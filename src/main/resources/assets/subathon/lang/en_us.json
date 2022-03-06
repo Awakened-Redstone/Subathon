@@ -2,5 +2,24 @@
   "text.subathon.paste": "Paste",
   "subathon.messages.prime": "%s just subscribed with Prime!",
   "subathon.messages.default": "%s just subscribed!",
-  "subathon.messages.gift": "%s just gifted %s subs!"
+  "subathon.messages.gift": "%s just gifted %s subs!",
+  "subathon.starting": "§cStarting the bot... This can take a few seconds",
+  "subathon.started": "§aBot started, let the chaos begin!",
+
+  "title.subathon.config": "Subathon Configurations",
+  "category.subathon.general": "General",
+
+  "option.subathon.mode": "Mode",
+  "option.subathon.effect_amplifier": "Effect increment",
+  "option.subathon.channel_name": "Channel Name",
+  "option.subathon.sub_amplifier": "Subs per increment",
+  "option.subathon.client_id": "Client ID",
+  "option.subathon.client_secret": "Client Secret §c§l[WARNING!]",
+
+  "option.subathon.mode.description": "Mode",
+  "option.subathon.effect_amplifier.description": "Effect increment",
+  "option.subathon.channel_name.description": "Channel Name",
+  "option.subathon.sub_amplifier.description": "Subs per increment",
+  "option.subathon.client_id.description": "The clientId of the application",
+  "option.subathon.client_secret.description": "The clientSecret of the application\n§cIT IS NOT YOUR STREAM KEY!\n§c§l§nDO NOT LEAK!"
 }
