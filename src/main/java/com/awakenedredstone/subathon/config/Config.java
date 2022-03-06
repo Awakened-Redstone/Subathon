@@ -38,6 +38,7 @@ public class Config {
         json.add("version", new JsonPrimitive(configVersion));
         json.add("clientId", new JsonPrimitive(""));
         json.add("clientSecret", new JsonPrimitive(""));
+        json.add("code", new JsonPrimitive(""));
         json.add("effect", new JsonPrimitive("JUMP"));
         json.add("channelName", new JsonPrimitive(""));
         json.add("effectAmplifier", new JsonPrimitive(0.1));

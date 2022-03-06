@@ -1,5 +1,6 @@
 {
   "text.subathon.paste": "Paste",
+  "text.subathon.pasted": "Pasted!",
   "subathon.messages.prime": "%s just subscribed with Prime!",
   "subathon.messages.default": "%s just subscribed!",
   "subathon.messages.gift": "%s just gifted %s subs!",
@@ -15,11 +16,13 @@
   "option.subathon.sub_amplifier": "Subs per increment",
   "option.subathon.client_id": "Client ID",
   "option.subathon.client_secret": "Client Secret §c§l[WARNING!]",
+  "option.subathon.code": "Client Secret §c§l[WARNING!]",
 
   "option.subathon.mode.description": "Mode",
   "option.subathon.effect_amplifier.description": "Effect increment",
   "option.subathon.channel_name.description": "Channel Name",
   "option.subathon.sub_amplifier.description": "Subs per increment",
   "option.subathon.client_id.description": "The clientId of the application",
-  "option.subathon.client_secret.description": "The clientSecret of the application\n§cIT IS NOT YOUR STREAM KEY!\n§c§l§nDO NOT LEAK!"
+  "option.subathon.client_secret.description": "The clientSecret of the application\n§cIT IS NOT YOUR STREAM KEY!\n§c§l§nDO NOT LEAK!",
+  "option.subathon.code.description": "The code on the url you get redirected after authorizing the application.\n§cIT IS NOT YOUR STREAM KEY!\n§c§l§nDO NOT LEAK!"
 }

@@ -62,6 +62,11 @@ public class ClothConfig {
                 .setSaveConsumer(v -> Subathon.getConfigData().clientSecret = v)
                 .build());
 
+        general.addEntry(new PasteFieldBuilder(new TranslatableText("option.subathon.code"), Subathon.getConfigData().clientSecret)
+                .setTooltip(new TranslatableText("option.subathon.code.description"))
+                .setSaveConsumer(v -> Subathon.getConfigData().code = v)
+                .build());
+
         builder.setSavingRunnable(Subathon.config::save);
         return builder.build();
     }

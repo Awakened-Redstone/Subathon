@@ -38,11 +38,19 @@ public class Bot implements Runnable {
     public static TwitchClient twitchClient;
     private static float counter = 0;
     private OAuth2Credential accessToken;
+    private static int subsUntilIncrement = getConfigData().subModifier;
 
     @Override
     public void run() {
         twitchClient = TwitchClientBuilder.builder().withEnableHelix(true).withEnablePubSub(true).build();
-        accessToken = generateToken();
+        accessToken = getConfigData().accessToken != null ? getToken() : generateToken();
+        if (getConfigData().accessToken == null) {
+            getConfigData().accessToken = accessToken.getAccessToken();
+            getConfigData().refreshToken = accessToken.getRefreshToken();
+            getConfigData().expiresIn = accessToken.getExpiresIn();
+            getConfigData().scope = accessToken.getScopes();
+            config.save();
+        }
 
         if (accessToken == null) {
             LOGGER.error("Failed to get the accessToken! Cancelling bot initialization!");
@@ -86,14 +94,27 @@ public class Bot implements Runnable {
             } else {
                 message = new TranslatableText("subathon.messages.default", sub.getUser().getName());
             }
+            subsUntilIncrement -= 1;
         } else if (event instanceof GiftSubscriptionsEvent sub) {
             message = new TranslatableText("subathon.messages.gift", sub.getUser().getName(), sub.getCount());
+            subsUntilIncrement -= sub.getCount();
         }
+        if (subsUntilIncrement > 0) return;
+        else subsUntilIncrement = getConfigData().subModifier;
         counter += Subathon.getConfigData().effectAmplifier;
         Text finalMessage = message;
         server.getPlayerManager().getPlayerList().forEach(player -> positionedText(player, finalMessage, 12, 16, 0xFFFFFF, true, true, 0));
         server.getPlayerManager().getPlayerList().forEach(player -> positionedText(player, new LiteralText(String.format("The effect amplifier is now %s", counter)), 12, 28, 0xFFFFFF, true, true, 1));
         //TODO: change the effect message, ex: "Your jump is now 1.2", "Your speed is now 0.2", etc.
+    }
+
+    private OAuth2Credential getToken() {
+        return new OAuth2Credential("twitch",
+                getConfigData().accessToken,
+                getConfigData().refreshToken,
+                null, null,
+                getConfigData().expiresIn,
+                getConfigData().scope);
     }
 
     private OAuth2Credential generateToken() {
@@ -103,8 +124,10 @@ public class Bot implements Runnable {
             HttpUrl.Builder urlBuilder = HttpUrl.parse("https://id.twitch.tv/oauth2/token").newBuilder();
             urlBuilder.addQueryParameter("client_id", getConfigData().clientId);
             urlBuilder.addQueryParameter("client_secret", getConfigData().clientSecret);
-            urlBuilder.addQueryParameter("grant_type", "client_credentials");
-            urlBuilder.addQueryParameter("scope", "channel:read:subscriptions");
+            urlBuilder.addQueryParameter("code", getConfigData().code);
+            urlBuilder.addQueryParameter("grant_type", "authorization_code");
+            //urlBuilder.addQueryParameter("scope", "channel:read:subscriptions");
+            urlBuilder.addQueryParameter("redirect_uri", "http://localhost");
 
             Request request = new Request.Builder()
                     .url(urlBuilder.build().toString())
@@ -136,8 +159,8 @@ public class Bot implements Runnable {
      * @param state  state - csrf protection
      * @return url
      */
-    public String getAuthenticationUrl(List<Object> scopes, String state) {
-        return getAuthenticationUrl("https://twitch.tv", scopes, state);
+    public static String getAuthenticationUrl(List<Object> scopes, String state) {
+        return getAuthenticationUrl("http://localhost", scopes, state);
     }
 
     /**
@@ -148,7 +171,7 @@ public class Bot implements Runnable {
      * @param state       state - csrf protection
      * @return url
      */
-    public String getAuthenticationUrl(String redirectUrl, List<Object> scopes, String state) {
+    public static String getAuthenticationUrl(String redirectUrl, List<Object> scopes, String state) {
         if (state == null) {
             state = "twitch|" + UUID.randomUUID();
         }

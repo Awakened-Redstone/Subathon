@@ -136,16 +136,12 @@ public class SubathonCommand {
     }
 
     private static void openLink(ServerCommandSource source) {
-        if (bot == null) {
-            source.sendFeedback(new LiteralText("The bot is offline!"), false);
-            return;
-        }
         try {
             ServerPlayerEntity player = source.getPlayer();
             MinecraftClient client = MinecraftClient.getInstance();
             if (client.player != null && player.getUuid() == client.player.getUuid()) {
                 player.sendMessage(new LiteralText("Opening authentication page"), false);
-                Util.getOperatingSystem().open(bot.getAuthenticationUrl(List.of("channel:read:subscriptions"), null));
+                Util.getOperatingSystem().open(Bot.getAuthenticationUrl(List.of("channel:read:subscriptions"), null));
             }
         } catch (Exception e) {
             source.sendError(new LiteralText("Only players can run this command!"));
