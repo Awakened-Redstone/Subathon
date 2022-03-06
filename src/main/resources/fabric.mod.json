@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "subathon",
+  "version": "${version}",
+  "name": "Subathon",
+  "description": "Minecraft but every sub...",
+  "authors": [
+    "AwakenedRedstone"
+  ],
+  "contact": {
+    "repo": "https://githu.com/Awakened-Redstone/Subathon"
+  },
+  "license": "LGPL-3.0",
+  "icon": "assets/subathon/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "com.awakenedredstone.subathon.client.SubathonClient"
+    ],
+    "server": [
+      "com.awakenedredstone.subathon.server.SubathonServer"
+    ],
+    "main": [
+      "com.awakenedredstone.subathon.Subathon"
+    ],
+      "modmenu": [
+        "com.awakenedredstone.subathon.config.cloth.ModMenuIntegration"
+      ]
+  },
+  "mixins": [
+    "subathon.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.13.3",
+    "fabric": "*",
+    "minecraft": ">=1.18.2"
+  }
+}
