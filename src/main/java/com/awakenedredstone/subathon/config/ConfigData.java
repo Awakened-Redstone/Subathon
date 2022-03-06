@@ -13,7 +13,6 @@ public class ConfigData {
     public int expiresIn;
     public List<String> scope;
     public String effect;
-    public float effectMultiplier;
     public float effectAmplifier;
     public short subModifier;
 }
