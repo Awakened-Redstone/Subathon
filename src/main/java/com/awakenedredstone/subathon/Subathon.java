@@ -1,16 +1,16 @@
 package com.awakenedredstone.subathon;
 
 import com.awakenedredstone.subathon.commands.SubathonCommand;
+import com.awakenedredstone.subathon.config.Auth;
+import com.awakenedredstone.subathon.config.AuthData;
 import com.awakenedredstone.subathon.config.Config;
 import com.awakenedredstone.subathon.config.ConfigData;
-import com.awakenedredstone.subathon.config.cloth.ClothConfig;
 import com.awakenedredstone.subathon.json.JsonHelper;
 import com.awakenedredstone.subathon.twitch.Bot;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.LiteralText;
 import org.slf4j.Logger;
@@ -25,6 +25,7 @@ public class Subathon implements ModInitializer {
     public static Bot bot;
 
     public static final Config config = new Config();
+    public static final Auth auth = new Auth();
     public static final Logger LOGGER = LoggerFactory.getLogger("Subathon");
     public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
@@ -32,6 +33,9 @@ public class Subathon implements ModInitializer {
 
     public static ConfigData getConfigData() {
         return config.getConfigData();
+    }
+    public static AuthData getAuthData() {
+        return auth.getAuthData();
     }
 
     @Override
@@ -46,6 +50,7 @@ public class Subathon implements ModInitializer {
             }
         }
         config.loadConfigs();
+        auth.loadAuth();
     }
 
     public static Effect getEffect() {

@@ -6,5 +6,5 @@ public enum Effect {
     SUPER_JUMP,
     SPEED,
     SLOWNESS,
-    POTION_EFFECT
+    //POTION_EFFECT
 }

@@ -43,40 +43,22 @@ public class Bot implements Runnable {
     @Override
     public void run() {
         twitchClient = TwitchClientBuilder.builder().withEnableHelix(true).withEnablePubSub(true).build();
-        accessToken = getConfigData().accessToken != null ? getToken() : generateToken();
-        if (getConfigData().accessToken == null) {
-            getConfigData().accessToken = accessToken.getAccessToken();
-            getConfigData().refreshToken = accessToken.getRefreshToken();
-            getConfigData().expiresIn = accessToken.getExpiresIn();
-            getConfigData().scope = accessToken.getScopes();
-            config.save();
+        try {
+            accessToken = getToken();
+        } catch (Exception exception) {
+            LOGGER.error("Failed to get the accessToken! Cancelling bot initialization!", exception);
+            server.getCommandSource().sendFeedback(new LiteralText("Could not start the bot!"), true);
+            try {
+                SubathonCommand.execute(server.getCommandSource(), false);
+            } catch (CommandSyntaxException e) {
+                LOGGER.error("An error occurred when trying to execute \"/subathon stop\"", e);
+            }
+            twitchClient.close();
+            return;
         }
 
-        if (accessToken == null) {
-            LOGGER.error("Failed to get the accessToken! Cancelling bot initialization!");
-            server.getCommandSource().sendFeedback(new LiteralText("Could not start the bot!"), true);
-            try {
-                SubathonCommand.execute(server.getCommandSource(), false);
-            } catch (CommandSyntaxException e) {
-                LOGGER.error("An error occurred when trying to execute \"/subathon stop\"", e);
-            }
-            twitchClient.close();
-            return;
-        }
-        List<User> users = twitchClient.getHelix().getUsers(accessToken.getAccessToken(), null, List.of(getConfigData().channelName)).execute().getUsers();
-        if (users.isEmpty()) {
-            LOGGER.error(String.format("Could not find user \"%s\"! Cancelling bot initialization!", getConfigData().channelName));
-            server.getCommandSource().sendFeedback(new LiteralText("Could not start the bot!"), true);
-            try {
-                SubathonCommand.execute(server.getCommandSource(), false);
-            } catch (CommandSyntaxException e) {
-                LOGGER.error("An error occurred when trying to execute \"/subathon stop\"", e);
-            }
-            twitchClient.close();
-            return;
-        }
-        twitchClient.getPubSub().listenForSubscriptionEvents(accessToken, users.get(0).getId());
-        twitchClient.getPubSub().listenForChannelSubGiftsEvents(accessToken, users.get(0).getId());
+        twitchClient.getPubSub().listenForSubscriptionEvents(accessToken, getAuthData().user_id);
+        twitchClient.getPubSub().listenForChannelSubGiftsEvents(accessToken, getAuthData().user_id);
         twitchClient.getEventManager().onEvent(GiftSubscriptionsEvent.class, this::executeAction);
         twitchClient.getEventManager().onEvent(SubscriptionEvent.class, this::executeAction);
 
@@ -109,47 +91,14 @@ public class Bot implements Runnable {
     }
 
     private OAuth2Credential getToken() {
+        if (getAuthData().access_token == null) throw new NullPointerException("access_token is missing!");
+        if (getAuthData().refresh_token == null) throw new NullPointerException("refresh_token is missing!");
         return new OAuth2Credential("twitch",
-                getConfigData().accessToken,
-                getConfigData().refreshToken,
+                getAuthData().access_token,
+                getAuthData().refresh_token,
                 null, null,
-                getConfigData().expiresIn,
-                getConfigData().scope);
-    }
-
-    private OAuth2Credential generateToken() {
-        try {
-            OkHttpClient client = new OkHttpClient();
-            ObjectMapper objectMapper = new ObjectMapper();
-            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://id.twitch.tv/oauth2/token").newBuilder();
-            urlBuilder.addQueryParameter("client_id", getConfigData().clientId);
-            urlBuilder.addQueryParameter("client_secret", getConfigData().clientSecret);
-            urlBuilder.addQueryParameter("code", getConfigData().code);
-            urlBuilder.addQueryParameter("grant_type", "authorization_code");
-            //urlBuilder.addQueryParameter("scope", "channel:read:subscriptions");
-            urlBuilder.addQueryParameter("redirect_uri", "http://localhost");
-
-            Request request = new Request.Builder()
-                    .url(urlBuilder.build().toString())
-                    .post(RequestBody.create(null, new byte[]{}))
-                    .build();
-
-            Response response = client.newCall(request).execute();
-            String responseBody = response.body().string();
-            if (response.isSuccessful()) {
-                Map<String, Object> resultMap = objectMapper.readValue(responseBody, new TypeReference<HashMap<String, Object>>() {});
-
-                return new OAuth2Credential("twitch",
-                        (String) resultMap.get("access_token"),
-                        (String) resultMap.get("refresh_token"),
-                        null, null,
-                        (Integer) resultMap.get("expires_in"),
-                        (List) resultMap.get("scope"));
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to generate token!", e);
-        }
-        return null;
+                getAuthData().expires_in,
+                List.of("channel:read:subscriptions"));
     }
 
     /**
@@ -160,7 +109,7 @@ public class Bot implements Runnable {
      * @return url
      */
     public static String getAuthenticationUrl(List<Object> scopes, String state) {
-        return getAuthenticationUrl("http://localhost", scopes, state);
+        return getAuthenticationUrl("https://subathon-mod.glitch.me", scopes, state);
     }
 
     /**
@@ -178,7 +127,7 @@ public class Bot implements Runnable {
         return String.format("%s?response_type=%s&client_id=%s&redirect_uri=%s&scope=%s&state=%s",
                 "https://id.twitch.tv/oauth2/authorize",
                 URLEncoder.encode("code", StandardCharsets.UTF_8),
-                URLEncoder.encode(getConfigData().clientId, StandardCharsets.UTF_8),
+                URLEncoder.encode("7scb6ymkzkne4uh5nuyg7nf7j5v213", StandardCharsets.UTF_8),
                 URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8),
                 scopes.stream().map(Object::toString).collect(Collectors.joining(" ")),
                 URLEncoder.encode(state, StandardCharsets.UTF_8));

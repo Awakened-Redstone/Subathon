@@ -38,7 +38,6 @@ public class Config {
         json.add("version", new JsonPrimitive(configVersion));
         json.add("clientId", new JsonPrimitive(""));
         json.add("clientSecret", new JsonPrimitive(""));
-        json.add("code", new JsonPrimitive(""));
         json.add("effect", new JsonPrimitive("JUMP"));
         json.add("channelName", new JsonPrimitive(""));
         json.add("effectAmplifier", new JsonPrimitive(0.1));
@@ -50,8 +49,8 @@ public class Config {
         return configData;
     }
 
-    public boolean save() {
-        return JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(configData).getAsJsonObject(), configFile);
+    public void save() {
+        JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(configData).getAsJsonObject(), configFile);
     }
 }
 

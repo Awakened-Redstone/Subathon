@@ -48,9 +48,6 @@ public class SubathonCommand {
         })).then(CommandManager.literal("info").executes((source) -> {
             executeGetInfo(source.getSource());
             return 0;
-        })).then(CommandManager.literal("authorize").executes((source) -> {
-            openLink(source.getSource());
-            return 0;
         })).then(CommandManager.literal("setModifier").then(CommandManager.argument("amount", IntegerArgumentType.integer()).executes((source) -> {
             executeSetModifier(source.getSource(), IntegerArgumentType.getInteger(source, "amount"));
             return 0;
@@ -60,7 +57,19 @@ public class SubathonCommand {
     public static void execute(ServerCommandSource source, boolean enable) throws CommandSyntaxException {
         final CommandSyntaxException[] exception = {null};
         if (enable) {
-            source.sendFeedback(new LiteralText("Subathon started!"), false);
+            if (thread != null && Bot.twitchClient != null) {
+                source.sendError(new TranslatableText("subathon.command.error.online"));
+                return;
+            } else if (thread != null) {
+                source.sendError(new TranslatableText("subathon.command.error.fatal"));
+                execute(source, false);
+                return;
+            } else if (Bot.twitchClient != null) {
+                source.sendError(new TranslatableText("subathon.command.error.fatal"));
+                execute(source, false);
+                return;
+            }
+            source.sendFeedback(new LiteralText("Subathon starting, please wait for the bot to be ready!"), false);
             source.getServer().getPlayerManager().getPlayerList().forEach(player -> {
                 try {
                     executeTitle(source, player, new LiteralText("\u00a7c\u00a7lSubathon started!"), TitleS2CPacket::new);
@@ -81,12 +90,15 @@ public class SubathonCommand {
             thread.setDaemon(true);
             thread.start();
         } else {
+            if (thread == null && Bot.twitchClient == null) {
+                source.sendError(new TranslatableText("subathon.command.error.offline"));
+                return;
+            }
             source.sendFeedback(new LiteralText("Subathon stopped. The modifier is still being applied!"), true);
             source.getServer().getPlayerManager().getPlayerList().forEach(player -> {
                 try {
                     executeTitle(source, player, new LiteralText("\u00a7c\u00a7lSubathon stopped!"), TitleS2CPacket::new);
                     executeTitle(source, player, new LiteralText("\u00a74The modifier is still being applied!"), SubtitleS2CPacket::new);
-                    player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.MASTER, 100, 0.8f);
                     player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.MASTER, 100, 0.8f);
                     player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.MASTER, 100, 0.8f);
                     player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.MASTER, 100, 0.8f);
@@ -97,6 +109,8 @@ public class SubathonCommand {
             if (exception[0] != null) throw exception[0];
             if (Bot.twitchClient != null) Bot.twitchClient.close();
             if (thread != null && thread.isAlive() && !thread.isInterrupted()) thread.interrupt();
+            Bot.twitchClient = null;
+            thread = null;
         }
     }
 
@@ -133,19 +147,6 @@ public class SubathonCommand {
         source.sendFeedback(new LiteralText(String.format("    User Id: %s", validate.get("user_id"))), false);
         source.sendFeedback(new LiteralText(String.format("    Expires In: %s", validate.get("expires_in"))), false);
         source.sendFeedback(new LiteralText("==========================================="), false);
-    }
-
-    private static void openLink(ServerCommandSource source) {
-        try {
-            ServerPlayerEntity player = source.getPlayer();
-            MinecraftClient client = MinecraftClient.getInstance();
-            if (client.player != null && player.getUuid() == client.player.getUuid()) {
-                player.sendMessage(new LiteralText("Opening authentication page"), false);
-                Util.getOperatingSystem().open(Bot.getAuthenticationUrl(List.of("channel:read:subscriptions"), null));
-            }
-        } catch (Exception e) {
-            source.sendError(new LiteralText("Only players can run this command!"));
-        }
     }
 
     private static void executeTitle(ServerCommandSource source, ServerPlayerEntity player, Text title, Function<Text, Packet<?>> constructor) throws CommandSyntaxException {

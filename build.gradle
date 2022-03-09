@@ -6,6 +6,10 @@ plugins {
 version = project.mod_version
 group = project.maven_group
 
+configurations {
+    includeTransitive
+}
+
 repositories {
     maven {
         name "ClothConfigAPI"
@@ -29,8 +33,14 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
-    include modImplementation("com.github.twitch4j:twitch4j:${project.twitch4j_version}")
+    modImplementation("com.github.twitch4j:twitch4j:${project.twitch4j_version}")
+    includeTransitive("com.github.twitch4j:twitch4j:${project.twitch4j_version}")
 }
+
+configurations.getByName("includeTransitive").resolvedConfiguration.resolvedArtifacts.forEach(dep -> {
+    if (!dep.id.componentIdentifier.displayName.contains("slf4j-api"))
+        dependencies.add("include", dep.id.componentIdentifier.displayName)
+})
 
 processResources {
     inputs.property "version", project.version

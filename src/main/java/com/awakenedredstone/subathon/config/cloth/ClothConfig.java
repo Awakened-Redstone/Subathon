@@ -2,8 +2,10 @@ package com.awakenedredstone.subathon.config.cloth;
 
 import com.awakenedredstone.subathon.Effect;
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.config.cloth.options.ButtonFieldBuilder;
 import com.awakenedredstone.subathon.config.cloth.options.PasteFieldBuilder;
 import com.awakenedredstone.subathon.config.cloth.options.ShortFieldBuilder;
+import com.awakenedredstone.subathon.twitch.Bot;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -11,8 +13,10 @@ import me.shedaniel.clothconfig2.impl.builders.DropdownMenuBuilder;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Util;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 
 public class ClothConfig {
@@ -36,14 +40,8 @@ public class ClothConfig {
 
         general.addEntry(entryBuilder.startFloatField(new TranslatableText("option.subathon.effect_amplifier"), Subathon.getConfigData().effectAmplifier)
                 .setDefaultValue(0.1f)
-                .setTooltip(new TranslatableText("option.subathon.effect_amplifier.description")) // Optional: Shown when the user hover over this option
-                .setSaveConsumer(newValue -> Subathon.getConfigData().effectAmplifier = newValue) // Recommended: Called when user save the config
-                .build()); // Builds the option entry for cloth config
-
-        general.addEntry(entryBuilder.startStrField(new TranslatableText("option.subathon.channel_name"), Subathon.getConfigData().channelName)
-                .setDefaultValue("")
-                .setTooltip(new TranslatableText("option.subathon.channel_name.description"))
-                .setSaveConsumer(newValue -> Subathon.getConfigData().channelName = newValue)
+                .setTooltip(new TranslatableText("option.subathon.effect_amplifier.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().effectAmplifier = newValue)
                 .build());
 
         general.addEntry(new ShortFieldBuilder(new TranslatableText("option.subathon.sub_amplifier"), Subathon.getConfigData().subModifier)
@@ -52,23 +50,25 @@ public class ClothConfig {
                 .setSaveConsumer(newValue -> Subathon.getConfigData().subModifier = newValue)
                 .build());
 
-        general.addEntry(new PasteFieldBuilder(new TranslatableText("option.subathon.client_id"), Subathon.getConfigData().clientId)
-                .setTooltip(new TranslatableText("option.subathon.client_id.description"))
-                .setSaveConsumer(v -> Subathon.getConfigData().clientId = v)
+        general.addEntry(new PasteFieldBuilder(new TranslatableText("option.subathon.auth_data"), "{}")
+                .setDefaultValue("{}")
+                .setType("JSON")
+                .setTooltip(new TranslatableText("option.subathon.auth_data.description"))
+                .setSaveConsumer(Subathon.auth::fromString)
                 .build());
 
-        general.addEntry(new PasteFieldBuilder(new TranslatableText("option.subathon.client_secret"), Subathon.getConfigData().clientSecret)
-                .setTooltip(new TranslatableText("option.subathon.client_secret.description"))
-                .setSaveConsumer(v -> Subathon.getConfigData().clientSecret = v)
+        general.addEntry(new ButtonFieldBuilder(new TranslatableText("option.subathon.auth"))
+                .setTooltip(new TranslatableText("option.subathon.auth.description"))
+                .setPressAction((button) -> Util.getOperatingSystem().open(Bot.getAuthenticationUrl(List.of("channel:read:subscriptions"), null)))
                 .build());
 
-        general.addEntry(new PasteFieldBuilder(new TranslatableText("option.subathon.code"), Subathon.getConfigData().clientSecret)
-                .setTooltip(new TranslatableText("option.subathon.code.description"))
-                .setSaveConsumer(v -> Subathon.getConfigData().code = v)
-                .build());
-
-        builder.setSavingRunnable(Subathon.config::save);
+        builder.setSavingRunnable(this::save);
         return builder.build();
+    }
+
+    private void save() {
+        Subathon.config.save();
+        Subathon.auth.save();
     }
 
     public static final Function<String, Effect> FUNCTION = (str) -> {

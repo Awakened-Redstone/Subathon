@@ -18,55 +18,35 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class PasteConfig extends TooltipListEntry<String> {
+public class ButtonListEntry extends TooltipListEntry<String> {
     protected ButtonWidget buttonWidget;
-    protected ButtonWidget resetButton;
     protected List<ClickableWidget> widgets;
-    private final Consumer<String> saveConsumer;
-    private String value = "";
-    private boolean modified = false;
 
     @Deprecated
-    public PasteConfig(Text fieldName, @Nullable Supplier<Optional<Text[]>> tooltipSupplier, Consumer<String> saveConsumer, String value) {
-        this(fieldName, tooltipSupplier, false, saveConsumer, value);
+    public ButtonListEntry(Text fieldName, @Nullable Supplier<Optional<Text[]>> tooltipSupplier, ButtonWidget.PressAction pressAction) {
+        this(fieldName, tooltipSupplier, false, pressAction);
     }
 
     @Deprecated
-    public PasteConfig(Text fieldName, @Nullable Supplier<Optional<Text[]>> tooltipSupplier, boolean requiresRestart, Consumer<String> saveConsumer, String value) {
+    public ButtonListEntry(Text fieldName, @Nullable Supplier<Optional<Text[]>> tooltipSupplier, boolean requiresRestart, ButtonWidget.PressAction pressAction) {
         super(fieldName, tooltipSupplier, requiresRestart);
-        this.saveConsumer = saveConsumer;
-        this.value = value;
-        this.resetButton = new ButtonWidget(0, 0, MinecraftClient.getInstance().textRenderer.getWidth(new TranslatableText("text.cloth-config.reset_value")) + 6, 20, new TranslatableText("text.cloth-config.reset_value"), (widget) -> {
-            this.value = "";
-            buttonWidget.setMessage(new TranslatableText("text.subathon.paste"));
-            this.modified = true;
-        });
-        this.buttonWidget = new ButtonWidget(0, 0, 150 - this.resetButton.getWidth() - 2, 20, new TranslatableText("text.subathon.paste"), button -> {
-            button.setMessage(new TranslatableText("text.subathon.pasted"));
-            this.value = MinecraftClient.getInstance().keyboard.getClipboard();
-            this.modified = true;
-        });
-        this.widgets = Lists.newArrayList(new ClickableWidget[]{this.buttonWidget, this.resetButton});
+        this.buttonWidget = new ButtonWidget(0, 0, 150, 20, new TranslatableText("text.subathon.auth"), pressAction);
+        this.widgets = Lists.newArrayList(new ClickableWidget[]{this.buttonWidget});
     }
 
     public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
         super.render(matrices, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
         Window window = MinecraftClient.getInstance().getWindow();
-        this.resetButton.active = this.isEditable() && !value.equals(getDefaultValue().get());
-        this.resetButton.y = y;
         this.buttonWidget.y = y;
         Text displayedFieldName = this.getDisplayedFieldName();
         if (MinecraftClient.getInstance().textRenderer.isRightToLeft()) {
             MinecraftClient.getInstance().textRenderer.drawWithShadow(matrices, displayedFieldName.asOrderedText(), (float)(window.getScaledWidth() - x - MinecraftClient.getInstance().textRenderer.getWidth(displayedFieldName)), (float)(y + 6), this.getPreferredTextColor());
-            this.resetButton.x = x;
-            this.buttonWidget.x = x + this.resetButton.getWidth();
+            this.buttonWidget.x = x;
         } else {
             MinecraftClient.getInstance().textRenderer.drawWithShadow(matrices, displayedFieldName.asOrderedText(), (float)x, (float)(y + 6), this.getPreferredTextColor());
-            this.resetButton.x = x + entryWidth - this.resetButton.getWidth();
             this.buttonWidget.x = x + entryWidth - 150;
         }
 
-        this.resetButton.render(matrices, mouseX, mouseY, delta);
         this.buttonWidget.render(matrices, mouseX, mouseY, delta);
     }
 
@@ -75,7 +55,7 @@ public class PasteConfig extends TooltipListEntry<String> {
     }
 
     public boolean isEdited() {
-        return modified;
+        return false;
     }
 
     public List<? extends Element> children() {
@@ -83,14 +63,10 @@ public class PasteConfig extends TooltipListEntry<String> {
     }
 
     public String getValue() {
-        return "You are not allowed to get this information!";
+        return "There is literally nothing here.";
     }
 
-    public void save() {
-        if (this.saveConsumer != null) {
-            this.saveConsumer.accept(value);
-        }
-    }
+    public void save() {}
 
     public List<? extends Selectable> narratables() {
         return this.widgets;

@@ -1,11 +1,19 @@
 {
   "text.subathon.paste": "Paste",
   "text.subathon.pasted": "Pasted!",
+  "text.subathon.auth": "Authenticate",
+
+  "text.subathon.error.not_valid_json": "Not a valid JSON!",
+
   "subathon.messages.prime": "%s just subscribed with Prime!",
   "subathon.messages.default": "%s just subscribed!",
   "subathon.messages.gift": "%s just gifted %s subs!",
   "subathon.starting": "§cStarting the bot... This can take a few seconds",
   "subathon.started": "§aBot started, let the chaos begin!",
+
+  "subathon.command.error.offline": "The bot is already offline",
+  "subathon.command.error.online": "The bot is already online",
+  "subathon.command.error.fatal": "A fatal error occurred when executing the command!",
 
   "title.subathon.config": "Subathon Configurations",
   "category.subathon.general": "General",
@@ -14,15 +22,13 @@
   "option.subathon.effect_amplifier": "Effect increment",
   "option.subathon.channel_name": "Channel Name",
   "option.subathon.sub_amplifier": "Subs per increment",
-  "option.subathon.client_id": "Client ID",
-  "option.subathon.client_secret": "Client Secret §c§l[WARNING!]",
-  "option.subathon.code": "Client Secret §c§l[WARNING!]",
+  "option.subathon.auth_data": "Auth Code §c§l[WARNING!]",
+  "option.subathon.auth": "Open auth page",
 
   "option.subathon.mode.description": "Mode",
   "option.subathon.effect_amplifier.description": "Effect increment",
   "option.subathon.channel_name.description": "Channel Name",
   "option.subathon.sub_amplifier.description": "Subs per increment",
-  "option.subathon.client_id.description": "The clientId of the application",
-  "option.subathon.client_secret.description": "The clientSecret of the application\n§cIT IS NOT YOUR STREAM KEY!\n§c§l§nDO NOT LEAK!",
-  "option.subathon.code.description": "The code on the url you get redirected after authorizing the application.\n§cIT IS NOT YOUR STREAM KEY!\n§c§l§nDO NOT LEAK!"
+  "option.subathon.auth_data.description": "The code given by the authentication page.\n§c§l§nDO NOT LEAK OR SHARE IT!",
+  "option.subathon.auth.description": "Opens the authentication page, there you will get the auth code."
 }
