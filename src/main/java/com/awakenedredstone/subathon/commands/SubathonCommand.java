@@ -115,10 +115,12 @@ public class SubathonCommand {
     }
 
     private static void executeReload(ServerCommandSource source) throws CommandSyntaxException {
-        source.sendFeedback(new LiteralText("Reloading configurations."), true);
+        source.sendFeedback(new TranslatableText("subathon.command.reloading"), true);
         Subathon.config.loadConfigs();
+        Subathon.auth.loadAuth();
         if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player) player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
-        source.sendFeedback(new LiteralText("Configurations reloaded"), true);
+        source.sendFeedback(new TranslatableText("subathon.command.reloaded"), true);
+        source.sendFeedback(new TranslatableText("subathon.command.reload.notice"), true);
     }
 
     public static void executeSetModifier(ServerCommandSource source, int amount) {

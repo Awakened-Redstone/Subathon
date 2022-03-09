@@ -14,6 +14,9 @@
   "subathon.command.error.offline": "The bot is already offline",
   "subathon.command.error.online": "The bot is already online",
   "subathon.command.error.fatal": "A fatal error occurred when executing the command!",
+  "subathon.command.reloading": "Reloading configurations.",
+  "subathon.command.reloaded": "Configurations reloaded",
+  "subathon.command.reload.notice": "A restart of the bot will be required for some changes to apply.",
 
   "title.subathon.config": "Subathon Configurations",
   "category.subathon.general": "General",
