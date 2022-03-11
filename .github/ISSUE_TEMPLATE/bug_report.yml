@@ -44,7 +44,7 @@ body:
     attributes:
       label: Expected Behavior
       description: What did you expect to happen?
-      placeholder: 'Example: The Bot should start'
+      placeholder: 'Example: The Piston should extend.'
     validations:
       required: true
   - type: textarea
@@ -52,7 +52,7 @@ body:
     attributes:
       label: Actual Behavior
       description: What did actually happen?
-      placeholder: 'Example: The bot fails to start and shuts down.'
+      placeholder: 'Example: The Piston does not extend.'
     validations:
       required: true
   - type: textarea
@@ -66,9 +66,9 @@ body:
         need to be able to replicate your issue.
       placeholder: |
         Example:
-        1. Authenticate
-        2. Start the bot
-        3. It gives an error and shuts down
+        1. Place a Redstone Lamp in front of a Redstone Repeater
+        2. Use a Lever to activate the Redstone Repeater
+        3. Nothing happens
     validations:
       required: true
   - type: input
