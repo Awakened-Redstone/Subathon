@@ -1,38 +1,114 @@
----
 name: Bug report
-about: 'Use this template if you''re running into bugs or other issues '
-title: ''
-labels: bug
-assignees: ''
+description: "Use this template if you're running into bugs or other issues"
+labels:
+  - T-bug
+  - S-needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        ## Instructions
 
----
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+        This is a template for the issue you are about to open! It will help you
+        provide the information necessary to complete your **bug report**.
+        Before you open an issue, ensure you've completed every step on the
+        checklist below.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+        - Have you used the [search
+        tool](https://github.com/CaffeineMC/sodium-fabric/issues) to find
+        similar issues? If you find one that looks like what you are getting,
+        consider contributing additional information to it instead. Make sure
+        you are not opening a duplicate.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+        - Are you using the latest version of the mod? If not, try updating to
+        see if it resolves your issue. You can find the latest versions of
+        CaffeineMC mods [here](https://caffeinemc.net).
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+        All good? Then continue to fill the issue by providing the following
+        information about it:
+  - type: input
+    id: version
+    attributes:
+      label: Version information
+      description: >-
+        Please provide the exact version of the mod you are using. Every part of
+        the version is important! If you do not know what version you are using,
+        look at the file name in your `mods` folder.
+      placeholder: 'Example: mc1.16.4-0.1.1+rev.4b3964a'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: 'Example: The Piston should extend.'
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What did actually happen?
+      placeholder: 'Example: The Piston does not extend.'
+    validations:
+      required: true
+  - type: textarea
+    id: repro-steps
+    attributes:
+      label: Reproduction Steps
+      description: >-
+        Provide information on how to reproduce this bug. You can either
+        fill this section in like the example below or do something else just
+        make sure your instructions are minimal and clear, as other people will
+        need to be able to replicate your issue.
+      placeholder: |
+        Example:
+        1. Place a Redstone Lamp in front of a Redstone Repeater
+        2. Use a Lever to activate the Redstone Repeater
+        3. Nothing happens
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >-
+        # System Information
 
-**Additional context**
-Add any other context about the problem here.
+
+        You can obtain this information from the right-side of the in-game debug
+        screen (F3) or through using
+        [DxDiag](https://support.microsoft.com/en-us/help/4028644/windows-open-and-run-dxdiagexe)
+        on Windows. 
+  - type: input
+    id: java
+    attributes:
+      label: Java version
+      placeholder: 'Example: Java 16'
+    validations:
+      required: true
+  - type: input
+    id: cpu
+    attributes:
+      label: CPU
+      placeholder: 'Example: Intel Core i5-7200U'
+    validations:
+      required: true
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      placeholder: 'Example: Intel HD Graphics 620'
+    validations:
+      required: true
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional information
+      description: >-
+        Provide a list of any other mods you are using, along with their
+        respective versions. If you have any screenshots, videos, or other
+        information that you feel is necessary to explain the issue, feel free
+        to attach them here.
