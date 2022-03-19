@@ -3,10 +3,12 @@
 [<img src="https://camo.githubusercontent.com/9296b230044bb4ef07851ff9baa2d04aeb210baee3467abafff1380fa081f08b/68747470733a2f2f692e696d6775722e636f6d2f4f6c31546366382e706e67" alt="Requires Fabric API" data-canonical-src="https://i.imgur.com/Ol1Tcf8.png" width="128">](https://modrinth.com/mod/fabric-api/)
 
 
-**<ins>It is highly recommended to use [ModMenu](https://modrinth.com/mod/modmenu) + [Cloth Config API](https://www.curseforge.com/minecraft/mc-mods/cloth-config) </ins>**
+## **<ins>It is highly recommended to use [ModMenu](https://modrinth.com/mod/modmenu) + [Cloth Config API](https://www.curseforge.com/minecraft/mc-mods/cloth-config) </ins>**
 
 Before you run `/subathon start` you have to authenticate. In order to authenticate go to the config UI and click `Authenticate`, after that wait until you get the
-successful authentication page, on it you will find the instructions to finish the authentication.
+successful authentication page, on it you will find the instructions to finish the authentication.  
+After starting the bot it is recommended to run `/subathon info` to make sure everything is working properly.  
+If you wish to, you can change the messages with a resourcepack.
 
 With that you are all set and your viewers can torture you with subs.
 
