@@ -34,7 +34,7 @@ public class ClothConfig {
         int resetButtonSpace = resetButtonWidth + 4;
         int bruhWidth = MinecraftClient.getInstance().textRenderer.getWidth(bruh) + 2;
         RenderAction renderAction = (matrices, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta, entry) -> {
-            if (entry.getValue() == 0 && !entry.isEmpty()) {
+            if (entry.getValue() == 0 && !entry.isEmpty() && entry.getError().isEmpty()) {
                 if (MinecraftClient.getInstance().textRenderer.isRightToLeft()) {
                     textRenderer.drawWithShadow(matrices, bruh, x + resetButtonWidth + (148 - resetButtonSpace) - bruhWidth, y + 6, 0xFFFFFF);
                 } else {
