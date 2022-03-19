@@ -24,10 +24,7 @@ import okhttp3.Response;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.awakenedredstone.subathon.Subathon.*;
@@ -67,9 +64,7 @@ public class Bot implements Runnable {
         twitchClient.getEventManager().onEvent(SubscriptionEvent.class, this::executeAction);
         twitchClient.getEventManager().onEvent(CheerEvent.class, this::executeAction);
 
-        server.getPlayerManager().getPlayerList().forEach(player -> {
-            player.sendMessage(new TranslatableText("subathon.started"), true);
-        });
+        server.getPlayerManager().getPlayerList().forEach(player -> player.sendMessage(new TranslatableText("subathon.started"), true));
     }
 
     public <T extends Event> void executeAction(T event) {
@@ -113,7 +108,7 @@ public class Bot implements Runnable {
                 if (getConfigData().onePerCheer) {
                     counter += getConfigData().bitModifier * getConfigData().effectAmplifier;
                 } else if (getConfigData().cumulativeBits) {
-                    bits += cheer.getBits();
+                    bits += (short) ((int) cheer.getBits());
                     counter += ((short) Math.floor((float) bits / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
                     bits %= getConfigData().bitMin;
                 } else {
@@ -200,7 +195,7 @@ public class Bot implements Runnable {
         try {
             OkHttpClient client = new OkHttpClient();
             ObjectMapper objectMapper = new ObjectMapper();
-            HttpUrl.Builder urlBuilder = HttpUrl.parse("https://id.twitch.tv/oauth2/validate").newBuilder();
+            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse("https://id.twitch.tv/oauth2/validate")).newBuilder();
 
             Request request = new Request.Builder()
                     .url(urlBuilder.build().toString())
@@ -208,11 +203,10 @@ public class Bot implements Runnable {
                     .build();
 
             Response response = client.newCall(request).execute();
-            String responseBody = response.body().string();
-            Map<String, Object> resultMap = objectMapper.readValue(responseBody, new TypeReference<HashMap<String, Object>>() {
-            });
+            String responseBody = Objects.requireNonNull(response.body()).string();
 
-            return resultMap;
+            return objectMapper.readValue(responseBody, new TypeReference<HashMap<String, Object>>() {
+            });
         } catch (Exception e) {
             LOGGER.error("Failed to validate token!", e);
         }
