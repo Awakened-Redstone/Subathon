@@ -64,7 +64,7 @@ public class PasteListEntry extends TooltipListEntry<String> {
         if (MinecraftClient.getInstance().textRenderer.isRightToLeft()) {
             MinecraftClient.getInstance().textRenderer.drawWithShadow(matrices, displayedFieldName.asOrderedText(), (float) (window.getScaledWidth() - x - MinecraftClient.getInstance().textRenderer.getWidth(displayedFieldName)), (float) (y + 6), this.getPreferredTextColor());
             this.resetButton.x = x;
-            this.buttonWidget.x = x + this.resetButton.getWidth();
+            this.buttonWidget.x = x + this.resetButton.getWidth() + 2;
         } else {
             MinecraftClient.getInstance().textRenderer.drawWithShadow(matrices, displayedFieldName.asOrderedText(), (float) x, (float) (y + 6), this.getPreferredTextColor());
             this.resetButton.x = x + entryWidth - this.resetButton.getWidth();

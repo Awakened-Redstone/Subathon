@@ -2,11 +2,18 @@ package com.awakenedredstone.subathon.commands;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.twitch.Bot;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.github.twitch4j.chat.events.AbstractChannelEvent;
+import com.github.twitch4j.chat.events.channel.CheerEvent;
+import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
+import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
+import com.github.twitch4j.common.events.domain.EventUser;
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.client.MinecraftClient;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import net.minecraft.command.CommandSource;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
@@ -19,17 +26,14 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Util;
 import net.minecraft.util.logging.UncaughtExceptionHandler;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.awakenedredstone.subathon.Subathon.bot;
-import static com.awakenedredstone.subathon.Subathon.thread;
+import static com.awakenedredstone.subathon.Subathon.*;
 
 public class SubathonCommand {
 
@@ -48,13 +52,72 @@ public class SubathonCommand {
         })).then(CommandManager.literal("info").executes((source) -> {
             executeGetInfo(source.getSource());
             return 0;
-        })).then(CommandManager.literal("setModifier").then(CommandManager.argument("amount", IntegerArgumentType.integer()).executes((source) -> {
-            executeSetModifier(source.getSource(), IntegerArgumentType.getInteger(source, "amount"));
+        })).then(CommandManager.literal("setModifier").then(CommandManager.argument("amount", FloatArgumentType.floatArg()).executes((source) -> {
+            executeSetModifier(source.getSource(), FloatArgumentType.getFloat(source, "amount"));
             return 0;
-        }))));
+        }))).then(CommandManager.literal("setBits").then(CommandManager.argument("amount", IntegerArgumentType.integer(0, 32767)).executes((source) -> {
+            executeSetBits(source.getSource(), IntegerArgumentType.getInteger(source, "amount"));
+            return 0;
+        }))).then(CommandManager.literal("setSubsUntilIncrement").then(CommandManager.argument("amount", IntegerArgumentType.integer(0, 32767)).executes((source) -> {
+            executeSetSubsUntilIncrement(source.getSource(), IntegerArgumentType.getInteger(source, "amount"));
+            return 0;
+        }))).then(CommandManager.literal("test")
+                .then(CommandManager.literal("sub")
+                        .then(CommandManager.argument("tier", StringArgumentType.word())
+                                .suggests((source, builder) -> CommandSource.suggestMatching(Arrays.stream(SubTiers.values()).map(v -> v.name().toLowerCase()).toList(), builder))
+                                .executes(source -> {
+                                    try {
+                                        executeTest(source.getSource(), Events.SUBSCRIPTION, (short) 0, SubTiers.valueOf(StringArgumentType.getString(source, "tier").toUpperCase()));
+                                    } catch (IllegalArgumentException e) {
+                                        throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
+                                    }
+                                    return 0;
+                                })
+                        )
+                ).then(CommandManager.literal("resub")
+                        .then(CommandManager.argument("tier", StringArgumentType.word())
+                                .suggests((source, builder) -> CommandSource.suggestMatching(Arrays.stream(SubTiers.values()).map(v -> v.name().toLowerCase()).toList(), builder))
+                                .then(CommandManager.argument("months", IntegerArgumentType.integer(1, 32767))
+                                        .executes(source -> {
+                                            try {
+                                                executeTest(source.getSource(), Events.RESUBSCRIPTION, (short) IntegerArgumentType.getInteger(source, "months"),
+                                                        SubTiers.valueOf(StringArgumentType.getString(source, "tier").toUpperCase()));
+                                            } catch (IllegalArgumentException e) {
+                                                throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
+                                            }
+                                            return 0;
+                                        })
+                                )
+                        )
+                ).then(CommandManager.literal("subGift")
+                        .then(CommandManager.argument("tier", StringArgumentType.word())
+                                .suggests((source, builder) -> CommandSource.suggestMatching(Arrays.stream(SubTiers.values()).map(v -> v.name().toLowerCase()).toList(), builder))
+                                .then(CommandManager.argument("amount", IntegerArgumentType.integer(1, 32767))
+                                        .executes(source -> {
+                                            try {
+                                                executeTest(source.getSource(), Events.SUB_GIFT, (short) IntegerArgumentType.getInteger(source, "amount"),
+                                                        SubTiers.valueOf(StringArgumentType.getString(source, "tier").toUpperCase()));
+                                            } catch (IllegalArgumentException e) {
+                                                throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
+                                            }
+                                            return 0;
+                                        })
+                                )
+                        )
+                ).then(CommandManager.literal("cheer")
+                        .then(CommandManager.argument("amount", IntegerArgumentType.integer(1, 32767))
+                                .executes(source -> {
+                                    executeTest(source.getSource(), Events.CHEER, (short) IntegerArgumentType.getInteger(source, "amount"), null);
+                                    return 0;
+                                })
+                        )
+                )
+        ));
     }
 
     public static void execute(ServerCommandSource source, boolean enable) throws CommandSyntaxException {
+        if (getAuthData().access_token == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
         final CommandSyntaxException[] exception = {null};
         if (enable) {
             if (thread != null && Bot.twitchClient != null) {
@@ -114,44 +177,140 @@ public class SubathonCommand {
         }
     }
 
-    private static void executeReload(ServerCommandSource source) throws CommandSyntaxException {
+    private static void executeReload(ServerCommandSource source) {
         source.sendFeedback(new TranslatableText("subathon.command.reloading"), true);
         Subathon.config.loadConfigs();
         Subathon.auth.loadAuth();
-        if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player) player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
+        if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player)
+            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
         source.sendFeedback(new TranslatableText("subathon.command.reloaded"), true);
         source.sendFeedback(new TranslatableText("subathon.command.reload.notice"), true);
     }
 
-    public static void executeSetModifier(ServerCommandSource source, int amount) {
+    public static void executeSetModifier(ServerCommandSource source, float amount) {
         source.sendFeedback(new LiteralText("Setting modifier to " + amount), true);
         Bot.setCounter(amount);
-        if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player) player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
+        if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player)
+            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
+    }
+
+    public static void executeSetBits(ServerCommandSource source, int amount) {
+        source.sendFeedback(new LiteralText("Setting bits to " + amount), true);
+        Bot.setBits((short) amount);
+        if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player)
+            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
+    }
+
+    public static void executeSetSubsUntilIncrement(ServerCommandSource source, int amount) {
+        source.sendFeedback(new LiteralText("Setting subsUntilIncrement to " + amount), true);
+        Bot.setSubsUntilIncrement((short) amount);
+        if (source.getEntity() != null && source.getEntity() instanceof ServerPlayerEntity player)
+            player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
     }
 
     public static void executeGetInfo(ServerCommandSource source) throws CommandSyntaxException {
-        if (bot == null) {
-            source.sendFeedback(new LiteralText("The bot is offline!"), false);
+        if (getAuthData().access_token == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
+        if (thread == null && Bot.twitchClient == null) {
+            source.sendError(new LiteralText("The bot is offline!"));
             return;
         }
         source.sendFeedback(new LiteralText("Getting information, please wait..."), false);
         final Map<String, Object> validate = bot.validate();
         if (validate == null) {
-            source.sendFeedback(new LiteralText("Failed to validate, this is not good!"), false);
+            source.sendError(new LiteralText("Failed to validate, this is not good!"));
             execute(source, false);
             return;
         }
+
+        if ((validate.get("status") != null && (int) validate.get("status") != 200) || (validate.get("code") != null && (int) validate.get("code") != 200)) {
+            source.sendError(new LiteralText("Oh no, something went wrong!"));
+            source.sendFeedback(new LiteralText("==========================================="), false);
+            source.sendFeedback(new LiteralText(String.format("    Status code: %s", validate.get("status"))), false);
+            source.sendFeedback(new LiteralText(String.format("    Message: %s", validate.get("message"))), false);
+            source.sendFeedback(new LiteralText("==========================================="), false);
+            execute(source, false);
+            return;
+        }
+
+        int expiresIn = (int) validate.get("expires_in");
         source.sendFeedback(new LiteralText("\n\n"), false);
         source.sendFeedback(new LiteralText("==========================================="), false);
-        source.sendFeedback(new LiteralText(String.format("    Client ID: §k%s", validate.get("client_id"))), false);
         source.sendFeedback(new LiteralText(String.format("    Login: %s", validate.get("login"))), false);
-        source.sendFeedback(new LiteralText(String.format("    Scopes: %s", ((List<?>) validate.get("scopes")).stream().map(Object::toString).collect(Collectors.joining(" ")))), false);
+        source.sendFeedback(new LiteralText(String.format("    Scopes: %s", ((List<?>) validate.get("scopes")).stream().map(Object::toString).collect(Collectors.joining(" | ")))), false);
         source.sendFeedback(new LiteralText(String.format("    User Id: %s", validate.get("user_id"))), false);
-        source.sendFeedback(new LiteralText(String.format("    Expires In: %s", validate.get("expires_in"))), false);
+        source.sendFeedback(new LiteralText(String.format("    Expires In: %s", expiresIn < 600 ? "§c§l" + expiresIn + "§r" : expiresIn)), false);
         source.sendFeedback(new LiteralText("==========================================="), false);
+    }
+
+    public static void executeTest(ServerCommandSource source, Events event, short count, @Nullable SubTiers tier) throws CommandSyntaxException {
+        if (getAuthData().access_token == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
+        if (getAuthData().display_name == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.incomplete_auth")).create();
+        AbstractChannelEvent testEvent = null;
+        switch (event) {
+            case SUBSCRIPTION -> {
+                if (!getConfigData().enableSubs)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "subscriptions")).create();
+                if (tier == null)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
+                testEvent = new SubscriptionEvent(null, null,
+                        new EventUser(getAuthData().user_id, getAuthData().display_name),
+                        tier.ordinalName, Optional.empty(), 1, false,
+                        null, 0, null, 1, 0, Collections.emptyList());
+            }
+            case RESUBSCRIPTION -> {
+                if (!getConfigData().enableSubs)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "subscriptions")).create();
+                if (tier == null)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
+                testEvent = new SubscriptionEvent(null, null,
+                        new EventUser(getAuthData().user_id, getAuthData().display_name),
+                        tier.ordinalName, Optional.empty(), (int) count, false,
+                        null, new Random().nextInt(count + 1), null, 1, 0, Collections.emptyList());
+            }
+            case SUB_GIFT -> {
+                if (!getConfigData().enableSubs)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "subscriptions")).create();
+                if (tier == null)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
+                testEvent = new GiftSubscriptionsEvent(null, new EventUser(getAuthData().user_id, getAuthData().display_name),
+                        tier.ordinalName, (int) count, count + new Random().nextInt(count));
+            }
+            case CHEER -> {
+                if (!getConfigData().enableBits)
+                    throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "bits")).create();
+                testEvent = new CheerEvent(null, null, new EventUser(getAuthData().user_id, getAuthData().display_name),
+                        "", (int) count, 0, 0, Collections.emptyList());
+            }
+        }
+        if (testEvent == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.fatal")).create();
+        source.sendFeedback(new TranslatableText("subathon.command.test.trying", event.name()), true);
+        Bot.twitchClient.getEventManager().publish(testEvent);
     }
 
     private static void executeTitle(ServerCommandSource source, ServerPlayerEntity player, Text title, Function<Text, Packet<?>> constructor) throws CommandSyntaxException {
         player.networkHandler.sendPacket(constructor.apply(Texts.parse(source, title, player, 0)));
+    }
+
+    enum SubTiers {
+        PRIME("Prime"),
+        TIER1("1000"),
+        TIER2("2000"),
+        TIER3("3000");
+
+        private final String ordinalName;
+
+        SubTiers(String ordinalName) {
+            this.ordinalName = ordinalName;
+        }
+    }
+
+    enum Events {
+        SUBSCRIPTION,
+        RESUBSCRIPTION,
+        SUB_GIFT,
+        CHEER
     }
 }

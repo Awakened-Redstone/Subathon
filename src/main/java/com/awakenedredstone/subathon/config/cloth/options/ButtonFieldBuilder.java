@@ -10,7 +10,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -82,11 +81,11 @@ public class ButtonFieldBuilder extends FieldBuilder<String, ButtonListEntry> {
     public ButtonListEntry build() {
         ButtonListEntry entry = new ButtonListEntry(this.getFieldNameKey(), null, this.isRequireRestart(), pressAction);
         entry.setTooltipSupplier(() -> {
-            return (Optional<Text[]>)this.tooltipSupplier.apply(entry.getValue());
+            return this.tooltipSupplier.apply(entry.getValue());
         });
         if (this.errorSupplier != null) {
             entry.setErrorSupplier(() -> {
-                return (Optional<Text>)this.errorSupplier.apply(entry.getValue());
+                return this.errorSupplier.apply(entry.getValue());
             });
         }
 

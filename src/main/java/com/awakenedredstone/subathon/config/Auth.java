@@ -48,6 +48,10 @@ public class Auth {
         return authData;
     }
 
+    public String getJsonString() {
+        return Subathon.GSON.toJsonTree(authData).getAsJsonObject().toString();
+    }
+
     public void save() {
         JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(authData).getAsJsonObject(), authFile);
     }

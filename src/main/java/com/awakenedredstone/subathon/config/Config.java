@@ -3,7 +3,6 @@ package com.awakenedredstone.subathon.config;
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.json.JsonHelper;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 
 import java.io.*;
 import java.util.stream.Collectors;
@@ -12,8 +11,6 @@ public class Config {
 
     private ConfigData configData;
     private final File configFile = new File(getConfigDirectory(), "subathon.json");
-    @SuppressWarnings("FieldCanBeLocal")
-    private final byte configVersion = 1;
 
     public File getConfigDirectory() {
         return new File(".", "config/subathon");
@@ -34,15 +31,7 @@ public class Config {
     }
 
     public JsonObject generateDefaultConfig() {
-        JsonObject json = new JsonObject();
-        json.add("version", new JsonPrimitive(configVersion));
-        json.add("clientId", new JsonPrimitive(""));
-        json.add("clientSecret", new JsonPrimitive(""));
-        json.add("effect", new JsonPrimitive("JUMP"));
-        json.add("channelName", new JsonPrimitive(""));
-        json.add("effectAmplifier", new JsonPrimitive(0.1));
-        json.add("subModifier", new JsonPrimitive(1));
-        return json;
+        return Subathon.GSON.toJsonTree(new ConfigData()).getAsJsonObject();
     }
 
     public ConfigData getConfigData() {

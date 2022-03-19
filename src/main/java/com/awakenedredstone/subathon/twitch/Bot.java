@@ -2,34 +2,32 @@ package com.awakenedredstone.subathon.twitch;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.commands.SubathonCommand;
+import com.awakenedredstone.subathon.config.MessageMode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.core.domain.Event;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
+import com.github.twitch4j.chat.events.channel.CheerEvent;
 import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
 import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
-import com.github.twitch4j.common.enums.SubscriptionPlan;
-import com.github.twitch4j.helix.domain.User;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.packet.s2c.play.SubtitleS2CPacket;
-import net.minecraft.network.packet.s2c.play.TitleS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Identifier;
-import okhttp3.*;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.text.DecimalFormat;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.awakenedredstone.subathon.Subathon.*;
@@ -38,7 +36,8 @@ public class Bot implements Runnable {
     public static TwitchClient twitchClient;
     private static float counter = 0;
     private OAuth2Credential accessToken;
-    private static int subsUntilIncrement = getConfigData().subModifier;
+    private static short subsUntilIncrement = getConfigData().subsPerIncrement;
+    private static short bits = 0;
 
     @Override
     public void run() {
@@ -57,10 +56,16 @@ public class Bot implements Runnable {
             return;
         }
 
-        twitchClient.getPubSub().listenForSubscriptionEvents(accessToken, getAuthData().user_id);
-        twitchClient.getPubSub().listenForChannelSubGiftsEvents(accessToken, getAuthData().user_id);
+        if (getConfigData().enableSubs) {
+            twitchClient.getPubSub().listenForSubscriptionEvents(accessToken, getAuthData().user_id);
+            twitchClient.getPubSub().listenForChannelSubGiftsEvents(accessToken, getAuthData().user_id);
+        }
+        if (getConfigData().enableBits) {
+            twitchClient.getPubSub().listenForCheerEvents(accessToken, getAuthData().user_id);
+        }
         twitchClient.getEventManager().onEvent(GiftSubscriptionsEvent.class, this::executeAction);
         twitchClient.getEventManager().onEvent(SubscriptionEvent.class, this::executeAction);
+        twitchClient.getEventManager().onEvent(CheerEvent.class, this::executeAction);
 
         server.getPlayerManager().getPlayerList().forEach(player -> {
             player.sendMessage(new TranslatableText("subathon.started"), true);
@@ -68,37 +73,95 @@ public class Bot implements Runnable {
     }
 
     public <T extends Event> void executeAction(T event) {
-        Text message = new LiteralText("Error! Failed to set sub message!");
+        Text message = null;
+
+        String text = Float.toString(getConfigData().effectAmplifier);
+        int integerPlaces = text.indexOf('.');
+        int decimalPlaces = text.length() - integerPlaces - 1;
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(decimalPlaces);
+
+        //Set the message to the corresponding event
         if (event instanceof SubscriptionEvent sub) {
             if (sub.getGifted()) return;
-            if (sub.getSubPlan() == SubscriptionPlan.TWITCH_PRIME) {
-                message = new TranslatableText("subathon.messages.prime", sub.getUser().getName());
-            } else {
-                message = new TranslatableText("subathon.messages.default", sub.getUser().getName());
+            String type = "";
+            switch (sub.getSubPlan()) {
+                case TWITCH_PRIME -> type = "prime";
+                case TIER1 -> type = "tier1";
+                case TIER2 -> type = "tier2";
+                case TIER3 -> type = "tier3";
             }
-            subsUntilIncrement -= 1;
+            message = new TranslatableText("subathon.messages." + type, sub.getUser().getName());
+            if (type.isEmpty()) {
+                server.getPlayerManager().getPlayerList().forEach(player -> sendPositionedText(player, new TranslatableText("subathon.messages.error.fatal"), 12, 40, 0xFFFFFF, true, true, -1));
+            } else subsUntilIncrement -= getConfigData().subModifiers.get(type);
         } else if (event instanceof GiftSubscriptionsEvent sub) {
             message = new TranslatableText("subathon.messages.gift", sub.getUser().getName(), sub.getCount());
-            subsUntilIncrement -= sub.getCount();
+            String type = "";
+            switch (sub.getSubscriptionPlan()) {
+                case "1000" -> type = "tier1";
+                case "2000" -> type = "tier2";
+                case "3000" -> type = "tier3";
+            }
+            if (type.isEmpty()) {
+                server.getPlayerManager().getPlayerList().forEach(player -> sendPositionedText(player, new TranslatableText("subathon.messages.error.fatal"), 12, 40, 0xFFFFFF, true, true, -1));
+            } else
+                subsUntilIncrement -= getConfigData().subModifiers.get(type) * (Subathon.getConfigData().onePerGift ? 1 : sub.getCount());
+        } else if (event instanceof CheerEvent cheer) {
+            if (cheer.getBits() >= getConfigData().bitMin) {
+                message = new TranslatableText("subathon.messages.cheer", cheer.getUser().getName(), cheer.getBits());
+                if (getConfigData().onePerCheer) {
+                    counter += getConfigData().bitModifier * getConfigData().effectAmplifier;
+                } else if (getConfigData().cumulativeBits) {
+                    bits += cheer.getBits();
+                    counter += ((short) Math.floor((float) bits / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
+                    bits %= getConfigData().bitMin;
+                } else {
+                    counter += ((short) Math.floor((float) cheer.getBits() / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
+                }
+                server.getPlayerManager().getPlayerList().forEach(player -> sendPositionedText(player, new LiteralText(String.format("The effect amplifier is now %s", df.format(counter))), 12, 28, 0xFFFFFF, true, true, 1));
+            } else if (getConfigData().cumulativeIgnoreMin && getConfigData().cumulativeBits) {
+                message = new TranslatableText("subathon.messages.cheer", cheer.getUser().getName(), cheer.getBits());
+                bits += cheer.getBits();
+                if (bits >= getConfigData().bitMin) {
+                    counter += ((short) Math.floor((float) bits / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
+                    bits %= getConfigData().bitMin;
+                    server.getPlayerManager().getPlayerList().forEach(player -> sendPositionedText(player, new LiteralText(String.format("The effect amplifier is now %s", df.format(counter))), 12, 28, 0xFFFFFF, true, true, 1));
+                }
+            }
         }
-        if (subsUntilIncrement > 0) return;
-        else subsUntilIncrement = getConfigData().subModifier;
-        counter += Subathon.getConfigData().effectAmplifier;
+
+        if (message == null) return;
         Text finalMessage = message;
-        server.getPlayerManager().getPlayerList().forEach(player -> positionedText(player, finalMessage, 12, 16, 0xFFFFFF, true, true, 0));
-        server.getPlayerManager().getPlayerList().forEach(player -> positionedText(player, new LiteralText(String.format("The effect amplifier is now %s", counter)), 12, 28, 0xFFFFFF, true, true, 1));
+        server.getPlayerManager().getPlayerList().forEach(player -> {
+            switch (MessageMode.valueOf(getConfigData().messageMode)) {
+                case CHAT -> player.sendMessage(finalMessage, false);
+                case OVERLAY -> sendPositionedText(player, finalMessage, 12, 16, 0xFFFFFF, true, true, 0);
+            }
+        });
+
+        //Check if it should increment the counter or not
+        if (subsUntilIncrement > 0) return;
+        else {
+            while (subsUntilIncrement <= 0) {
+                subsUntilIncrement += getConfigData().subsPerIncrement;
+                counter += getConfigData().effectAmplifier;
+            }
+        }
+
+        //Show a message to inform the player that the modifier has been increased
         //TODO: change the effect message, ex: "Your jump is now 1.2", "Your speed is now 0.2", etc.
+        server.getPlayerManager().getPlayerList().forEach(player -> sendPositionedText(player, new LiteralText(String.format("The effect amplifier is now %s", df.format(counter))), 12, 28, 0xFFFFFF, true, true, 1));
     }
 
     private OAuth2Credential getToken() {
         if (getAuthData().access_token == null) throw new NullPointerException("access_token is missing!");
-        if (getAuthData().refresh_token == null) throw new NullPointerException("refresh_token is missing!");
         return new OAuth2Credential("twitch",
                 getAuthData().access_token,
-                getAuthData().refresh_token,
+                "",
                 null, null,
-                getAuthData().expires_in,
-                List.of("channel:read:subscriptions"));
+                5184000,
+                List.of("channel:read:subscriptions", "bits:read"));
     }
 
     /**
@@ -126,10 +189,10 @@ public class Bot implements Runnable {
         }
         return String.format("%s?response_type=%s&client_id=%s&redirect_uri=%s&scope=%s&state=%s",
                 "https://id.twitch.tv/oauth2/authorize",
-                URLEncoder.encode("code", StandardCharsets.UTF_8),
+                URLEncoder.encode("token", StandardCharsets.UTF_8),
                 URLEncoder.encode("7scb6ymkzkne4uh5nuyg7nf7j5v213", StandardCharsets.UTF_8),
                 URLEncoder.encode(redirectUrl, StandardCharsets.UTF_8),
-                scopes.stream().map(Object::toString).collect(Collectors.joining(" ")),
+                scopes.stream().map(Object::toString).collect(Collectors.joining("%20")),
                 URLEncoder.encode(state, StandardCharsets.UTF_8));
     }
 
@@ -146,11 +209,10 @@ public class Bot implements Runnable {
 
             Response response = client.newCall(request).execute();
             String responseBody = response.body().string();
-            if (response.isSuccessful()) {
-                Map<String, Object> resultMap = objectMapper.readValue(responseBody, new TypeReference<HashMap<String, Object>>() {});
+            Map<String, Object> resultMap = objectMapper.readValue(responseBody, new TypeReference<HashMap<String, Object>>() {
+            });
 
-                return resultMap;
-            }
+            return resultMap;
         } catch (Exception e) {
             LOGGER.error("Failed to validate token!", e);
         }
@@ -161,22 +223,24 @@ public class Bot implements Runnable {
         return counter;
     }
 
-    public static void setCounter(int counter) {
-        Bot.counter = counter;
+    public static void setCounter(float value) {
+        Bot.counter = value;
     }
 
-    public void positionedText(ServerPlayerEntity player, Text text, int x, int y, int color, boolean center, boolean shadow) {
-        positionedText(player, text, x, y, color, center, shadow, new Random().nextLong());
+    public static short getBits() {
+        return bits;
     }
 
-    public void positionedText(ServerPlayerEntity player, Text text, int x, int y, int color, boolean center, boolean shadow, long id) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeText(text);
-        buf.writeBoolean(shadow);
-        buf.writeBoolean(center);
-        int[] values = new int[]{x, y, color};
-        buf.writeIntArray(values);
-        buf.writeLong(id);
-        ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "positioned_text"), buf);
+    public static void setBits(short value) {
+        Bot.bits = value;
     }
+
+    public static short getSubsUntilIncrement() {
+        return subsUntilIncrement;
+    }
+
+    public static void setSubsUntilIncrement(short value) {
+        Bot.subsUntilIncrement = value;
+    }
+
 }

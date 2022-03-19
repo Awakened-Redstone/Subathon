@@ -4,6 +4,7 @@ import me.shedaniel.clothconfig2.gui.entries.TextFieldListEntry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import org.jetbrains.annotations.ApiStatus;
@@ -31,44 +32,53 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
         return builder.toString();
     };
-    private int minimum;
-    private int maximum;
+    private short minimum;
+    private short maximum;
     private final Consumer<Short> saveConsumer;
+    private final RenderAction render;
 
     /** @deprecated */
     @Deprecated
     @ApiStatus.Internal
-    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer) {
+    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, RenderAction render) {
         super(fieldName, value, resetButtonKey, defaultValue);
-        this.minimum = -2147483647;
-        this.maximum = 2147483647;
+        this.render = render;
+        this.minimum = Short.MIN_VALUE;
+        this.maximum = Short.MAX_VALUE;
         this.saveConsumer = saveConsumer;
     }
 
     /** @deprecated */
     @Deprecated
     @ApiStatus.Internal
-    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier) {
-        this(fieldName, value, resetButtonKey, defaultValue, saveConsumer, tooltipSupplier, false);
+    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, RenderAction render) {
+        this(fieldName, value, resetButtonKey, defaultValue, saveConsumer, tooltipSupplier, false, render);
     }
 
     /** @deprecated */
     @Deprecated
     @ApiStatus.Internal
-    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, boolean requiresRestart) {
+    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, boolean requiresRestart, RenderAction render) {
         super(fieldName, value, resetButtonKey, defaultValue, tooltipSupplier, requiresRestart);
-        this.minimum = -2147483647;
-        this.maximum = 2147483647;
+        this.render = render;
+        this.minimum = Short.MIN_VALUE;
+        this.maximum = Short.MAX_VALUE;
         this.saveConsumer = saveConsumer;
+    }
+
+    @Override
+    public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
+        super.render(matrices, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
+        this.render.onRender(matrices, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta, this);
     }
 
     protected String stripAddText(String s) {
-        return (String)stripCharacters.apply(s);
+        return stripCharacters.apply(s);
     }
 
     protected void textFieldPreRender(TextFieldWidget widget) {
         try {
-            double i = (double)Integer.parseInt(this.textFieldWidget.getText());
+            double i = Integer.parseInt(this.textFieldWidget.getText());
             if (!(i < (double)this.minimum) && !(i > (double)this.maximum)) {
                 widget.setEditableColor(14737632);
             } else {
@@ -91,12 +101,12 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
     }
 
-    public ShortListEntry setMaximum(int maximum) {
+    public ShortListEntry setMaximum(short maximum) {
         this.maximum = maximum;
         return this;
     }
 
-    public ShortListEntry setMinimum(int minimum) {
+    public ShortListEntry setMinimum(short minimum) {
         this.minimum = minimum;
         return this;
     }
@@ -107,6 +117,10 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
         } catch (Exception var2) {
             return 0;
         }
+    }
+
+    public boolean isEmpty() {
+        return this.textFieldWidget.getText().isEmpty();
     }
 
     public Optional<Text> getError() {
@@ -120,7 +134,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
                 return Optional.of(new TranslatableText("text.cloth-config.error.too_small", this.minimum));
             }
         } catch (NumberFormatException var2) {
-            return Optional.of(new TranslatableText("text.cloth-config.error.not_valid_number_int"));
+            return Optional.of(new TranslatableText("text.cloth-config.error.not_valid_number_short"));
         }
 
         return super.getError();

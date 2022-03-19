@@ -89,14 +89,14 @@ public class PasteFieldBuilder extends FieldBuilder<String, PasteListEntry> {
     public PasteListEntry build() {
         PasteListEntry entry = new PasteListEntry(this.getFieldNameKey(), null, this.isRequireRestart(), this.saveConsumer, value, defaultValue);
         entry.setTooltipSupplier(() -> {
-            return (Optional<Text[]>)this.tooltipSupplier.apply(entry.getValue());
+            return this.tooltipSupplier.apply(entry.getValue());
         });
         if (type != null) {
             entry.setType(type);
         }
         if (this.errorSupplier != null) {
             entry.setErrorSupplier(() -> {
-                return (Optional<Text>)this.errorSupplier.apply(entry.getValue());
+                return this.errorSupplier.apply(entry.getValue());
             });
         }
 

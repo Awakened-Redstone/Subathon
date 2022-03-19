@@ -1,6 +1,5 @@
 package com.awakenedredstone.subathon.config.cloth.options;
 
-import me.shedaniel.clothconfig2.gui.entries.IntegerListEntry;
 import me.shedaniel.clothconfig2.impl.builders.FieldBuilder;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -16,6 +15,7 @@ import java.util.function.Supplier;
 @Environment(EnvType.CLIENT)
 public class ShortFieldBuilder extends FieldBuilder<Short, ShortListEntry> {
     private Consumer<Short> saveConsumer = null;
+    private RenderAction render = (q, w, e, r, t, y, u, i, o, p, a) -> {};
     private Function<Short, Optional<Text[]>> tooltipSupplier = (i) -> {
         return Optional.empty();
     };
@@ -101,9 +101,19 @@ public class ShortFieldBuilder extends FieldBuilder<Short, ShortListEntry> {
         return this;
     }
 
+    public ShortFieldBuilder setRender(RenderAction render) {
+        this.render = render;
+        return this;
+    }
+
+    public ShortFieldBuilder removeRender() {
+        this.render = (q, w, e, r, t, y, u, i, o, p, a) -> {};
+        return this;
+    }
+
     @NotNull
     public ShortListEntry build() {
-        ShortListEntry entry = new ShortListEntry(this.getFieldNameKey(), this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, null, this.isRequireRestart());
+        ShortListEntry entry = new ShortListEntry(this.getFieldNameKey(), this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, null, this.isRequireRestart(), this.render);
         if (this.min != null) {
             entry.setMinimum(this.min);
         }

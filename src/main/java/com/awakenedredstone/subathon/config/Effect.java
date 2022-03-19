@@ -1,4 +1,4 @@
-package com.awakenedredstone.subathon;
+package com.awakenedredstone.subathon.config;
 
 public enum Effect {
     NONE,

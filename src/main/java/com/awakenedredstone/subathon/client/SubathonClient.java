@@ -2,16 +2,13 @@ package com.awakenedredstone.subathon.client;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.renderer.PositionedText;
-import com.mojang.logging.LogUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +33,7 @@ public class SubathonClient implements ClientModInitializer {
                 int baseX = values[0];
                 int baseY = values[1];
                 client.execute(() -> {
+                    Subathon.LOGGER.info("[POSITIONED TEXT] {}", text.getString().replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n"));
                     final int[] positionedTextData = new int[3];
                     Text positionedText;
                     boolean positionedTextShadow;
