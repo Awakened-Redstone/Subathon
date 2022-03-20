@@ -20,8 +20,10 @@
   "subathon.starting": "§cStarting the bot... This can take a few seconds",
   "subathon.started": "§aBot started, let the chaos begin!",
 
-  "subathon.command.error.offline": "The bot is already offline!",
-  "subathon.command.error.online": "The bot is already online!",
+  "subathon.command.error.already_offline": "The bot is already offline!",
+  "subathon.command.error.already_online": "The bot is already online!",
+  "subathon.command.error.offline": "The bot is offline!",
+  "subathon.command.error.online": "The bot is online!",
   "subathon.command.error.fatal": "A fatal error occurred when executing the command!",
   "subathon.command.error.invalid_tier": "Invalid sub tier inserted!",
   "subathon.command.error.module_disabled": "The module \"%s\" is disabled!",
