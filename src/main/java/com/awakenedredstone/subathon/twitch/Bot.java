@@ -19,6 +19,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.math.MathHelper;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -120,18 +121,18 @@ public class Bot implements Runnable {
                 message = new TranslatableText("subathon.messages.cheer", cheer.getUserName(), cheer.getBitsUsed());
                 if (getConfigData().onePerCheer) {
                     counter += getConfigData().bitModifier * getConfigData().effectAmplifier;
-                    if (getConfigData().cumulativeBits) bits += ((short) ((int) cheer.getBitsUsed())) % getConfigData().bitMin;
+                    if (getConfigData().cumulativeBits) bits += (short) MathHelper.clamp(cheer.getBitsUsed(), 0, 32767) % getConfigData().bitMin;
                 } else if (getConfigData().cumulativeBits) {
-                    bits += (short) ((int) cheer.getBitsUsed());
+                    bits += (short) MathHelper.clamp(cheer.getBitsUsed(), 0, 32767);
                     counter += ((short) Math.floor((float) bits / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
                     bits %= getConfigData().bitMin;
                 } else {
-                    counter += ((short) Math.floor((float) cheer.getBitsUsed() / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
+                    counter += ((short) MathHelper.clamp(Math.floor((float) cheer.getBitsUsed() / (float) getConfigData().bitMin), 0, 32767) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
                 }
                 server.getPlayerManager().getPlayerList().forEach(player -> sendPositionedText(player, new LiteralText(String.format("The effect amplifier is now %s", df.format(counter))), 12, 28, 0xFFFFFF, true, true, 1));
             } else if (getConfigData().cumulativeIgnoreMin && getConfigData().cumulativeBits) {
                 message = new TranslatableText("subathon.messages.cheer", cheer.getUserName(), cheer.getBitsUsed());
-                bits += cheer.getBitsUsed();
+                bits += (short) MathHelper.clamp(cheer.getBitsUsed(), 0, 32767);
                 if (bits >= getConfigData().bitMin) {
                     counter += ((short) Math.floor((float) bits / (float) getConfigData().bitMin) * getConfigData().bitModifier) * getConfigData().effectAmplifier;
                     bits %= getConfigData().bitMin;
