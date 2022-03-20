@@ -2,11 +2,21 @@ package com.awakenedredstone.subathon.commands;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.twitch.Bot;
-import com.github.twitch4j.chat.events.AbstractChannelEvent;
 import com.github.twitch4j.chat.events.channel.CheerEvent;
 import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
 import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
+import com.github.twitch4j.common.enums.SubscriptionPlan;
+import com.github.twitch4j.common.events.TwitchEvent;
+import com.github.twitch4j.common.events.domain.EventChannel;
 import com.github.twitch4j.common.events.domain.EventUser;
+import com.github.twitch4j.common.util.TwitchUtils;
+import com.github.twitch4j.pubsub.domain.ChannelBitsData;
+import com.github.twitch4j.pubsub.domain.CommerceMessage;
+import com.github.twitch4j.pubsub.domain.SubGiftData;
+import com.github.twitch4j.pubsub.domain.SubscriptionData;
+import com.github.twitch4j.pubsub.events.ChannelBitsEvent;
+import com.github.twitch4j.pubsub.events.ChannelSubGiftEvent;
+import com.github.twitch4j.pubsub.events.ChannelSubscribeEvent;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -29,6 +39,8 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.logging.UncaughtExceptionHandler;
 
 import javax.annotation.Nullable;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -121,7 +133,7 @@ public class SubathonCommand {
         final CommandSyntaxException[] exception = {null};
         if (enable) {
             if (thread != null && Bot.twitchClient != null) {
-                source.sendError(new TranslatableText("subathon.command.error.online"));
+                source.sendError(new TranslatableText("subathon.command.error.already_online"));
                 return;
             } else if (thread != null) {
                 source.sendError(new TranslatableText("subathon.command.error.fatal"));
@@ -154,7 +166,7 @@ public class SubathonCommand {
             thread.start();
         } else {
             if (thread == null && Bot.twitchClient == null) {
-                source.sendError(new TranslatableText("subathon.command.error.offline"));
+                source.sendError(new TranslatableText("subathon.command.error.already_offline"));
                 return;
             }
             source.sendFeedback(new LiteralText("Subathon stopped. The modifier is still being applied!"), true);
@@ -211,7 +223,7 @@ public class SubathonCommand {
     public static void executeGetInfo(ServerCommandSource source) throws CommandSyntaxException {
         if (getAuthData().access_token == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
         if (thread == null && Bot.twitchClient == null) {
-            source.sendError(new LiteralText("The bot is offline!"));
+            source.sendError(new TranslatableText("subathon.command.error.offline"));
             return;
         }
         source.sendFeedback(new LiteralText("Getting information, please wait..."), false);
@@ -243,45 +255,49 @@ public class SubathonCommand {
     }
 
     public static void executeTest(ServerCommandSource source, Events event, short count, @Nullable SubTiers tier) throws CommandSyntaxException {
-        if (getAuthData().access_token == null)
-            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
-        if (getAuthData().display_name == null)
-            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.incomplete_auth")).create();
-        AbstractChannelEvent testEvent = null;
+        if (getAuthData().access_token == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
+        if (getAuthData().display_name == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.incomplete_auth")).create();
+
+        if (thread == null && Bot.twitchClient == null) {
+            source.sendError(new TranslatableText("subathon.command.error.offline"));
+            return;
+        }
+
+        TwitchEvent testEvent = null;
         switch (event) {
             case SUBSCRIPTION -> {
                 if (!getConfigData().enableSubs)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "subscriptions")).create();
                 if (tier == null)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
-                testEvent = new SubscriptionEvent(null, null,
+                testEvent = transform(new SubscriptionEvent(null, new EventChannel(getAuthData().user_id, getAuthData().login),
                         new EventUser(getAuthData().user_id, getAuthData().display_name),
                         tier.ordinalName, Optional.empty(), 1, false,
-                        null, 0, null, 1, 0, Collections.emptyList());
+                        null, 0, null, 1, 0, Collections.emptyList()));
             }
             case RESUBSCRIPTION -> {
                 if (!getConfigData().enableSubs)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "subscriptions")).create();
                 if (tier == null)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
-                testEvent = new SubscriptionEvent(null, null,
+                testEvent = transform(new SubscriptionEvent(null, new EventChannel(getAuthData().user_id, getAuthData().login),
                         new EventUser(getAuthData().user_id, getAuthData().display_name),
                         tier.ordinalName, Optional.empty(), (int) count, false,
-                        null, new Random().nextInt(count + 1), null, 1, 0, Collections.emptyList());
+                        null, new Random().nextInt(count + 1), null, 1, 0, Collections.emptyList()));
             }
             case SUB_GIFT -> {
                 if (!getConfigData().enableSubs)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "subscriptions")).create();
                 if (tier == null)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.invalid_tier")).create();
-                testEvent = new GiftSubscriptionsEvent(null, new EventUser(getAuthData().user_id, getAuthData().display_name),
-                        tier.ordinalName, (int) count, count + new Random().nextInt(count));
+                testEvent = transform(new GiftSubscriptionsEvent(new EventChannel(getAuthData().user_id, getAuthData().login), new EventUser(getAuthData().user_id, getAuthData().display_name),
+                        tier.ordinalName, (int) count, count + new Random().nextInt(count)));
             }
             case CHEER -> {
                 if (!getConfigData().enableBits)
                     throw new SimpleCommandExceptionType(new TranslatableText("subathon.command.error.module_disabled", "bits")).create();
-                testEvent = new CheerEvent(null, null, new EventUser(getAuthData().user_id, getAuthData().display_name),
-                        "", (int) count, 0, 0, Collections.emptyList());
+                testEvent = transform(new CheerEvent(null, new EventChannel(getAuthData().user_id, getAuthData().login), new EventUser(getAuthData().user_id, getAuthData().display_name),
+                        "", (int) count, 0, 0, Collections.emptyList()));
             }
         }
         if (testEvent == null)
@@ -292,6 +308,61 @@ public class SubathonCommand {
 
     private static void executeTitle(ServerCommandSource source, ServerPlayerEntity player, Text title, Function<Text, Packet<?>> constructor) throws CommandSyntaxException {
         player.networkHandler.sendPacket(constructor.apply(Texts.parse(source, title, player, 0)));
+    }
+
+    public static ChannelSubscribeEvent transform(SubscriptionEvent e) {
+        SubscriptionData data = new SubscriptionData();
+        data.setUserName(e.getUser().getName());
+        data.setDisplayName(e.getUser().getName());
+        data.setUserId(e.getUser().getId());
+        data.setChannelName(e.getChannel().getName());
+        data.setChannelId(e.getChannel().getId());
+        data.setTimestamp(e.getFiredAtInstant());
+        data.setSubPlan(e.getSubPlan());
+        data.setSubPlanName(String.format("Channel Subscription (%s)", e.getChannel().getName()));
+        data.setMonths(e.getMonths());
+        data.setCumulativeMonths(e.getSubStreak());
+        data.setStreakMonths(e.getSubStreak());
+        data.setMultiMonthDuration(e.getMultiMonthDuration());
+        data.setRecipientId(e.getUser().getId());
+        data.setRecipientDisplayName(e.getUser().getName());
+        data.setRecipientUserName(e.getUser().getName());
+        data.setIsGift(e.getGifted());
+        data.setBenefitEndMonth(e.getGiftMonths() == null ? null : ZonedDateTime.now().plus(e.getGiftMonths(), ChronoUnit.MONTHS).getMonth().getValue());
+        e.getMessage().map(msg -> {
+            CommerceMessage cm = new CommerceMessage();
+            cm.setMessage(msg);
+            return cm;
+        }).ifPresent(data::setSubMessage);
+        return new ChannelSubscribeEvent(data);
+    }
+
+    public static ChannelSubGiftEvent transform(GiftSubscriptionsEvent e) {
+        SubGiftData data = new SubGiftData();
+        data.setCount(e.getCount());
+        data.setTier(SubscriptionPlan.fromString(e.getSubscriptionPlan()));
+        data.setUserId(e.getUser().getId());
+        data.setUserName(e.getUser().getName());
+        data.setDisplayName(e.getUser().getName());
+        data.setChannelId(e.getChannel().getId());
+        data.setUuid(UUID.randomUUID().toString());
+        data.setType("mystery-gift-purchase");
+        return new ChannelSubGiftEvent(data);
+    }
+
+    public static ChannelBitsEvent transform(CheerEvent e) {
+        ChannelBitsData data = new ChannelBitsData();
+        data.setUserId(e.getUser().getId());
+        data.setUserName(e.getUser().getName());
+        data.setChannelName(e.getChannel().getName());
+        data.setChannelId(e.getChannel().getId());
+        data.setTime(e.getFiredAtInstant().toString());
+        data.setChatMessage(e.getMessage());
+        data.setBitsUsed(e.getBits());
+        data.setTotalBitsUsed(e.getBits());
+        data.setContext("cheer");
+        data.isAnonymous(TwitchUtils.ANONYMOUS_CHEERER.equals(e.getUser()));
+        return new ChannelBitsEvent(data);
     }
 
     enum SubTiers {
