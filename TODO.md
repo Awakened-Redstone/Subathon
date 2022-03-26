@@ -3,8 +3,14 @@
  - [x] Bits support
  - [x] Different tiers increases different amounts
  - [ ] Special messages (show banner on 5 gifted, etc)
+ - [ ] Add different ways to show the overlay messages
 
-#Modes
+# Features
+- [ ] Add support for data driven modes (datapacks)
+- [ ] Save mod data per world (`level.dat` or `data.json`)
+- [ ] Better startup process and notifications
+
+# Modes
  - [ ] Chaos mode
  - [ ] Health mode
  - [ ] Fov mode

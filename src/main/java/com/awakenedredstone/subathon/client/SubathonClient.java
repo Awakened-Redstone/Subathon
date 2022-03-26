@@ -2,12 +2,16 @@ package com.awakenedredstone.subathon.client;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.renderer.PositionedText;
+import com.awakenedredstone.subathon.util.MessageUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
@@ -57,6 +61,31 @@ public class SubathonClient implements ClientModInitializer {
 
         HudRenderCallback.EVENT.register((matrix, delta) -> {
             positionedTexts.forEach((id, text) -> text.render(matrix));
+        });
+
+        HudRenderCallback.EVENT.register((matrix, delta) -> {
+            if (Subathon.integration.isRunning) {
+                MinecraftClient client = MinecraftClient.getInstance();
+                Text message = new TranslatableText("subathon.messages.value", MessageUtils.formatFloat(Subathon.integration.data.value));
+                int y = client.getWindow().getScaledHeight() - client.textRenderer.fontHeight - 4;
+                int x = client.getWindow().getScaledWidth() - client.textRenderer.getWidth(message) - 4;
+                if (client.currentScreen instanceof ChatScreen) y -= 12;
+                positionedTexts.put(-12L, new PositionedText(message, true, new int[]{x, y, 0xFFFFFF}));
+            }
+        });
+
+        HudRenderCallback.EVENT.register((matrix, delta) -> {
+            if (Subathon.getAuthData().access_token == null) {
+                MinecraftClient client = MinecraftClient.getInstance();
+                int y = client.getWindow().getScaledHeight() - client.textRenderer.fontHeight - 4;
+                if (client.currentScreen instanceof ChatScreen) y -= 12;
+                positionedTexts.put(-11L, new PositionedText(new TranslatableText("subathon.messages.not_connected"), true, new int[]{4, y, 0xFF5555}));
+            } else if (!Subathon.integration.isRunning) {
+                MinecraftClient client = MinecraftClient.getInstance();
+                int y = client.getWindow().getScaledHeight() - client.textRenderer.fontHeight - 4;
+                if (client.currentScreen instanceof ChatScreen) y -= 12;
+                positionedTexts.put(-12L, new PositionedText(new TranslatableText("subathon.messages.offline"), true, new int[]{4, y, 0xFF5555}));
+            }
         });
     }
 }

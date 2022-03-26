@@ -2,8 +2,6 @@ package com.awakenedredstone.subathon.config;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.json.JsonHelper;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 
 import java.io.*;
@@ -36,12 +34,6 @@ public class Auth {
 
     public void fromString(String json) throws JsonSyntaxException {
         authData = Subathon.GSON.fromJson(json.lines().collect(Collectors.joining("\n")), AuthData.class);
-    }
-
-    public JsonObject generateDefaultConfig() {
-        JsonObject json = new JsonObject();
-        json.add("version", new JsonPrimitive(configVersion));
-        return json;
     }
 
     public AuthData getAuthData() {

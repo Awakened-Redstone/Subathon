@@ -1,8 +1,8 @@
 package com.awakenedredstone.subathon.config.cloth;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.config.Effect;
 import com.awakenedredstone.subathon.config.MessageMode;
+import com.awakenedredstone.subathon.config.Mode;
 import com.awakenedredstone.subathon.config.cloth.options.ButtonFieldBuilder;
 import com.awakenedredstone.subathon.config.cloth.options.PasteFieldBuilder;
 import com.awakenedredstone.subathon.config.cloth.options.RenderAction;
@@ -135,11 +135,11 @@ public class ClothConfig {
 
         //General category options
         general.addEntry(entryBuilder.startDropdownMenu(new TranslatableText("option.subathon.mode"),
-                        DropdownMenuBuilder.TopCellElementBuilder.of(Effect.valueOf(Subathon.getConfigData().mode), EFFECT_FUNCTION, (effect) -> new LiteralText(effect.toString())),
+                        DropdownMenuBuilder.TopCellElementBuilder.of(Mode.valueOf(Subathon.getConfigData().mode), EFFECT_FUNCTION, (effect) -> new LiteralText(effect.toString())),
                         DropdownMenuBuilder.CellCreatorBuilder.of())
-                .setDefaultValue(Effect.JUMP)
+                .setDefaultValue(Mode.JUMP)
                 .setTooltip(new TranslatableText("option.subathon.mode.description"))
-                .setSelections(Arrays.stream(Effect.values()).toList())
+                .setSelections(Arrays.stream(Mode.values()).toList())
                 .setSaveConsumer(mode -> Subathon.getConfigData().mode = mode.toString())
                 .build());
 
@@ -183,11 +183,11 @@ public class ClothConfig {
         Subathon.auth.save();
     }
 
-    public static final Function<String, Effect> EFFECT_FUNCTION = (str) -> {
+    public static final Function<String, Mode> EFFECT_FUNCTION = (str) -> {
         try {
-            return Effect.valueOf(str);
+            return Mode.valueOf(str);
         } catch (Exception var2) {
-            return Effect.NONE;
+            return Mode.NONE;
         }
     };
 

@@ -1,7 +1,9 @@
 package com.awakenedredstone.subathon.commands;
 
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.json.JsonHelper;
 import com.awakenedredstone.subathon.twitch.Bot;
+import com.awakenedredstone.subathon.util.SubathonData;
 import com.github.twitch4j.chat.events.channel.CheerEvent;
 import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
 import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
@@ -36,9 +38,13 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.logging.UncaughtExceptionHandler;
+import net.minecraft.util.WorldSavePath;
 
 import javax.annotation.Nullable;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -56,6 +62,7 @@ public class SubathonCommand {
             execute(source.getSource(), true);
             return 0;
         })).then(CommandManager.literal("stop").executes((source) -> {
+            executeStop(source.getSource());
             execute(source.getSource(), false);
             return 0;
         })).then(CommandManager.literal("reload").executes((source) -> {
@@ -127,21 +134,33 @@ public class SubathonCommand {
         ));
     }
 
+    public static void executeStart(ServerCommandSource source) {
+        if (getAuthData().access_token == null) source.sendError(new TranslatableText("subathon.messages.error.missing_auth"));
+
+        File file = source.getServer().getSavePath(WorldSavePath.ROOT).resolve("subathon_data.json").toFile();
+        if (!file.exists()) JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(new SubathonData()).getAsJsonObject(), file);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            SubathonData data = Subathon.GSON.fromJson(reader, SubathonData.class);
+            integration.start(data);
+        } catch (IOException e) {
+            Subathon.LOGGER.error("Failed to start the integration!", e);
+            source.sendError(new TranslatableText("subathon.command.start.fail"));
+        }
+        //TODO: Notify the source
+    }
+
+    public static void executeStop(ServerCommandSource source) {
+        integration.stop();
+        //TODO: Notify the source
+    }
+
     public static void execute(ServerCommandSource source, boolean enable) throws CommandSyntaxException {
         if (getAuthData().access_token == null)
             throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
         final CommandSyntaxException[] exception = {null};
         if (enable) {
-            if (thread != null && Bot.twitchClient != null) {
+            if (Bot.twitchClient != null) {
                 source.sendError(new TranslatableText("subathon.command.error.already_online"));
-                return;
-            } else if (thread != null) {
-                source.sendError(new TranslatableText("subathon.command.error.fatal"));
-                execute(source, false);
-                return;
-            } else if (Bot.twitchClient != null) {
-                source.sendError(new TranslatableText("subathon.command.error.fatal"));
-                execute(source, false);
                 return;
             }
             source.sendFeedback(new LiteralText("Subathon starting, please wait for the bot to be ready!"), false);
@@ -159,13 +178,8 @@ public class SubathonCommand {
                 }
             });
             if (exception[0] != null) throw exception[0];
-            thread = new Thread(bot = new Bot());
-            thread.setName("Subathon Bot");
-            thread.setUncaughtExceptionHandler(new UncaughtExceptionHandler(Subathon.LOGGER));
-            thread.setDaemon(true);
-            thread.start();
         } else {
-            if (thread == null && Bot.twitchClient == null) {
+            if (Bot.twitchClient == null) {
                 source.sendError(new TranslatableText("subathon.command.error.already_offline"));
                 return;
             }
@@ -183,9 +197,7 @@ public class SubathonCommand {
             });
             if (exception[0] != null) throw exception[0];
             if (Bot.twitchClient != null) Bot.twitchClient.close();
-            if (thread != null && thread.isAlive() && !thread.isInterrupted()) thread.interrupt();
             Bot.twitchClient = null;
-            thread = null;
         }
     }
 
@@ -221,8 +233,9 @@ public class SubathonCommand {
     }
 
     public static void executeGetInfo(ServerCommandSource source) throws CommandSyntaxException {
-        if (getAuthData().access_token == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
-        if (thread == null && Bot.twitchClient == null) {
+        if (getAuthData().access_token == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
+        if (Bot.twitchClient == null) {
             source.sendError(new TranslatableText("subathon.command.error.offline"));
             return;
         }
@@ -255,10 +268,12 @@ public class SubathonCommand {
     }
 
     public static void executeTest(ServerCommandSource source, Events event, short count, @Nullable SubTiers tier) throws CommandSyntaxException {
-        if (getAuthData().access_token == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
-        if (getAuthData().display_name == null) throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.incomplete_auth")).create();
+        if (getAuthData().access_token == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.missing_auth")).create();
+        if (getAuthData().display_name == null)
+            throw new SimpleCommandExceptionType(new TranslatableText("subathon.messages.error.incomplete_auth")).create();
 
-        if (thread == null && Bot.twitchClient == null) {
+        if (Bot.twitchClient == null) {
             source.sendError(new TranslatableText("subathon.command.error.offline"));
             return;
         }

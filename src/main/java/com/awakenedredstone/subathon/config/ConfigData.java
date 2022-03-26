@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 
 public class ConfigData {
 
-    public String mode = Effect.JUMP.name();
+    public String mode = Mode.JUMP.name();
     public float effectAmplifier = 0.1f;
 
     public boolean enableSubs = false;
