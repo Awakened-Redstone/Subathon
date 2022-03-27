@@ -1,13 +1,11 @@
 package com.awakenedredstone.subathon.config.cloth;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.config.Effect;
 import com.awakenedredstone.subathon.config.MessageMode;
-import com.awakenedredstone.subathon.config.cloth.options.ButtonFieldBuilder;
-import com.awakenedredstone.subathon.config.cloth.options.PasteFieldBuilder;
+import com.awakenedredstone.subathon.config.Mode;
 import com.awakenedredstone.subathon.config.cloth.options.RenderAction;
 import com.awakenedredstone.subathon.config.cloth.options.ShortFieldBuilder;
-import com.awakenedredstone.subathon.twitch.Bot;
+import com.awakenedredstone.subathon.util.ConfigUtils;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
@@ -18,10 +16,8 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Util;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Function;
 
 public class ClothConfig {
@@ -49,6 +45,7 @@ public class ClothConfig {
         }
         ConfigCategory general = builder.getOrCreateCategory(new TranslatableText("category.subathon.general"));
         ConfigCategory modifiers = builder.getOrCreateCategory(new TranslatableText("category.subathon.modifiers"));
+        ConfigCategory advanced = builder.getOrCreateCategory(new TranslatableText("category.subathon.advanced"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
         //Subs sub category options
@@ -135,39 +132,52 @@ public class ClothConfig {
 
         //General category options
         general.addEntry(entryBuilder.startDropdownMenu(new TranslatableText("option.subathon.mode"),
-                        DropdownMenuBuilder.TopCellElementBuilder.of(Effect.valueOf(Subathon.getConfigData().mode), EFFECT_FUNCTION, (effect) -> new LiteralText(effect.toString())),
+                        DropdownMenuBuilder.TopCellElementBuilder.of(ConfigUtils.getMode(), EFFECT_FUNCTION, (effect) -> new LiteralText(effect.toString())),
                         DropdownMenuBuilder.CellCreatorBuilder.of())
-                .setDefaultValue(Effect.JUMP)
+                .setDefaultValue(Mode.JUMP)
                 .setTooltip(new TranslatableText("option.subathon.mode.description"))
-                .setSelections(Arrays.stream(Effect.values()).toList())
-                .setSaveConsumer(mode -> Subathon.getConfigData().mode = mode.toString())
+                .setSelections(Arrays.stream(Mode.values()).toList())
+                .setSaveConsumer(mode -> Subathon.getConfigData().mode = mode.name())
                 .build());
 
         general.addEntry(entryBuilder.startDropdownMenu(new TranslatableText("option.subathon.message_mode"),
-                        DropdownMenuBuilder.TopCellElementBuilder.of(MessageMode.valueOf(Subathon.getConfigData().messageMode), MESSAGE_MODE_FUNCTION, (effect) -> new LiteralText(effect.toString())),
+                        DropdownMenuBuilder.TopCellElementBuilder.of(ConfigUtils.getMessageMode(), MESSAGE_MODE_FUNCTION, (effect) -> new LiteralText(effect.toString())),
                         DropdownMenuBuilder.CellCreatorBuilder.of())
                 .setDefaultValue(MessageMode.OVERLAY)
                 .setTooltip(new TranslatableText("option.subathon.message_mode.description"))
                 .setSelections(Arrays.stream(MessageMode.values()).toList())
-                .setSaveConsumer(mode -> Subathon.getConfigData().messageMode = mode.toString())
+                .setSaveConsumer(mode -> Subathon.getConfigData().messageMode = mode.name())
                 .build());
 
-        general.addEntry(entryBuilder.startFloatField(new TranslatableText("option.subathon.effect_amplifier"), Subathon.getConfigData().effectAmplifier)
-                .setDefaultValue(0.1f)
+        general.addEntry(entryBuilder.startIntField(new TranslatableText("option.subathon.font_scale"), Subathon.getConfigData().fontScale)
+                .setDefaultValue(1)
+                .setTooltip(new TranslatableText("option.subathon.font_scale.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().fontScale = newValue)
+                .build());
+
+        general.addEntry(entryBuilder.startIntField(new TranslatableText("option.subathon.effect_amplifier"), Subathon.getConfigData().effectIncrement)
+                .setDefaultValue(1)
                 .setTooltip(new TranslatableText("option.subathon.effect_amplifier.description"))
-                .setSaveConsumer(newValue -> Subathon.getConfigData().effectAmplifier = newValue)
+                .setSaveConsumer(newValue -> Subathon.getConfigData().effectIncrement = newValue)
                 .build());
 
-        general.addEntry(new PasteFieldBuilder(new TranslatableText("option.subathon.auth_data"), Subathon.auth.getJsonString())
-                .setDefaultValue("{}")
-                .setType("JSON")
-                .setTooltip(new TranslatableText("option.subathon.auth_data.description"))
-                .setSaveConsumer(Subathon.auth::fromString)
+        general.addEntry(entryBuilder.startStrField(new TranslatableText("option.subathon.channel_name"), Subathon.getConfigData().channelName)
+                .setDefaultValue("")
+                .setTooltip(new TranslatableText("option.subathon.channel_name.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().channelName = newValue.toLowerCase())
                 .build());
 
-        general.addEntry(new ButtonFieldBuilder(new TranslatableText("option.subathon.auth"))
-                .setTooltip(new TranslatableText("option.subathon.auth.description"))
-                .setPressAction((button) -> Util.getOperatingSystem().open(Bot.getAuthenticationUrl(List.of("channel:read:subscriptions", "bits:read"), null)))
+        general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.run_at_server_start"), Subathon.getConfigData().runAtServerStart)
+                .setDefaultValue(true)
+                .setTooltip(new TranslatableText("option.subathon.run_at_server_start.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().runAtServerStart = newValue)
+                .build());
+
+        //Advanced settings
+        advanced.addEntry(entryBuilder.startFloatField(new TranslatableText("option.subathon.effect_multiplier"), Subathon.getConfigData().effectMultiplier)
+                .setDefaultValue(0.1f)
+                .setTooltip(new TranslatableText("option.subathon.effect_multiplier.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().effectMultiplier = newValue)
                 .build());
 
         //Modifier category options
@@ -180,21 +190,20 @@ public class ClothConfig {
 
     private void save() {
         Subathon.config.save();
-        Subathon.auth.save();
     }
 
-    public static final Function<String, Effect> EFFECT_FUNCTION = (str) -> {
+    public static final Function<String, Mode> EFFECT_FUNCTION = (str) -> {
         try {
-            return Effect.valueOf(str);
-        } catch (Exception var2) {
-            return Effect.NONE;
+            return Mode.valueOf(str);
+        } catch (Exception exception) {
+            return Mode.NONE;
         }
     };
 
     public static final Function<String, MessageMode> MESSAGE_MODE_FUNCTION = (str) -> {
         try {
             return MessageMode.valueOf(str);
-        } catch (Exception var2) {
+        } catch (Exception exception) {
             return MessageMode.CHAT;
         }
     };

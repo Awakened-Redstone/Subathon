@@ -1,8 +1,8 @@
 package com.awakenedredstone.subathon.mixin;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.config.Effect;
-import com.awakenedredstone.subathon.twitch.Bot;
+import com.awakenedredstone.subathon.config.Mode;
+import com.awakenedredstone.subathon.util.ConfigUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -24,11 +24,11 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Inject(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;setVelocity(DDD)V", shift = At.Shift.AFTER))
     private void jump(CallbackInfo ci) {
-        if (!this.isPlayer() && Subathon.getEffect() != Effect.SUPER_JUMP) return;
-        if (Subathon.getEffect() == Effect.JUMP || Subathon.getEffect() == Effect.SUPER_JUMP) increaseJump();
+        if (!this.isPlayer() && ConfigUtils.getMode() != Mode.SUPER_JUMP) return;
+        if (ConfigUtils.getMode() == Mode.JUMP || ConfigUtils.getMode() == Mode.SUPER_JUMP) increaseJump();
     }
 
     private void increaseJump() {
-        this.addVelocity(0, Bot.getCounter(), 0);
+        this.addVelocity(0, Subathon.integration.data.value, 0);
     }
 }

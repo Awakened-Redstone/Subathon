@@ -6,8 +6,17 @@ import java.util.stream.Stream;
 
 public class ConfigData {
 
-    public String mode = Effect.JUMP.name();
-    public float effectAmplifier = 0.1f;
+    public String mode = Mode.JUMP.name();
+    public String messageMode = MessageMode.OVERLAY.name();
+    public int fontScale = 1;
+    public int effectIncrement = 1;
+    public float effectMultiplier = 0.1f;
+    public boolean runAtServerStart = true;
+
+    //TODO: Support for multiple channels
+    public String channelId = "";
+    public String channelName = "";
+    public String channelDisplayName = "";
 
     public boolean enableSubs = false;
     public short subsPerIncrement = 1;
@@ -19,8 +28,6 @@ public class ConfigData {
     public boolean cumulativeBits = false;
     public boolean onePerCheer = false;
     public boolean cumulativeIgnoreMin = true;
-
-    public String messageMode = MessageMode.OVERLAY.name();
 
     public Map<String, Short> subModifiers = Stream.of(new Object[][] {
         { "prime", (short) 1 },

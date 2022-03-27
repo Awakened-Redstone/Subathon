@@ -7,6 +7,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Optional;
@@ -120,7 +121,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
     }
 
     public boolean isEmpty() {
-        return this.textFieldWidget.getText().isEmpty();
+        return StringUtils.isBlank(this.textFieldWidget.getText());
     }
 
     public Optional<Text> getError() {

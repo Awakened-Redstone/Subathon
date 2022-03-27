@@ -1,6 +1,6 @@
 package com.awakenedredstone.subathon.config;
 
-public enum Effect {
+public enum Mode {
     NONE,
     JUMP,
     SUPER_JUMP,
