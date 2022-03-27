@@ -8,9 +8,9 @@
 
 ## **<ins>It is highly recommended to use [ModMenu](https://modrinth.com/mod/modmenu) + [Cloth Config API](https://www.curseforge.com/minecraft/mc-mods/cloth-config) </ins>**
 
-Before you run `/subathon start` you have to authenticate. In order to authenticate go to the config UI and click `Authenticate`, after that wait until you get the
-successful authentication page, on it you will find the instructions to finish the authentication.  
-After starting the bot it is recommended to run `/subathon info` to make sure everything is working properly.  
+By the fault the mod will try to start the integration when the server starts (single player world and dedicated servers).  
+Before you start the integration you have to put your channel name at the configs.  
+With your channel name set all you have to do is join your SP world or type `/subathon start`  
 If you wish to, you can change the messages with a resourcepack.
 
 With that you are all set and your viewers can torture you with subs.
