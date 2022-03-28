@@ -1,31 +1,56 @@
 package com.awakenedredstone.subathon.client;
 
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.client.screen.EventLogScreen;
+import com.awakenedredstone.subathon.commands.SubathonCommand;
 import com.awakenedredstone.subathon.events.HudRenderCallback;
 import com.awakenedredstone.subathon.renderer.PositionedText;
+import com.awakenedredstone.subathon.twitch.Subscription;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Environment(EnvType.CLIENT)
 public class SubathonClient implements ClientModInitializer {
     private static final Map<Long, PositionedText> positionedTexts = new HashMap<>();
+    public static final List<TwitchEvent> events = new ArrayList<>();
     private BotStatus botStatus = BotStatus.UNKNOWN;
     private boolean showData = false;
     private float value = 0.0f;
 
+    private static KeyBinding keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.subathon.event_logs", // The translation key of the keybinding's name
+            InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
+            GLFW.GLFW_KEY_R, // The keycode of the key
+            "category.subathon.general_keybinds" // The translation key of the keybinding's category.
+    ));
+
     @Override
     public void onInitializeClient() {
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (keyBinding.isPressed()) {
+                client.setScreen(new EventLogScreen(client.currentScreen));
+            }
+            while (keyBinding.wasPressed()) {}
+        });
+
         //Packet sent by the server to inform the client that it has the mod
         ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "has_mod"), (client, handler, buf, responseSender) -> {
             client.execute(() -> {
@@ -49,6 +74,23 @@ public class SubathonClient implements ClientModInitializer {
                     case 0 -> botStatus = BotStatus.OFFLINE;
                     case 1 -> botStatus = BotStatus.RUNNING;
                     default -> botStatus = BotStatus.UNKNOWN;
+                }
+            });
+        });
+
+        //Packet sent by the server with a new event
+        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "event"), (client, handler, buf, responseSender) -> {
+             String name = buf.readString();
+             int amount = buf.readInt();
+             Subscription tier = buf.readEnumConstant(Subscription.class);
+             SubathonCommand.Events event = buf.readEnumConstant(SubathonCommand.Events.class);
+             String target = buf.readString();
+            client.execute(() -> {
+                TwitchEvent twitchEvent = new TwitchEvent(name, amount, tier, event, target);
+                events.add(twitchEvent);
+
+                if (client.currentScreen instanceof EventLogScreen) {
+                    ((EventLogScreen) client.currentScreen).addToList(twitchEvent);
                 }
             });
         });

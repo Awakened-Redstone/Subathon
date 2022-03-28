@@ -204,9 +204,10 @@ public class SubathonCommand {
             player.playSound(SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.MASTER, 100, 1f);
     }
 
-    public static void executeGetInfo(ServerCommandSource source) throws CommandSyntaxException {
-        source.sendError(new LiteralText("This command is temporarily disabled."));
-        //TODO: Show status and info
+    public static void executeGetInfo(ServerCommandSource source) {
+        source.sendFeedback(new TranslatableText("subathon.messages.channelName", getConfigData().channelName), false);
+        source.sendFeedback(new TranslatableText("subathon.messages.channelDisplayName", getConfigData().channelDisplayName), false);
+        source.sendFeedback(new TranslatableText("subathon.messages.channelId", getConfigData().channelId), false);
     }
 
     public static void executeTest(ServerCommandSource source, Events event, short count, @Nullable SubTiers tier) throws CommandSyntaxException {
@@ -341,7 +342,7 @@ public class SubathonCommand {
         }
     }
 
-    enum Events {
+    public enum Events {
         SUBSCRIPTION,
         RESUBSCRIPTION,
         SUB_GIFT,

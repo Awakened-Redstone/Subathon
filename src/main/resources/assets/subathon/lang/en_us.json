@@ -1,5 +1,12 @@
 {
+  "category.subathon.general_keybinds": "Subathon",
+  "gui.subathon.event_log": "Subathon logs",
+
   "effect.subathon.subathon": "Subathon",
+
+  "subathon.clear": "Clear logs",
+  "subathon.clear.confirm": "Are you sure you want to clear the logs?",
+  "subathon.clear.notice": "\nClearing the logs will only clear the event \nlogs GUI, it will not affect the gameplay",
 
   "text.subathon.paste": "Paste",
   "text.subathon.pasted": "Pasted!",
@@ -8,6 +15,16 @@
   "text.subathon.error.not_valid_json": "Not a valid JSON!",
   "text.subathon.error.requires_one_enabled": "You can't disabled all modules!",
   "text.cloth-config.error.not_valid_number_short": "Not a valid number! (Short)",
+
+  "subathon.messages.event.sub": "%1$s subscribed with %2$s",
+  "subathon.messages.event.resub": "%1$s resubscribed with %3$s for a total of %2$s months",
+  "subathon.messages.event.gift": "%1$s gifted %2$s %3$s sub%4$s",
+  "subathon.messages.event.gift_user": "%1$s gifted %2$s a %3$s sub",
+  "subathon.messages.event.cheer": "%1$s cheered x%2$s",
+
+  "subathon.messages.channelName": "Channel name: %s",
+  "subathon.messages.channelDisplayName": "Channel display name: %s",
+  "subathon.messages.channelId": "Channel id: %s",
 
   "subathon.messages.offline": "Integration offline",
   "subathon.messages.subscription": "%1$s subscribed with %2$s!",

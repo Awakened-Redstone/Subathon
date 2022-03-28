@@ -60,6 +60,12 @@ public class Subathon implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             sender.sendPacket(new Identifier(Subathon.MOD_ID, "has_mod"), PacketByteBufs.create());
 
+            if (handler.player.hasPermissionLevel(1)) {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeInt(integration.isRunning ? 1 : 0);
+                sender.sendPacket(new Identifier(Subathon.MOD_ID, "bot_status"), buf);
+            }
+
             if (integration.data != null) {
                 PacketByteBuf buf = PacketByteBufs.create();
                 buf.writeFloat(integration.data.value / getConfigData().effectMultiplier);

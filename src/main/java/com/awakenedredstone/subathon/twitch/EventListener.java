@@ -1,14 +1,20 @@
 package com.awakenedredstone.subathon.twitch;
 
+import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.commands.SubathonCommand;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import com.github.twitch4j.chat.events.channel.CheerEvent;
 import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
 import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
 import com.github.twitch4j.common.enums.SubscriptionPlan;
 import com.github.twitch4j.common.util.TwitchUtils;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Identifier;
 
 import static com.awakenedredstone.subathon.Subathon.getConfigData;
 import static com.awakenedredstone.subathon.Subathon.integration;
@@ -24,6 +30,16 @@ public class EventListener {
         integration.addSubs(getConfigData().subModifiers.get(tier.name().toLowerCase()));
 
         MessageUtils.sendEventMessage(message);
+
+        {
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeString(name);
+            buf.writeInt(event.getMonths());
+            buf.writeEnumConstant(tier);
+            buf.writeEnumConstant(event.getMonths() == 1 ? SubathonCommand.Events.SUBSCRIPTION : SubathonCommand.Events.RESUBSCRIPTION);
+            buf.writeString("");
+            MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
+        }
     }
 
     public void giftListener(GiftSubscriptionsEvent event) {
@@ -39,6 +55,16 @@ public class EventListener {
         integration.addSubs(getConfigData().subModifiers.get(tier.name().toLowerCase()) * event.getCount());
 
         MessageUtils.sendEventMessage(message);
+
+        {
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeString(name);
+            buf.writeInt(event.getCount());
+            buf.writeEnumConstant(tier);
+            buf.writeEnumConstant(SubathonCommand.Events.SUB_GIFT);
+            buf.writeString("");
+            MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
+        }
     }
 
     public void specificGiftListener(SpecificSubGiftEvent e) {
@@ -74,6 +100,16 @@ public class EventListener {
                 integration.addSubs(getConfigData().subModifiers.get(tier.name().toLowerCase()));
 
                 MessageUtils.broadcast(player -> player.sendMessage(message, false), "event_message");
+
+                {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeString(gifterName);
+                    buf.writeInt(0);
+                    buf.writeEnumConstant(tier);
+                    buf.writeEnumConstant(SubathonCommand.Events.GIFT_USER);
+                    buf.writeString(name);
+                    MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
+                }
             });
         }
     }
@@ -91,5 +127,15 @@ public class EventListener {
         }
 
         MessageUtils.sendEventMessage(message);
+
+        {
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeString(name);
+            buf.writeInt(event.getBits());
+            buf.writeEnumConstant(Subscription.PRIME);
+            buf.writeEnumConstant(SubathonCommand.Events.CHEER);
+            buf.writeString("");
+            MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
+        }
     }
 }

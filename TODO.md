@@ -9,6 +9,7 @@
 - [ ] Add support for data driven modes (datapacks)
 - [x] Save mod data per world
 - [x] Better startup process and notifications
+- [x] Logs screen for checking all events easily
 
 # Modes
  - [ ] Chaos mode
@@ -20,4 +21,4 @@
  - [x] Slowness mode
 
 # Changes
-- [x] Complete rewrite of the bot code because no one deserves spaghetti code
+- [ ] Redo the translations for more consistency and easier readability
