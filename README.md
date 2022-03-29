@@ -6,7 +6,7 @@
 
 ## **<ins>It is highly recommended to use [ModMenu](https://modrinth.com/mod/modmenu) + [Cloth Config API](https://www.curseforge.com/minecraft/mc-mods/cloth-config) </ins>**
 
-By the fault the mod will try to start the integration when the server starts (single player world and dedicated servers).  
+By default the mod will try to start the integration when the server starts (single player world and dedicated servers).  
 Before you start the integration you have to put your channel name at the configs.  
 With your channel name set all you have to do is join your SP world or type `/subathon start`  
 If you wish to, you can change the messages with a resourcepack.
