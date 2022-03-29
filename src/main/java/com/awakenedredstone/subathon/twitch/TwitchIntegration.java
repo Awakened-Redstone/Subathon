@@ -85,6 +85,7 @@ public class TwitchIntegration {
         }
         MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("subathon.messages.start.title"), TitleS2CPacket::new), "start_title");
         MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("subathon.messages.start.subtitle"), SubtitleS2CPacket::new), "start_subtitle");
+
         //Plays the sound 3 times for a higher volume
         MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
         MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
@@ -106,8 +107,8 @@ public class TwitchIntegration {
             MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "bot_status"), buf), "bot_status");
             MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("subathon.messages.stop.title"), TitleS2CPacket::new), "stop_title");
             MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("subathon.messages.stop.subtitle"), SubtitleS2CPacket::new), "stop_subtitle");
-            //Plays the sound 3 times for a higher volume
-            MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.VOICE, 100, 0.8f), "stop_sound");
+
+            //Plays the sound 2 times for a higher volume
             MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.VOICE, 100, 0.8f), "stop_sound");
             MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.VOICE, 100, 0.8f), "stop_sound");
         }
