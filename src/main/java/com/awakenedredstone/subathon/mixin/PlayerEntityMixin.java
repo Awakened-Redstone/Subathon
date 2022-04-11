@@ -13,6 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.math.BigDecimal;
+
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin extends LivingEntity {
 
@@ -22,8 +24,8 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
     @Inject(method = "getMovementSpeed", at = @At(value = "RETURN"), cancellable = true)
     public void getMovementSpeed(CallbackInfoReturnable<Float> cir) {
-        if (ConfigUtils.getMode() == Mode.SPEED) cir.setReturnValue((float)this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) + Subathon.integration.data.value);
-        if (ConfigUtils.getMode() == Mode.SLOWNESS) cir.setReturnValue(Math.max((float)this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) - Subathon.integration.data.value, 0.001f));
-
+        BigDecimal value = BigDecimal.valueOf(Subathon.integration.data.value).multiply(BigDecimal.valueOf(0.01f));
+        if (ConfigUtils.getMode() == Mode.SPEED) cir.setReturnValue(BigDecimal.valueOf(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)).add(value).floatValue());
+        if (ConfigUtils.getMode() == Mode.SLOWNESS) cir.setReturnValue(Math.max(BigDecimal.valueOf(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)).subtract(value).floatValue(), 0.001f));
     }
 }

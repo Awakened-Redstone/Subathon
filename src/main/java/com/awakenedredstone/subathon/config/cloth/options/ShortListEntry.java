@@ -135,7 +135,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
                 return Optional.of(new TranslatableText("text.cloth-config.error.too_small", this.minimum));
             }
         } catch (NumberFormatException var2) {
-            return Optional.of(new TranslatableText("text.cloth-config.error.not_valid_number_short"));
+            return Optional.of(new TranslatableText("text.subathon.config.error.not_valid_number_short"));
         }
 
         return super.getError();

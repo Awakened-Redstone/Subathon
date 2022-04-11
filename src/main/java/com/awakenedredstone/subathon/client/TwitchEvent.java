@@ -15,21 +15,21 @@ public record TwitchEvent(String name, int amount, Subscription tier, SubathonCo
     public Text getMessage() {
         switch (event) {
             case SUBSCRIPTION -> {
-                return new LiteralText(I18n.translate("subathon.messages.event.sub", name, tier.getName()));
+                return new LiteralText(I18n.translate("gui.subathon.event_logs.sub", name, tier.getName()));
             }
             case RESUBSCRIPTION -> {
-                return new LiteralText(I18n.translate("subathon.messages.event.resub", name, amount, tier.getName()));
+                return new LiteralText(I18n.translate("gui.subathon.event_logs.resub", name, amount, tier.getName()));
             }
             case SUB_GIFT -> {
-                return new LiteralText(I18n.translate("subathon.messages.event.gift", name, amount, tier.getName(), amount != 1 ? "s" : ""));
+                return new LiteralText(I18n.translate("gui.subathon.event_logs.gift", name, amount, tier.getName(), amount != 1 ? "s" : ""));
             }
             case GIFT_USER -> {
-                return new LiteralText(I18n.translate("subathon.messages.event.gift_user", name, amount, tier.getName(), target));
+                return new LiteralText(I18n.translate("gui.subathon.event_logs.gift_user", name, amount, tier.getName(), target));
             }
             case CHEER -> {
-                return new LiteralText(I18n.translate("subathon.messages.event.cheer", name, amount));
+                return new LiteralText(I18n.translate("gui.subathon.event_logs.cheer", name, amount));
             }
         }
-        return new TranslatableText("subathon.messages.event.error");
+        return new TranslatableText("gui.subathon.event_logs.error");
     }
 }

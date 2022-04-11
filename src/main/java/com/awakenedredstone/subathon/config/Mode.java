@@ -6,5 +6,6 @@ public enum Mode {
     SUPER_JUMP,
     SPEED,
     SLOWNESS,
-    //POTION_EFFECT
+    HEALTH,
+    SUPER_HEALTH
 }

@@ -10,9 +10,11 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.BaseText;
 import net.minecraft.text.Text;
 import net.minecraft.text.Texts;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.text.DecimalFormat;
@@ -27,16 +29,21 @@ import static com.awakenedredstone.subathon.Subathon.*;
 
 public class MessageUtils {
 
-    public static void sendError(Text message) {
+    public static void sendError(BaseText message) {
         LOGGER.error(message.getString());
-        server.getCommandSource().sendFeedback(message, true);
+        broadcastToOps(player -> player.sendMessage(message.formatted(Formatting.RED), false), "error_message");
+    }
+
+    public static void sendError(BaseText message, Throwable throwable) {
+        LOGGER.error(message.getString(), throwable);
+        broadcastToOps(player -> player.sendMessage(message.formatted(Formatting.RED), false), "error_message");
     }
 
     public static void broadcast(Consumer<ServerPlayerEntity> consumer, String id) {
         try {
             server.getPlayerManager().getPlayerList().forEach(consumer);
         } catch (Exception e) {
-            server.getCommandSource().sendFeedback(new TranslatableText("subathon.messages.error.broadcast", id), true);
+            server.getCommandSource().sendFeedback(new TranslatableText("text.subathon.error.broadcast", id), true);
         }
     }
 
@@ -51,7 +58,7 @@ public class MessageUtils {
                     server.getPlayerManager().getPlayerList().stream().filter(player -> names.contains(player.getGameProfile().getName())).forEach(consumer);
                 }
             } catch (Exception e) {
-                server.getCommandSource().sendFeedback(new TranslatableText("subathon.messages.error.broadcast", id), true);
+                server.getCommandSource().sendFeedback(new TranslatableText("text.subathon.error.broadcast", id), true);
             }
         } else {
             broadcast(consumer, id);
@@ -73,8 +80,8 @@ public class MessageUtils {
         player.networkHandler.sendPacket(constructor.apply(title));
     }
 
-    public static String formatFloat(float value) {
-        String text = Float.toString(getConfigData().effectMultiplier);
+    public static String formatDouble(double value) {
+        String text = Double.toString(getConfigData().effectMultiplier);
         int integerPlaces = text.indexOf('.');
         int decimalPlaces = text.length() - integerPlaces - 1;
         DecimalFormat df = new DecimalFormat();

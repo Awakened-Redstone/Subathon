@@ -6,7 +6,7 @@ import net.minecraft.entity.effect.StatusEffectCategory;
 
 public class SubathonStatusEffect extends StatusEffect {
     public SubathonStatusEffect() {
-        super(StatusEffectCategory.BENEFICIAL, 0x98D982);
+        super(StatusEffectCategory.NEUTRAL, 0x98D982);
     }
 
     @Override

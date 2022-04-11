@@ -17,10 +17,14 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public class ClothConfig {
+    private final Pattern TWITCH_USERNAME = Pattern.compile("^[a-zA-Z0-9][\\w]{0,24}$");
 
     public Screen build(Screen parent) {
         Subathon.generateConfig();
@@ -45,6 +49,7 @@ public class ClothConfig {
         }
         ConfigCategory general = builder.getOrCreateCategory(new TranslatableText("category.subathon.general"));
         ConfigCategory modifiers = builder.getOrCreateCategory(new TranslatableText("category.subathon.modifiers"));
+        ConfigCategory client = builder.getOrCreateCategory(new TranslatableText("category.subathon.client"));
         ConfigCategory advanced = builder.getOrCreateCategory(new TranslatableText("category.subathon.advanced"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
 
@@ -149,22 +154,10 @@ public class ClothConfig {
                 .setSaveConsumer(mode -> Subathon.getConfigData().messageMode = mode.name())
                 .build());
 
-        general.addEntry(entryBuilder.startIntField(new TranslatableText("option.subathon.font_scale"), Subathon.getConfigData().fontScale)
-                .setDefaultValue(1)
-                .setTooltip(new TranslatableText("option.subathon.font_scale.description"))
-                .setSaveConsumer(newValue -> Subathon.getConfigData().fontScale = newValue)
-                .build());
-
-        general.addEntry(entryBuilder.startIntField(new TranslatableText("option.subathon.effect_amplifier"), Subathon.getConfigData().effectIncrement)
+        general.addEntry(entryBuilder.startDoubleField(new TranslatableText("option.subathon.effect_amplifier"), Subathon.getConfigData().effectIncrement)
                 .setDefaultValue(1)
                 .setTooltip(new TranslatableText("option.subathon.effect_amplifier.description"))
                 .setSaveConsumer(newValue -> Subathon.getConfigData().effectIncrement = newValue)
-                .build());
-
-        general.addEntry(entryBuilder.startStrField(new TranslatableText("option.subathon.channel_name"), Subathon.getConfigData().channelName)
-                .setDefaultValue("")
-                .setTooltip(new TranslatableText("option.subathon.channel_name.description"))
-                .setSaveConsumer(newValue -> Subathon.getConfigData().channelName = newValue.toLowerCase())
                 .build());
 
         general.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.run_at_server_start"), Subathon.getConfigData().runAtServerStart)
@@ -173,8 +166,22 @@ public class ClothConfig {
                 .setSaveConsumer(newValue -> Subathon.getConfigData().runAtServerStart = newValue)
                 .build());
 
-        //Advanced settings
-        advanced.addEntry(entryBuilder.startFloatField(new TranslatableText("option.subathon.effect_multiplier"), Subathon.getConfigData().effectMultiplier)
+        general.addEntry(entryBuilder.startStrList(new TranslatableText("option.subathon.channels"), Subathon.getConfigData().channels)
+                .setDefaultValue(new ArrayList<>())
+                .setTooltip(new TranslatableText("option.subathon.channels.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().channels = newValue)
+                .setCellErrorSupplier(value -> TWITCH_USERNAME.matcher(value).matches() ? Optional.empty() : Optional.of(new TranslatableText("text.subathon.config.error.not_valid_twitch_username")))
+                .build());
+
+        //Client category options
+        client.addEntry(entryBuilder.startIntField(new TranslatableText("option.subathon.font_scale"), Subathon.getConfigData().fontScale)
+                .setDefaultValue(1)
+                .setTooltip(new TranslatableText("option.subathon.font_scale.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().fontScale = newValue)
+                .build());
+
+        //Advanced category options
+        advanced.addEntry(entryBuilder.startDoubleField(new TranslatableText("option.subathon.effect_multiplier"), Subathon.getConfigData().effectMultiplier)
                 .setDefaultValue(0.1f)
                 .setTooltip(new TranslatableText("option.subathon.effect_multiplier.description"))
                 .setSaveConsumer(newValue -> Subathon.getConfigData().effectMultiplier = newValue)

@@ -10,6 +10,18 @@
 - [x] Save mod data per world
 - [x] Better startup process and notifications
 - [x] Logs screen for checking all events easily
+- [ ] Spawn a raid when someone raid a channel raid
+- [ ] Hold increment and add it every x seconds
+- [ ] Reset modifier every x seconds [when above specified value]
+- [ ] Reset modifier on death
+- [ ] Custom advancements
+  - [ ] Custom trigger for modes
+  - [ ] Custom trigger for value
+  - [ ] Jerry block (craft a slime block on JUMP or SUPER_JUMP)
+  - [ ] Not slow anymore (walk on soulsand on SPEED)
+  - [ ] Am I moving? (walk on soulsand on SLOWNESS)
+  - [ ] It still does something (jump on honey block on JUMP or SUPER_JUMP)
+  - [ ] DSAW (get negative speed on SPEED)
 
 # Modes
  - [ ] Chaos mode
@@ -19,6 +31,3 @@
  - [x] Super jump mode
  - [x] Speed mode
  - [x] Slowness mode
-
-# Changes
-- [ ] Redo the translations for more consistency and easier readability

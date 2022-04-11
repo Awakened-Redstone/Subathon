@@ -23,7 +23,7 @@ public class EventLogScreen extends Screen {
     private final Screen parent;
 
     public EventLogScreen(Screen parent) {
-        super(new TranslatableText("gui.subathon.event_log"));
+        super(new TranslatableText("gui.subathon.event_logs"));
         this.parent = parent;
     }
 
@@ -32,15 +32,15 @@ public class EventLogScreen extends Screen {
         this.entryListWidget = new EventEntryListWidget(this.client);
         this.addSelectableChild(entryListWidget);
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 155, this.height - 28, 150, 20, ScreenTexts.DONE, button -> this.client.setScreen(this.parent)));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 5, this.height - 28, 150, 20, new TranslatableText("subathon.clear"), button ->
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 5, this.height - 28, 150, 20, new TranslatableText("gui.subathon.clear_logs"), button ->
                 client.setScreen(new ConfirmScreen(bool -> {
                         if (bool) {
                             SubathonClient.events.clear();
                             this.entryListWidget = new EventEntryListWidget(this.client);
                         }
                         this.client.setScreen(this);
-                    }, new TranslatableText("subathon.clear.confirm"), new TranslatableText("subathon.clear.notice"),
-                        new TranslatableText("subathon.clear"), new TranslatableText("gui.cancel")))));
+                    }, new TranslatableText("gui.subathon.clear_logs.question"), new TranslatableText("gui.subathon.clear_logs.message"),
+                        new TranslatableText("gui.subathon.clear_logs"), new TranslatableText("gui.cancel")))));
         super.init();
     }
 
@@ -162,15 +162,19 @@ public class EventLogScreen extends Screen {
 
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
-            DrawableHelper.drawTextWithShadow(matrices, EventLogScreen.this.textRenderer, event.getMessage(), EventLogScreen.this.width / 32 * 9, y + 5, index % 2 == 0 ? 0xFFFFFF : 0x909090);
-            int start = EventLogScreen.this.width / 64 * 15;
-            int spacing = EventLogScreen.this.width / 32 * 9 - EventLogScreen.this.width / 64 * 15;
-            int width = Math.max(EventLogScreen.this.width / 8 * 5, EventLogScreen.this.textRenderer.getWidth(event.getMessage()) + spacing * 2);
-            if (isMouseInside(mouseX, mouseY, start, y - 1, width, entryHeight + 8)) {
-                Rectangle area = getEntryArea(start, y - 1, width, entryHeight + 8);
+            int width = parent == null ? EventLogScreen.this.width : parent.getRowWidth();
+            int messageWidth = EventLogScreen.this.textRenderer.getWidth(event.getMessage());
+            int textStart = width < 512 ? (width - messageWidth) / 2 : EventLogScreen.this.width / 32 * 9;
+            int rectWidth = Math.max(EventLogScreen.this.width / 8 * 5, messageWidth + 16);
+            int start = width < 512 ? (width / 2) - (rectWidth / 2) : textStart - 8;
+            if (isMouseInside(mouseX, mouseY, start, y - 1, rectWidth, entryHeight + 8)) {
+                Rectangle area = getEntryArea(start, y - 1, rectWidth, entryHeight + 8);
                 if (parent != null)
                     parent.thisTimeTarget = area;
             }
+
+
+            DrawableHelper.drawTextWithShadow(matrices, EventLogScreen.this.textRenderer, event.getMessage(), textStart, y + 5, index % 2 == 0 ? 0xFFFFFF : 0x909090);
         }
     }
 }

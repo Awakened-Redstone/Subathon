@@ -1,5 +1,7 @@
 package com.awakenedredstone.subathon.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -9,14 +11,13 @@ public class ConfigData {
     public String mode = Mode.JUMP.name();
     public String messageMode = MessageMode.OVERLAY.name();
     public int fontScale = 1;
-    public int effectIncrement = 1;
-    public float effectMultiplier = 0.1f;
+    public double effectIncrement = 1;
+    public double effectMultiplier = 1f;
     public boolean runAtServerStart = true;
 
-    //TODO: Support for multiple channels
-    public String channelId = "";
-    public String channelName = "";
-    public String channelDisplayName = "";
+    public List<String> channels = new ArrayList<>();
+    public transient List<String> channelIds = new ArrayList<>();
+    public transient List<String> channelDisplayNames = new ArrayList<>();
 
     public boolean enableSubs = false;
     public short subsPerIncrement = 1;

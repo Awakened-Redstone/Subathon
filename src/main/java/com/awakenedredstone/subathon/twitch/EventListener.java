@@ -25,7 +25,7 @@ public class EventListener {
         if (event.getGifted()) return;
         Subscription tier = Subscription.valueOf(event.getSubPlan().name().replace("TWITCH_", ""));
         String name = event.getMessageEvent() != null ? event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName()) : event.getUser().getName();
-        Text message = new TranslatableText("subathon.messages.subscription", name, tier.getName());
+        Text message = new TranslatableText("text.subathon.event.subscription", name, tier.getName());
 
         integration.addSubs(getConfigData().subModifiers.get(tier.name().toLowerCase()));
 
@@ -46,7 +46,7 @@ public class EventListener {
         SubscriptionPlan subscriptionPlan = SubscriptionPlan.fromString(event.getSubscriptionPlan());
         Subscription tier = Subscription.valueOf(subscriptionPlan.name().replace("TWITCH_", ""));
         String name = event.getUser().equals(TwitchUtils.ANONYMOUS_GIFTER) ? "Anonymous" : event.getUser().getName();
-        Text message = new TranslatableText("subathon.messages.gift", name, event.getCount(), tier.getName(), event.getCount() != 1 ? "s" : "");
+        Text message = new TranslatableText("text.subathon.event.gift", name, event.getCount(), tier.getName(), event.getCount() != 1 ? "s" : "");
         if (tier == Subscription.PRIME) {
             MessageUtils.broadcast(player -> player.sendMessage(new LiteralText(
                     String.format("§e%s how in the world did you manage to gift a §c§lPRIME §esub?", name)), false), "what");
@@ -75,7 +75,7 @@ public class EventListener {
             String gifterName = event.getUser().equals(TwitchUtils.ANONYMOUS_GIFTER) ? "Anonymous" :
                     (event.getMessageEvent() != null ? event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName()) : event.getUser().getName());
             String name = event.getUser().getName();
-            Text message = new TranslatableText("subathon.messages.gift_user", gifterName, name, tier.getName());
+            Text message = new TranslatableText("text.subathon.event.gift_user", gifterName, name, tier.getName());
             if (tier == Subscription.PRIME) {
                 MessageUtils.broadcast(player -> player.sendMessage(new LiteralText(
                         String.format("§e%s how in the world did you manage to gift a §c§lPRIME §esub?", name)), false), "what");
@@ -91,7 +91,7 @@ public class EventListener {
                 String gifterName = event.getUser().equals(TwitchUtils.ANONYMOUS_GIFTER) ? "Anonymous" :
                         (event.getMessageEvent() != null ? event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName()) : event.getUser().getName());
                 String name = event.getUser().getName();
-                Text message = new TranslatableText("subathon.messages.gift_user", gifterName, name, tier.getName());
+                Text message = new TranslatableText("text.subathon.event.gift_user", gifterName, name, tier.getName());
                 if (tier == Subscription.PRIME) {
                     MessageUtils.broadcast(player -> player.sendMessage(new LiteralText(
                             String.format("§e%s how in the world did you manage to gift a §c§lPRIME §esub?", name)), false), "what");
@@ -117,7 +117,7 @@ public class EventListener {
     public void cheerListener(CheerEvent event) {
         String name = event.getUser().equals(TwitchUtils.ANONYMOUS_CHEERER) ? "Anonymous" :
                 (event.getMessageEvent() != null ? event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName()) : event.getUser().getName());
-        Text message = new TranslatableText("subathon.messages.cheer", name, event.getBits());
+        Text message = new TranslatableText("text.subathon.event.cheer", name, event.getBits());
         if (getConfigData().cumulativeBits) {
             if (getConfigData().cumulativeIgnoreMin || event.getBits() >= getConfigData().bitMin) {
                 integration.addBits(event.getBits());

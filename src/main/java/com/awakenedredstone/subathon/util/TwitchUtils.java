@@ -10,9 +10,9 @@ import okhttp3.Response;
 import java.util.Objects;
 
 public class TwitchUtils {
-    public static JsonObject getChannelData() {
+    public static JsonObject getChannelData(String channelName) {
         try {
-            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(String.format("https://api.ivr.fi/twitch/resolve/%s", Subathon.getConfigData().channelName))).newBuilder();
+            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(String.format("https://api.ivr.fi/twitch/resolve/%s", channelName))).newBuilder();
 
             Request request = new Request.Builder()
                     .url(urlBuilder.build().toString())
@@ -23,6 +23,7 @@ public class TwitchUtils {
 
             JsonObject responseJson = Subathon.GSON.fromJson(responseBody, JsonObject.class);
             JsonObject json = new JsonObject();
+            if (responseJson.get("status").getAsInt() != 200) return null;
             json.add("channelId", responseJson.get("id"));
             json.add("displayName", responseJson.get("displayName"));
             return json;
