@@ -4,6 +4,9 @@
   "category.subathon.keybinds": "Subathon",
   "key.subathon.event_logs": "Event logs",
 
+  "tip.startWithServer.title": "Start with server",
+  "tip.startWithServer.description": "is enabled by default!",
+
   "gui.subathon.event_logs": "Subathon logs",
   "gui.subathon.event_logs.sub": "%1$s subscribed with %2$s",
   "gui.subathon.event_logs.resub": "%1$s resubscribed with %3$s for a total of %2$s months",
@@ -17,12 +20,14 @@
 
   "commands.subathon.info": "§fThe current connected channels are: %s",
 
-  "commands.subathon.get.internalValue": "The current internal value is %s",
-  "commands.subathon.get.displayValue": "The current display value is %s",
+  "commands.subathon.get.internal_value": "The current internal value is %s",
+  "commands.subathon.get.display_value": "The current display value is %s",
+  "commands.subathon.get.temp_value": "The current cached value is %s",
   "commands.subathon.get.subs": "The current sub count is %s",
   "commands.subathon.get.bits": "The current bit count is %s",
 
   "commands.subathon.set.modifier": "The modifier value has been set to %s",
+  "commands.subathon.set.temp_value": "The cached value has been set to %s",
   "commands.subathon.set.subs": "The sub count has been set to %s",
   "commands.subathon.set.bits": "The bit count has been set to %s",
 
@@ -60,6 +65,7 @@
   "category.subathon.subscribers": "Subscribers",
   "category.subathon.subscribers.modifiers": "Sub modifiers",
   "category.subathon.bits": "Bits",
+  "category.subathon.timers": "Timers",
 
   "text.subathon.config.error.not_valid_number_short": "Not a valid number! (Short)",
   "text.subathon.config.error.not_valid_twitch_username": "Not a valid Twitch username!",
@@ -89,6 +95,7 @@
   "text.subathon.integration.reloading": "§dIntegration reloading",
 
   "text.subathon.error.integration.online": "The integration is already online!",
+  "text.subathon.error.integration.reload.offline": "Cannot reload while the integration isn't running!",
   "text.subathon.error.missing_channel_name": "Unable to start, missing channel name!",
   "text.subathon.error.invalid_channel_name": "Ignoring invalid channel name \"%s\"!",
   "text.subathon.error.broadcast": "Failed to send broadcast with id \"%s\"!",
@@ -114,6 +121,10 @@
   "option.subathon.bits.cumulative": "Cumulative bits",
   "option.subathon.bits.once": "Once per cheer",
   "option.subathon.bits.cumulative_ignore_min": "Cumulative ignores minimum",
+  "option.subathon.reset_timer": "Reset timer",
+  "option.subathon.update_timer": "Update timer",
+  "option.subathon.show_reset_timer": "Show reset timer",
+  "option.subathon.show_update_timer": "Show update timer",
 
   "option.subathon.mode.description": "Defines the behavior of the mod",
   "option.subathon.message_mode.description": "Where the alert messages will be shown",
@@ -131,5 +142,9 @@
   "option.subathon.bits.modifier.description": "How much of the modifier will be incremented",
   "option.subathon.bits.cumulative.description": "The bits donated will be stored internally and when the internal\namount passes the minimum bit count the counter will be increased",
   "option.subathon.bits.once.description": "Only increases the counter once, instead of bits/bit_min",
-  "option.subathon.bits.cumulative_ignore_min.description": "Makes so on cumulative bits mode all bits are added to the internal\nbit counter instead of only cheers over the minimum amount"
+  "option.subathon.bits.cumulative_ignore_min.description": "Makes so on cumulative bits mode all bits are added to the internal\nbit counter instead of only cheers over the minimum amount",
+  "option.subathon.resetTimer.description": "The time between resets, setting this to 0 disables it\nFormat: HH:mm:ss.tt\nH = Hour | m= Minute | s = Second | t = Tick\nTo insert the value in ticks just insert the number and a \u00a7ct\u00a7r on the end\nTo insert in seconds just insert the number",
+  "option.subathon.updateTimer.description": "The time between updates, setting this to 0 disables it\nFormat: HH:mm:ss.tt\nH = Hour | m= Minute | s = Second | t = Tick\nTo insert the value in ticks just insert the number and a \u00a7ct\u00a7r on the end\nTo insert in seconds just insert the number",
+  "option.subathon.show_reset_timer.description": "Shows reset timer",
+  "option.subathon.show_update_timer.description": "Shows update timer"
 }

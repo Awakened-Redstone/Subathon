@@ -15,16 +15,26 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.awakenedredstone.subathon.util.ConversionUtils.toInt;
+
 public class ClothConfig {
-    private final Pattern TWITCH_USERNAME = Pattern.compile("^[a-zA-Z0-9][\\w]{0,24}$");
+    private final Pattern TWITCH_USERNAME = Pattern.compile("^[a-zA-Z\\d]\\w{0,24}$");
+    private final Pattern TIME_PATTERN = Pattern.compile("^(?:(?:(\\d{1,4}):)?([0-5]?\\d):)?([0-5]?\\d)(?:\\.([0-1]?\\d))?$|^\\d{1,10}t$|^\\d{1,10}$");
+    private final Pattern TIME_PATTERN_HMST = Pattern.compile("^(?:(?:(\\d{1,4}):)?([0-5]?\\d):)?([0-5]?\\d)(?:\\.([0-1]?\\d))?$");
+    private final Pattern TIME_PATTERN_TICKS = Pattern.compile("^\\d{1,10}t$");
+    private final Pattern TIME_PATTERN_SECONDS = Pattern.compile("^\\d{1,10}$");
 
     public Screen build(Screen parent) {
         Subathon.generateConfig();
@@ -49,6 +59,7 @@ public class ClothConfig {
         }
         ConfigCategory general = builder.getOrCreateCategory(new TranslatableText("category.subathon.general"));
         ConfigCategory modifiers = builder.getOrCreateCategory(new TranslatableText("category.subathon.modifiers"));
+        ConfigCategory timers = builder.getOrCreateCategory(new TranslatableText("category.subathon.timers"));
         ConfigCategory client = builder.getOrCreateCategory(new TranslatableText("category.subathon.client"));
         ConfigCategory advanced = builder.getOrCreateCategory(new TranslatableText("category.subathon.advanced"));
         ConfigEntryBuilder entryBuilder = builder.entryBuilder();
@@ -135,6 +146,37 @@ public class ClothConfig {
                 .setSaveConsumer(newValue -> Subathon.getConfigData().cumulativeIgnoreMin = newValue)
                 .build());
 
+        //Timers category options
+        timers.addEntry(entryBuilder.startTextDescription(new LiteralText("This category is temporary").formatted(Formatting.RED)).build());
+
+        timers.addEntry(entryBuilder.startTextField(new TranslatableText("option.subathon.reset_timer"), ConfigUtils.ticksToTime(Subathon.getConfigData().resetTimer))
+                .setDefaultValue("00:00:00.00")
+                .setTooltip(new TranslatableText("option.subathon.reset_timer.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().resetTimer = timeStringToTicks(newValue))
+                .setErrorSupplier(v -> {
+                    Optional<Text> badFormat = Optional.of(new TranslatableText("text.subathon.config.error.not_valid_time"));
+                    if (TIME_PATTERN.matcher(v).matches()) {
+                        if (TIME_PATTERN_TICKS.matcher(v).matches() && Long.parseLong(v.replace("t", "")) > 719999999) return badFormat;
+                        if (TIME_PATTERN_SECONDS.matcher(v).matches() && Long.parseLong(v) > 35999999) return badFormat;
+                        return Optional.empty();
+                    } else return badFormat;
+                })
+                .build());
+
+        timers.addEntry(entryBuilder.startTextField(new TranslatableText("option.subathon.update_timer"), ConfigUtils.ticksToTime(Subathon.getConfigData().updateTimer))
+                .setDefaultValue("00:00:00.00")
+                .setTooltip(new TranslatableText("option.subathon.update_timer.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().updateTimer = timeStringToTicks(newValue))
+                .setErrorSupplier(v -> {
+                    Optional<Text> badFormat = Optional.of(new TranslatableText("text.subathon.config.error.not_valid_time"));
+                    if (TIME_PATTERN.matcher(v).matches()) {
+                        if (TIME_PATTERN_TICKS.matcher(v).matches() && Long.parseLong(v.replace("t", "")) > 719999999) return badFormat;
+                        if (TIME_PATTERN_SECONDS.matcher(v).matches() && Long.parseLong(v) > 35999999) return badFormat;
+                        return Optional.empty();
+                    } else return badFormat;
+                })
+                .build());
+
         //General category options
         general.addEntry(entryBuilder.startDropdownMenu(new TranslatableText("option.subathon.mode"),
                         DropdownMenuBuilder.TopCellElementBuilder.of(ConfigUtils.getMode(), EFFECT_FUNCTION, (effect) -> new LiteralText(effect.toString())),
@@ -170,14 +212,29 @@ public class ClothConfig {
                 .setDefaultValue(new ArrayList<>())
                 .setTooltip(new TranslatableText("option.subathon.channels.description"))
                 .setSaveConsumer(newValue -> Subathon.getConfigData().channels = newValue)
-                .setCellErrorSupplier(value -> TWITCH_USERNAME.matcher(value).matches() ? Optional.empty() : Optional.of(new TranslatableText("text.subathon.config.error.not_valid_twitch_username")))
+                .setCellErrorSupplier(value -> {
+                    if (TWITCH_USERNAME.matcher(value).matches()) return Optional.empty();
+                    else return Optional.of(new TranslatableText("text.subathon.config.error.not_valid_twitch_username"));
+                })
                 .build());
 
         //Client category options
-        client.addEntry(entryBuilder.startIntField(new TranslatableText("option.subathon.font_scale"), Subathon.getConfigData().fontScale)
+        client.addEntry(entryBuilder.startFloatField(new TranslatableText("option.subathon.font_scale"), Subathon.getConfigData().fontScale)
                 .setDefaultValue(1)
                 .setTooltip(new TranslatableText("option.subathon.font_scale.description"))
                 .setSaveConsumer(newValue -> Subathon.getConfigData().fontScale = newValue)
+                .build());
+
+        client.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.show_reset_timer"), Subathon.getConfigData().showResetTimer)
+                .setDefaultValue(false)
+                .setTooltip(new TranslatableText("option.subathon.show_reset_timer.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().showResetTimer = newValue)
+                .build());
+
+        client.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.show_update_timer"), Subathon.getConfigData().showUpdateTimer)
+                .setDefaultValue(false)
+                .setTooltip(new TranslatableText("option.subathon.show_update_timer.description"))
+                .setSaveConsumer(newValue -> Subathon.getConfigData().showUpdateTimer = newValue)
                 .build());
 
         //Advanced category options
@@ -199,7 +256,7 @@ public class ClothConfig {
         Subathon.config.save();
     }
 
-    public static final Function<String, Mode> EFFECT_FUNCTION = (str) -> {
+    public final Function<String, Mode> EFFECT_FUNCTION = (str) -> {
         try {
             return Mode.valueOf(str);
         } catch (Exception exception) {
@@ -207,11 +264,29 @@ public class ClothConfig {
         }
     };
 
-    public static final Function<String, MessageMode> MESSAGE_MODE_FUNCTION = (str) -> {
+    public final Function<String, MessageMode> MESSAGE_MODE_FUNCTION = (str) -> {
         try {
             return MessageMode.valueOf(str);
         } catch (Exception exception) {
             return MessageMode.CHAT;
         }
     };
+
+    private int timeStringToTicks(String value) {
+        int time = 0;
+        Matcher HMST = TIME_PATTERN_HMST.matcher(value);
+        if (HMST.matches()) {
+            int h = (StringUtils.isNumeric(HMST.group(1)) && StringUtils.isNotBlank(HMST.group(1)) ? Short.parseShort(HMST.group(1)) : 0);
+            int m = (StringUtils.isNumeric(HMST.group(2)) && StringUtils.isNotBlank(HMST.group(2)) ? Byte.parseByte(HMST.group(2)) : 0) + h * 60;
+            int s = (StringUtils.isNumeric(HMST.group(3)) && StringUtils.isNotBlank(HMST.group(3)) ? Byte.parseByte(HMST.group(3)) : 0) + m * 60;
+            int t = (StringUtils.isNumeric(HMST.group(4)) && StringUtils.isNotBlank(HMST.group(4)) ? Byte.parseByte(HMST.group(4)) : 0) + s * 20;
+            Subathon.LOGGER.info(String.valueOf(t));
+            time = t;
+        } else if (TIME_PATTERN_TICKS.matcher(value).matches()) {
+            time = toInt(Long.parseLong(value.replace("t", "")));
+        } else if (TIME_PATTERN_SECONDS.matcher(value).matches()) {
+            time = toInt(Long.parseLong(value) * 20);
+        }
+        return time;
+    }
 }

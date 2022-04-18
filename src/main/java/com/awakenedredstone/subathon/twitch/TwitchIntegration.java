@@ -1,6 +1,7 @@
 package com.awakenedredstone.subathon.twitch;
 
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.json.JsonHelper;
 import com.awakenedredstone.subathon.util.BotStatus;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import com.awakenedredstone.subathon.util.ProcessSubGift;
@@ -10,7 +11,6 @@ import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.events.channel.CheerEvent;
 import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
 import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
-import com.google.gson.JsonObject;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
@@ -21,8 +21,13 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.logging.UncaughtExceptionHandler;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,14 +40,14 @@ public class TwitchIntegration {
     public final ScheduledExecutorService simpleExecutor = Executors.newScheduledThreadPool(1);
     public ScheduledExecutorService executor = Executors.newScheduledThreadPool(6);
     public Collection<Future<?>> runningThreads = new ArrayList<>();
-    public final BlockingQueue<Thread> queue = new LinkedBlockingQueue<>();
+    public final BlockingQueue<Runnable> queue = new LinkedBlockingQueue<>();
     private TwitchClient twitchClient = null;
     public SubathonData data;
     public boolean isRunning = false;
     private Thread initThread = null;
+    private final int timeout = 30000;
 
-    public TwitchIntegration() {
-    }
+    public TwitchIntegration() {}
 
     public void start(SubathonData data) {
         {
@@ -103,93 +108,83 @@ public class TwitchIntegration {
         usersProgressBar.setName(new TranslatableText("text.subathon.load.users", 0, totalChannels));
         usersProgressBar.setVisible(true);
 
-        //TODO: Use async IO
         initThread = new Thread(() -> {
-            final boolean[] failed = {false};
-            IntStream.range(0, totalChannels).forEach(index -> {
-                String channelName = getConfigData().channels.get(index);
-                Thread thread = new Thread(() -> {
-                    JsonObject channelData = TwitchUtils.getChannelData(channelName);
-                    if (channelData == null) {
-                        MessageUtils.sendError(new TranslatableText("text.subathon.error.invalid_channel_name", channelName));
-                    } else {
-                        getConfigData().channelIds.set(index, channelData.get("channelId").getAsString());
-                        getConfigData().channelDisplayNames.set(index, channelData.get("displayName").getAsString());
-                        twitchClient.getChat().joinChannel(channelName);
-                    }
+            Object lock = new Object();
+            synchronized (lock) {
+                IntStream.range(0, totalChannels).forEach(index -> {
+                    String channelName = getConfigData().channels.get(index);
+                    TwitchUtils.getChannelData(channelName, channelData -> {
+                        if (channelData == null || channelData.get("channelId").isJsonNull() || channelData.get("displayName").isJsonNull()) {
+                            MessageUtils.sendError(new TranslatableText("text.subathon.error.invalid_channel_name", channelName));
+                        } else {
+                            getConfigData().channelIds.set(index, channelData.get("channelId").getAsString());
+                            getConfigData().channelDisplayNames.set(index, channelData.get("displayName").getAsString());
+                            twitchClient.getChat().joinChannel(channelName);
+                        }
 
-                    usersProgressBar.setName(new TranslatableText("text.subathon.load.users", ++joinedChannels[0], totalChannels));
-                    usersProgressBar.setValue(joinedChannels[0]);
+                        usersProgressBar.setName(new TranslatableText("text.subathon.load.users", ++joinedChannels[0], totalChannels));
+                        usersProgressBar.setValue(joinedChannels[0]);
+
+                        if (joinedChannels[0] == totalChannels) {
+                            synchronized (lock) {
+                                lock.notify();
+                            }
+                        }
+                    });
                 });
 
-                thread.setName(String.format("Channel data query [%s]", channelName));
-                thread.setUncaughtExceptionHandler(new UncaughtExceptionHandler(Subathon.LOGGER));
-                thread.setDaemon(true);
-
                 try {
-                    queue.put(thread);
-                } catch (InterruptedException e) {
-                    MessageUtils.sendError(new TranslatableText("text.subathon.error.fatal"), e);
-                    simpleExecutor.execute(new ClearProgressBar());
-                    stop(false);
-                    failed[0] = true;
-                }
-            });
-
-            while (!queue.isEmpty()) {
-                try {
-                    runningThreads.add(executor.submit(queue.take()));
+                    lock.wait(timeout);
+                    if (joinedChannels[0] != totalChannels) {
+                        MessageUtils.sendError(new LiteralText("Failed to start integration!"));
+                        simpleExecutor.execute(new ClearProgressBar());
+                        OKHTTPCLIENT.dispatcher().cancelAll();
+                        return;
+                    }
                 } catch (Exception e) {
                     MessageUtils.sendError(new LiteralText("Failed to start integration!"), e);
                     simpleExecutor.execute(new ClearProgressBar());
-                    clearRunningThreads();
-                    stop(false);
+                    OKHTTPCLIENT.dispatcher().cancelAll();
                     return;
                 }
-            }
 
-            try {
-                for (Future<?> thread : runningThreads) {
-                    thread.get();
+                usersProgressBar.setVisible(false);
+                mainProgressBar.setValue(5);
+                mainProgressBar.setName(new TranslatableText("text.subathon.load.main", new TranslatableText("text.subathon.load.stage.broadcast"), 5));
+                isRunning = true;
+
+                {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeEnumConstant(BotStatus.RUNNING);
+                    MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "bot_status"), buf), "bot_status");
                 }
-            } catch (Exception e) {
-                MessageUtils.sendError(new LiteralText("Failed to start integration!"), e);
-                simpleExecutor.execute(new ClearProgressBar());
-                clearRunningThreads();
-                return;
+
+                {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeDouble(getDisplayValue());
+                    MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
+                }
+
+                {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeInt(getConfigData().resetTimer);
+                    buf.writeInt(getConfigData().updateTimer);
+                    MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "timers"), buf), "timers");
+                }
+
+                MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("text.subathon.integration.start.title"), TitleS2CPacket::new), "start_title");
+                MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("text.subathon.integration.start.subtitle"), SubtitleS2CPacket::new), "start_subtitle");
+
+                //Plays the sound 3 times for a higher volume
+                MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
+                MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
+                MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
+
+                mainProgressBar.setValue(6);
+                mainProgressBar.setName(new TranslatableText("text.subathon.load.main", new TranslatableText("text.subathon.load.stage.complete"), 6));
+
+                simpleExecutor.schedule(new ClearProgressBar(), 3, TimeUnit.SECONDS);
             }
-
-            if (failed[0]) {
-                return;
-            }
-
-            usersProgressBar.setVisible(false);
-            mainProgressBar.setValue(5);
-            mainProgressBar.setName(new TranslatableText("text.subathon.load.main", new TranslatableText("text.subathon.load.stage.broadcast"), 5));
-            isRunning = true;
-
-            {
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeEnumConstant(BotStatus.RUNNING);
-                MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "bot_status"), buf), "bot_status");
-            }
-            {
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeDouble(getDisplayValue());
-                MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
-            }
-            MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("text.subathon.integration.start.title"), TitleS2CPacket::new), "start_title");
-            MessageUtils.broadcast(player -> MessageUtils.sendTitle(player, new TranslatableText("text.subathon.integration.start.subtitle"), SubtitleS2CPacket::new), "start_subtitle");
-
-            //Plays the sound 3 times for a higher volume
-            MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
-            MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
-            MessageUtils.broadcast(player -> player.playSound(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.VOICE, 100, 0.9f), "start_sound");
-
-            mainProgressBar.setValue(6);
-            mainProgressBar.setName(new TranslatableText("text.subathon.load.main", new TranslatableText("text.subathon.load.stage.complete"), 6));
-
-            simpleExecutor.schedule(new ClearProgressBar(), 3, TimeUnit.SECONDS);
         });
 
         initThread.setName("Twitch integration startup");
@@ -232,13 +227,21 @@ public class TwitchIntegration {
 
     public void reload() {
         if (!isRunning) {
-            MessageUtils.sendError(new LiteralText("Cannot reload while the integration isn't running!"));
+            MessageUtils.sendError(new TranslatableText("text.subathon.error.integration.reload.offline"));
         }
 
         {
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeEnumConstant(BotStatus.RELOADING);
             MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "bot_status"), buf), "bot_status");
+        }
+
+        File file = server.getSavePath(WorldSavePath.ROOT).resolve("subathon_data.json").toFile();
+        if (!file.exists()) JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(new SubathonData()).getAsJsonObject(), file);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            data = GSON.fromJson(reader, SubathonData.class);
+        } catch (IOException e) {
+            MessageUtils.sendError(new LiteralText("Failed to start the integration!"));
         }
 
         final byte[] joinedChannels = {0};
@@ -254,76 +257,65 @@ public class TwitchIntegration {
 
         initThread = new Thread(() -> {
             twitchClient.getChat().getChannels().forEach(twitchClient.getChat()::leaveChannel);
-            final boolean[] failed = {false};
-            IntStream.range(0, totalChannels).forEach(index -> {
-                String channelName = getConfigData().channels.get(index);
-                Thread thread = new Thread(() -> {
-                    JsonObject channelData = TwitchUtils.getChannelData(channelName);
-                    if (channelData == null) {
-                        MessageUtils.sendError(new TranslatableText("text.subathon.error.invalid_channel_name", channelName));
-                    } else {
-                        getConfigData().channelIds.set(index, channelData.get("channelId").getAsString());
-                        getConfigData().channelDisplayNames.set(index, channelData.get("displayName").getAsString());
-                        twitchClient.getChat().joinChannel(channelName);
-                    }
+            Object lock = new Object();
+            synchronized (lock) {
+                IntStream.range(0, totalChannels).forEach(index -> {
+                    String channelName = getConfigData().channels.get(index);
+                    TwitchUtils.getChannelData(channelName, channelData -> {
+                        if (channelData == null || channelData.get("channelId").isJsonNull() || channelData.get("displayName").isJsonNull()) {
+                            MessageUtils.sendError(new TranslatableText("text.subathon.error.invalid_channel_name", channelName));
+                        } else {
+                            getConfigData().channelIds.set(index, channelData.get("channelId").getAsString());
+                            getConfigData().channelDisplayNames.set(index, channelData.get("displayName").getAsString());
+                            twitchClient.getChat().joinChannel(channelName);
+                        }
 
-                    usersProgressBar.setName(new TranslatableText("text.subathon.load.users", ++joinedChannels[0], totalChannels));
-                    usersProgressBar.setValue(joinedChannels[0]);
+                        usersProgressBar.setName(new TranslatableText("text.subathon.load.users", ++joinedChannels[0], totalChannels));
+                        usersProgressBar.setValue(joinedChannels[0]);
+
+                        if (joinedChannels[0] == totalChannels) {
+                            synchronized (lock) {
+                                lock.notify();
+                            }
+                        }
+                    });
                 });
 
-                thread.setName(String.format("Channel data query [%s]", channelName));
-                thread.setUncaughtExceptionHandler(new UncaughtExceptionHandler(Subathon.LOGGER));
-                thread.setDaemon(true);
-
                 try {
-                    queue.put(thread);
-                } catch (InterruptedException e) {
-                    MessageUtils.sendError(new TranslatableText("text.subathon.error.fatal"), e);
-                    simpleExecutor.execute(new ClearProgressBar());
-                    stop(false);
-                    failed[0] = true;
-                }
-            });
-
-            while (!queue.isEmpty()) {
-                try {
-                    runningThreads.add(executor.submit(queue.take()));
+                    lock.wait(timeout);
+                    if (joinedChannels[0] != totalChannels) {
+                        MessageUtils.sendError(new LiteralText("Failed to start integration!"));
+                        simpleExecutor.execute(new ClearProgressBar());
+                        OKHTTPCLIENT.dispatcher().cancelAll();
+                        return;
+                    }
                 } catch (Exception e) {
                     MessageUtils.sendError(new LiteralText("Failed to start integration!"), e);
                     simpleExecutor.execute(new ClearProgressBar());
-                    clearRunningThreads();
-                    stop(false);
+                    OKHTTPCLIENT.dispatcher().cancelAll();
                     return;
                 }
-            }
 
-            try {
-                for (Future<?> thread : runningThreads) {
-                    thread.get();
+                {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeEnumConstant(BotStatus.RUNNING);
+                    MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "bot_status"), buf), "bot_status");
                 }
-            } catch (Exception e) {
-                MessageUtils.sendError(new LiteralText("Failed to start integration!"), e);
-                simpleExecutor.execute(new ClearProgressBar());
-                clearRunningThreads();
-                return;
-            }
 
-            if (failed[0]) {
-                return;
-            }
+                {
+                    PacketByteBuf buf = PacketByteBufs.create();
+                    buf.writeInt(getConfigData().resetTimer);
+                    buf.writeInt(getConfigData().updateTimer);
+                    MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "timers"), buf), "timers");
+                }
 
-            {
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeEnumConstant(BotStatus.RUNNING);
-                MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "bot_status"), buf), "bot_status");
+                simpleExecutor.schedule(() -> {
+                    usersProgressBar.setVisible(false);
+                    usersProgressBar.setName(new TranslatableText("text.subathon.load.users", 0, 0));
+                    usersProgressBar.setMaxValue(1);
+                    usersProgressBar.setValue(0);
+                }, 100, TimeUnit.MILLISECONDS);
             }
-
-            simpleExecutor.schedule(() -> {
-                usersProgressBar.setVisible(false);
-                usersProgressBar.setName(new TranslatableText("text.subathon.load.users", 0, 0));
-                usersProgressBar.setMaxValue(1);
-                usersProgressBar.setValue(0);
-            }, 100, TimeUnit.MILLISECONDS);
         });
 
         initThread.setName("Twitch integration reload");
@@ -352,14 +344,25 @@ public class TwitchIntegration {
         increaseValue(amount * getConfigData().bitModifier);
     }
 
-    public void increaseValue(float amount) {
-        data.value += amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
+    public void increaseValue(double amount) {
+        double increase = amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
+        if (getConfigData().updateTimer > 0) integration.data.tempValue += increase;
+        else data.value += increase;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(getDisplayValue());
         MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
     }
 
-    public void setValue(float amount) {
+    public void increaseValue(double amount, boolean force) {
+        if (force) {
+            data.value += amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeDouble(getDisplayValue());
+            MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
+        } else increaseValue(amount);
+    }
+
+    public void setValue(double amount) {
         data.value = amount;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(getDisplayValue());
