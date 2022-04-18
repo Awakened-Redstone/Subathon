@@ -2,6 +2,7 @@ package com.awakenedredstone.subathon.mixin;
 
 import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.potions.SubathonStatusEffect;
+import com.awakenedredstone.subathon.util.MessageUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
@@ -22,7 +23,7 @@ public class AbstractInventoryScreenMixin {
     private void getStatusEffectDescription(StatusEffectInstance statusEffect, CallbackInfoReturnable<Text> cir) {
         if (statusEffect.getEffectType() instanceof SubathonStatusEffect) {
             MutableText mutableText = cir.getReturnValue().shallowCopy();
-            mutableText.append(" ").append(new LiteralText("" + (SubathonClient.value)));
+            mutableText.append(" ").append(new LiteralText("" + (MessageUtils.formatDouble(SubathonClient.value))));
             cir.setReturnValue(mutableText);
         }
     }

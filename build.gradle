@@ -1,4 +1,4 @@
-import com.modrinth.minotaur.TaskModrinthUpload
+import com.modrinth.minotaur.dependencies.ModDependency
 import net.fabricmc.loom.task.RemapJarTask
 import org.kohsuke.github.GHReleaseBuilder
 import org.kohsuke.github.GitHub
@@ -12,8 +12,12 @@ buildscript {
 plugins {
     id 'fabric-loom' version '0.11-SNAPSHOT'
     id "org.ajoberstar.grgit" version "3.1.0"
-    id "com.modrinth.minotaur" version "1.1.0"
+    id "com.modrinth.minotaur" version "2.+"
     id 'maven-publish'
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/subathon.accesswidener")
 }
 
 def ENV = System.getenv()
@@ -47,8 +51,7 @@ dependencies {
         exclude(group: "net.fabricmc.fabric-api")
     }
 
-    modImplementation "de.guntram.mcmod:crowdin-translate:1.2"
-    include "de.guntram.mcmod:crowdin-translate:1.2"
+    include modImplementation("de.guntram.mcmod:crowdin-translate:1.4+1.18.2")
 
     modImplementation("com.github.twitch4j:twitch4j:${project.twitch4j_version}") {
         exclude group: 'org.slf4j'
@@ -104,47 +107,7 @@ task remapMavenJar(type: RemapJarTask, dependsOn: jar) {
     addNestedDependencies = false
 }
 
-task createResourcePack (type: Copy, dependsOn: remapMavenJar) {
-    into layout.buildDirectory
-
-    //Clear directory
-    delete "build/resoursepack"
-
-    // Create directories
-    mkdir "build/resoursepack"
-    mkdir "build/resoursepack/assets"
-    mkdir "build/resoursepack/assets/subathon"
-    mkdir "build/resoursepack/assets/subathon/lang"
-
-    //Create MCMETA file
-    new File(projectDir, "build/resoursepack/pack.mcmeta").text = """{
-   "pack": {
-      "pack_format": 8,
-      "description": "Subathon ${project.version} translations"
-   }
-}
-"""
-
-    into('resoursepack') {
-        from "src/main/resources/assets/subathon/icon.png"
-        rename 'icon.png', 'pack.png'
-    }
-
-
-    into("resoursepack/assets/subathon/lang") {
-        from "src/main/resources/assets/subathon/lang"
-    }
-}
-
-task zipResourcePack (type: Zip, dependsOn: createResourcePack) {
-
-    archiveFileName = "subathon-${project.version}-translations.zip"
-    destinationDirectory = layout.buildDirectory.dir('libs')
-
-    from layout.buildDirectory.dir("resoursepack")
-}
-
-build.dependsOn zipResourcePack
+build.dependsOn remapMavenJar
 
 def getBranch() {
     def ENV = System.getenv()
@@ -161,7 +124,7 @@ def getBranch() {
     return branch.substring(branch.lastIndexOf("/") + 1)
 }
 
-task github(dependsOn: zipResourcePack) {
+task github(dependsOn: remapMavenJar) {
     onlyIf {
         ENV.GITHUB_TOKEN
     }
@@ -170,32 +133,31 @@ task github(dependsOn: zipResourcePack) {
         def github = GitHub.connectUsingOAuth(ENV.GITHUB_TOKEN as String)
         def repository = github.getRepository(ENV.GITHUB_REPOSITORY)
 
-        def releaseBuilder = new GHReleaseBuilder(repository, version as String)
+        def releaseBuilder = new GHReleaseBuilder(repository, version)
         releaseBuilder.name("[$project.minecraft_version] Subathon - $project.version")
         releaseBuilder.body(ENV.CHANGELOG ?: "No changelog provided")
         releaseBuilder.commitish(getBranch())
 
         def ghRelease = releaseBuilder.create()
         ghRelease.uploadAsset(file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar"), "application/java-archive");
-        ghRelease.uploadAsset(file("${project.buildDir}/libs/${archivesBaseName}-${project.version}-translations.zip"), "application/zip");
     }
 }
 
-task modrinth(type: TaskModrinthUpload, dependsOn: zipResourcePack) {
-    onlyIf {
-        ENV.MODRINTH_TOKEN
-    }
+tasks.modrinth.dependsOn(tasks.remapMavenJar)
 
+modrinth {
     token = ENV.MODRINTH_TOKEN
     projectId = "amLXPXxi"
     versionNumber = version
     versionName = "[$project.minecraft_version] Subathon - $project.version"
-    releaseType = "release"
+    versionType = "release"
     changelog = ENV.CHANGELOG ?: "No changelog provided"
-
+    gameVersions = [project.minecraft_version]
+    loaders = ["fabric"]
     uploadFile = remapJar
-    uploadFile = file("${project.buildDir}/libs/${archivesBaseName}-${project.version}-translations.zip")
-
-    addGameVersion(project.minecraft_version)
-    addLoader('fabric')
+    dependencies = [
+            new ModDependency("P7dR8mSH", "required"), //FabricAPI
+            new ModDependency("CmHD69Pj", "required"), //Twitch4J
+            new ModDependency("mOgUt4GM", "optional") //ModMenu
+    ]
 }

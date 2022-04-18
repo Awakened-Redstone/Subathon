@@ -26,6 +26,8 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.awakenedredstone.subathon.Subathon.*;
+import static com.awakenedredstone.subathon.util.ConversionUtils.toByte;
+import static com.awakenedredstone.subathon.util.ConversionUtils.toShort;
 
 public class MessageUtils {
 
@@ -40,10 +42,14 @@ public class MessageUtils {
     }
 
     public static void broadcast(Consumer<ServerPlayerEntity> consumer, String id) {
+        broadcast(server.getPlayerManager().getPlayerList(), consumer, id);
+    }
+
+    public static void broadcast(List<ServerPlayerEntity> players, Consumer<ServerPlayerEntity> consumer, String id) {
         try {
-            server.getPlayerManager().getPlayerList().forEach(consumer);
+            players.forEach(consumer);
         } catch (Exception e) {
-            server.getCommandSource().sendFeedback(new TranslatableText("text.subathon.error.broadcast", id), true);
+            server.getCommandSource().sendFeedback(new TranslatableText("text.subathon.error.broadcast", id).formatted(Formatting.RED), true);
         }
     }
 
@@ -102,5 +108,21 @@ public class MessageUtils {
         buf.writeIntArray(values);
         buf.writeLong(id);
         ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "positioned_text"), buf);
+    }
+
+    public static String ticksToTime(int totalTicks) {
+        byte ticks = toByte(totalTicks % 20);
+        byte seconds = toByte((totalTicks /= 20) % 60);
+        byte minutes = toByte((totalTicks /= 60) % 60);
+        short hours = toShort(totalTicks / 60);
+        return String.format("%02d:%02d:%02d.%02d", hours, minutes, seconds, ticks);
+    }
+
+    public static String ticksToSimpleTime(int _totalTicks) {
+        double totalTicks = _totalTicks;
+        byte seconds = toByte((totalTicks /= 20) % 60);
+        byte minutes = toByte((totalTicks /= 60) % 60);
+        short hours = toShort(totalTicks / 60);
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 }

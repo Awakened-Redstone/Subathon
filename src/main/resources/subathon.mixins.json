@@ -7,11 +7,13 @@
     "LivingEntityMixin",
     "MinecraftServerMixin",
     "PlayerEntityMixin",
+    "PlayerListEntryMixin",
     "ServerConfigEntryMixin"
   ],
   "client": [
     "AbstractInventoryScreenMixin",
     "AbstractTextFieldListCellMixin",
+    "AbstractTextFieldListMixin",
     "InGameHudMixin"
   ],
   "server": [

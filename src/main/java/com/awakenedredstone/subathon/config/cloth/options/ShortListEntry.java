@@ -79,8 +79,8 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
     protected void textFieldPreRender(TextFieldWidget widget) {
         try {
-            double i = Integer.parseInt(this.textFieldWidget.getText());
-            if (!(i < (double)this.minimum) && !(i > (double)this.maximum)) {
+            short i = Short.parseShort(this.textFieldWidget.getText());
+            if (!(i < this.minimum) && !(i > this.maximum)) {
                 widget.setEditableColor(14737632);
             } else {
                 widget.setEditableColor(16733525);
@@ -126,7 +126,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
     public Optional<Text> getError() {
         try {
-            int i = Integer.parseInt(this.textFieldWidget.getText());
+            short i = Short.parseShort(this.textFieldWidget.getText());
             if (i > this.maximum) {
                 return Optional.of(new TranslatableText("text.cloth-config.error.too_large", this.maximum));
             }

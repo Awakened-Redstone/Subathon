@@ -21,19 +21,19 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.boss.CommandBossBar;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.registry.Registry;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +50,7 @@ public class Subathon implements ModInitializer {
     public static CommandBossBar mainProgressBar;
     public static CommandBossBar usersProgressBar;
 
+    public static final OkHttpClient OKHTTPCLIENT = new OkHttpClient();
     public static final StatusEffect SUBATHON_EFFECT = new SubathonStatusEffect();
     public static final EventListener eventListener = new EventListener();
     public static final WebSocketFactory webSocketFactory = new WebSocketFactory();
@@ -64,9 +65,21 @@ public class Subathon implements ModInitializer {
     public void onInitialize() {
         Registry.register(Registry.STATUS_EFFECT, new Identifier(MOD_ID, "subathon"), SUBATHON_EFFECT);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (getConfigData().resetTimer > 0 && server.getTicks() % getConfigData().resetTimer == 0) integration.setValue(0);
+            if (getConfigData().updateTimer > 0 && server.getTicks() % getConfigData().updateTimer == 0) {
+                integration.increaseValue(integration.data.tempValue, true);
+                integration.data.tempValue = 0;
+            }
+
+            //Send the server ticks to the players every second
+            if ((getConfigData().resetTimer > 0 || getConfigData().updateTimer > 0) && server.getTicks() % 20 == 0) {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeInt(server.getTicks());
+                MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(MOD_ID, "server_ticks"), buf), "send_ticks");
+            }
+
             if (Subathon.integration.data.value != 0 && potionTick-- == 0) {
                 potionTick = 10;
-                int level = (int) Math.round(integration.getDisplayValue());
                 MessageUtils.broadcast(player -> player.addStatusEffect(
                         new StatusEffectInstance(SUBATHON_EFFECT, potionTick + 5, 0, false, false)), "apply_potion");
             }
@@ -107,7 +120,8 @@ public class Subathon implements ModInitializer {
             usersProgressBar.setVisible(false);
 
             File file = server.getSavePath(WorldSavePath.ROOT).resolve("subathon_data.json").toFile();
-            if (!file.exists()) JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(new SubathonData()).getAsJsonObject(), file);
+            if (!file.exists())
+                JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(new SubathonData()).getAsJsonObject(), file);
             try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 SubathonData data = Subathon.GSON.fromJson(reader, SubathonData.class);
                 if (getConfigData().runAtServerStart) integration.start(data);
@@ -117,18 +131,14 @@ public class Subathon implements ModInitializer {
                 integration.simpleExecutor.execute(new TwitchIntegration.ClearProgressBar());
             }
         });
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> integration.stop(false));
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            if (getConfigData().updateTimer > 0) integration.data.value += integration.data.tempValue;
+            integration.stop(false);
+        });
 
         LivingEntityCallback.JUMP.register((entity) -> {
             if (!entity.isPlayer() && ConfigUtils.getMode() != Mode.SUPER_JUMP) return;
             if (ConfigUtils.getMode() == Mode.JUMP || ConfigUtils.getMode() == Mode.SUPER_JUMP) increaseJump(entity);
-        });
-
-        LivingEntityCallback.TICK.register((entity) -> {
-            if (((ConfigUtils.getMode() == Mode.HEALTH && entity instanceof PlayerEntity) || ConfigUtils.getMode() == Mode.SUPER_HEALTH) && potionTick == 0) {
-                entity.addStatusEffect(new StatusEffectInstance(StatusEffects.HEALTH_BOOST, potionTick + 5,
-                        BigDecimal.valueOf(integration.data.value).intValue(), false, false));
-            }
         });
 
         generateConfig();

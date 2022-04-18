@@ -40,24 +40,26 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class SubathonCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        dispatcher.register(literal("subathon").requires((source) -> source.hasPermissionLevel(2))
+        dispatcher.register(literal("subathon").requires((source) -> source.hasPermissionLevel(2) || source.getServer().isSingleplayer())
                 .then(literal("start").executes((source) -> executeStart(source.getSource())))
                 .then(literal("stop").executes((source) -> executeStop(source.getSource())))
                 .then(literal("restart").executes((source) -> executeRestart(source.getSource())))
                 .then(literal("reload").executes((source) -> executeReload(source.getSource())))
                 .then(literal("info").executes((source) -> executeGetInfo(source.getSource())))
-                .then(literal("set")
+                .then(literal("set").requires((source) -> source.hasPermissionLevel(2))
                         .then(literal("modifier").then(argument("amount", FloatArgumentType.floatArg())
                                 .executes((source) -> executeSet(source.getSource(), ValueType.MODIFIER, FloatArgumentType.getFloat(source, "amount"), 0))))
+                        .then(literal("temp_modifier").then(argument("amount", FloatArgumentType.floatArg())
+                                .executes((source) -> executeSet(source.getSource(), ValueType.TEMP_MODIFIER, FloatArgumentType.getFloat(source, "amount"), 0))))
                         .then(literal("subs").then(argument("amount", IntegerArgumentType.integer(0, 32767))
                                 .executes((source) -> executeSet(source.getSource(), ValueType.SUBS, 0, IntegerArgumentType.getInteger(source, "amount")))))
                         .then(literal("bits").then(argument("amount", IntegerArgumentType.integer(0, 32767))
                                 .executes((source) -> executeSet(source.getSource(), ValueType.BITS, 0, IntegerArgumentType.getInteger(source, "amount"))))))
-                .then(literal("get")
+                .then(literal("get").requires((source) -> source.hasPermissionLevel(2))
                         .then(literal("modifier").executes(source -> executeGet(source.getSource(), ValueType.MODIFIER)))
                         .then(literal("subs").executes(source -> executeGet(source.getSource(), ValueType.SUBS)))
                         .then(literal("bits").executes(source -> executeGet(source.getSource(), ValueType.BITS))))
-                .then(literal("test")
+                .then(literal("test").requires((source) -> source.hasPermissionLevel(2))
                         .then(literal("sub").then(argument("tier", StringArgumentType.word())
                                 .suggests((source, builder) -> CommandSource.suggestMatching(Arrays.stream(SubTiers.values()).map(v -> v.name().toLowerCase()).toList(), builder))
                                 .executes(source -> {
@@ -179,7 +181,11 @@ public class SubathonCommand {
         switch (type) {
             case MODIFIER -> {
                 integration.setValue(value1);
-                source.sendFeedback(new TranslatableText("commands.subathon.set.modifier", value1), true);
+                source.sendFeedback(new TranslatableText("commands.subathon.set.value", value1), true);
+            }
+            case TEMP_MODIFIER -> {
+                integration.data.tempValue = value1;
+                source.sendFeedback(new TranslatableText("commands.subathon.set.temp_value", value1), true);
             }
             case SUBS -> {
                 integration.data.subs = value2;
@@ -202,8 +208,9 @@ public class SubathonCommand {
     public static int executeGet(ServerCommandSource source, ValueType type) {
         switch (type) {
             case MODIFIER -> {
-                source.sendFeedback(new TranslatableText("commands.subathon.get.internalValue", integration.data.value), false);
-                source.sendFeedback(new TranslatableText("commands.subathon.get.displayValue", integration.getDisplayValue()), false);
+                source.sendFeedback(new TranslatableText("commands.subathon.get.internal_value", integration.data.value), false);
+                source.sendFeedback(new TranslatableText("commands.subathon.get.display_value", integration.getDisplayValue()), false);
+                source.sendFeedback(new TranslatableText("commands.subathon.get.temp_value", integration.data.tempValue), false);
             }
             case SUBS -> source.sendFeedback(new TranslatableText("commands.subathon.get.subs", integration.data.subs), false);
             case BITS -> source.sendFeedback(new TranslatableText("commands.subathon.get.bits", integration.data.bits), false);
@@ -294,6 +301,7 @@ public class SubathonCommand {
 
     enum ValueType {
         MODIFIER,
+        TEMP_MODIFIER,
         SUBS,
         BITS
     }

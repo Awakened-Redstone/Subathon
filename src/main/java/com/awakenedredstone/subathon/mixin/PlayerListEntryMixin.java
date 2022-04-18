@@ -12,8 +12,6 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,7 +29,6 @@ import java.util.Optional;
 
 @Mixin(PlayerListEntry.class)
 public class PlayerListEntryMixin {
-    private final Logger LOGGER = LogManager.getLogger("SakuraCake/PlayerListEntryMixin");
     @Shadow @Final private GameProfile profile;
     @Shadow @Final private Map<Type, Identifier> textures;
     @Shadow private boolean texturesLoaded;
@@ -49,14 +46,14 @@ public class PlayerListEntryMixin {
     }
 
     private void registerCapes() {
-        Path capesPath = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().getPath("data/subathon/special/capes.json");
-        if (capesPath != null) {
-            try (BufferedReader reader = Files.newBufferedReader(capesPath)) {
+        Optional<Path> capesPath = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath("data/subathon/special/capes.json");
+        if (capesPath.isPresent()) {
+            try (BufferedReader reader = Files.newBufferedReader(capesPath.get())) {
                 JsonElement json = JsonParser.parseReader(new JsonReader(reader));
                 if (json == null) return;
                 JsonElement capeId = json.getAsJsonObject().get(profile.getId().toString());
                 if (capeId != null) {
-                    Optional<Path> path = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath(String.format("assets/sakuracake/textures/special/cape/%s.png", capeId.getAsString()));
+                    Optional<Path> path = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath(String.format("assets/subathon/textures/cape/%s.png", capeId.getAsString()));
                     if (path.isPresent()) {
                         try (InputStream stream = Files.newInputStream(path.get())) {
                             MinecraftClient.getInstance().getTextureManager().registerTexture(new Identifier(Subathon.MOD_ID, String.format("%s", capeId.getAsString())), new NativeImageBackedTexture(NativeImage.read(stream)));

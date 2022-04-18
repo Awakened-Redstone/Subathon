@@ -2,7 +2,8 @@ package com.awakenedredstone.subathon.twitch;
 
 public class SubathonData {
 
-    public double value = 0.0f;
+    public transient double tempValue = 0;
+    public double value = 0;
     public int bits = 0;
     public int subs = 0;
 }
