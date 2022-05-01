@@ -32,8 +32,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
-import static com.awakenedredstone.subathon.Subathon.getConfigData;
-import static com.awakenedredstone.subathon.Subathon.integration;
+import static com.awakenedredstone.subathon.Subathon.*;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -180,6 +179,7 @@ public class SubathonCommand {
     public static int executeSet(ServerCommandSource source, ValueType type, float value1, int value2) {
         switch (type) {
             case MODIFIER -> {
+                subTimers.clear();
                 integration.setValue(value1);
                 source.sendFeedback(new TranslatableText("commands.subathon.set.value", value1), true);
             }
@@ -254,7 +254,7 @@ public class SubathonCommand {
 
                 testEvent = (new SubscriptionEvent(null, new EventChannel(getConfigData().channelIds.get(0), getConfigData().channels.get(0)),
                         new EventUser(getConfigData().channelIds.get(0), getConfigData().channelDisplayNames.get(0)),
-                        tier.ordinalName, Optional.empty(), (int) count, false,
+                        tier.ordinalName, Optional.of("Did I hear SUBATHON?"), (int) count, false,
                         null, new Random().nextInt(count + 1), null, 1, 0, Collections.emptyList()));
             }
             case SUB_GIFT -> {
@@ -285,7 +285,7 @@ public class SubathonCommand {
 
                 testEvent = (new CheerEvent(null, new EventChannel(getConfigData().channelIds.get(0), getConfigData().channels.get(0)),
                         new EventUser(getConfigData().channelIds.get(0), getConfigData().channelDisplayNames.get(0)),
-                        "", (int) count, 0, 0, Collections.emptyList()));
+                        String.format("Cheer%d Jump king!", count), (int) count, 0, 0, Collections.emptyList()));
             }
         }
 

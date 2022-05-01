@@ -4,14 +4,11 @@
   "category.subathon.keybinds": "Subathon",
   "key.subathon.event_logs": "Event logs",
 
-  "tip.startWithServer.title": "Start with server",
-  "tip.startWithServer.description": "is enabled by default!",
-
   "gui.subathon.event_logs": "Subathon logs",
   "gui.subathon.event_logs.sub": "%1$s subscribed with %2$s",
-  "gui.subathon.event_logs.resub": "%1$s resubscribed with %3$s for a total of %2$s months",
+  "gui.subathon.event_logs.resub": "%1$s resubscribed with %3$s, for a total of %2$s months",
   "gui.subathon.event_logs.gift": "%1$s gifted %2$s %3$s sub%4$s",
-  "gui.subathon.event_logs.gift_user": "%1$s gifted %2$s a %3$s sub",
+  "gui.subathon.event_logs.gift_user": "%1$s gifted %4$s a %3$s sub",
   "gui.subathon.event_logs.cheer": "%1$s cheered x%2$s",
 
   "gui.subathon.clear_logs": "Clear logs",
@@ -26,7 +23,7 @@
   "commands.subathon.get.subs": "The current sub count is %s",
   "commands.subathon.get.bits": "The current bit count is %s",
 
-  "commands.subathon.set.modifier": "The modifier value has been set to %s",
+  "commands.subathon.set.value": "The modifier value has been set to %s",
   "commands.subathon.set.temp_value": "The cached value has been set to %s",
   "commands.subathon.set.subs": "The sub count has been set to %s",
   "commands.subathon.set.bits": "The bit count has been set to %s",
@@ -100,6 +97,7 @@
   "text.subathon.error.invalid_channel_name": "Ignoring invalid channel name \"%s\"!",
   "text.subathon.error.broadcast": "Failed to send broadcast with id \"%s\"!",
   "text.subathon.error.fatal": "§c§lA fatal error occurred!",
+  "text.subathon.error.message_too_long": "§cMessage too long!",
 
   "option.subathon.mode": "Mode",
   "option.subathon.message_mode": "Message mode",
@@ -143,8 +141,8 @@
   "option.subathon.bits.cumulative.description": "The bits donated will be stored internally and when the internal\namount passes the minimum bit count the counter will be increased",
   "option.subathon.bits.once.description": "Only increases the counter once, instead of bits/bit_min",
   "option.subathon.bits.cumulative_ignore_min.description": "Makes so on cumulative bits mode all bits are added to the internal\nbit counter instead of only cheers over the minimum amount",
-  "option.subathon.resetTimer.description": "The time between resets, setting this to 0 disables it\nFormat: HH:mm:ss.tt\nH = Hour | m= Minute | s = Second | t = Tick\nTo insert the value in ticks just insert the number and a \u00a7ct\u00a7r on the end\nTo insert in seconds just insert the number",
-  "option.subathon.updateTimer.description": "The time between updates, setting this to 0 disables it\nFormat: HH:mm:ss.tt\nH = Hour | m= Minute | s = Second | t = Tick\nTo insert the value in ticks just insert the number and a \u00a7ct\u00a7r on the end\nTo insert in seconds just insert the number",
+  "option.subathon.reset_timer.description": "The time between resets, setting this to 0 disables it\nFormat: HH:mm:ss.tt\nH = Hour | m= Minute | s = Second | t = Tick\nTo insert the value in ticks just insert the number and a \u00a7ct\u00a7r on the end\nTo insert in seconds just insert the number",
+  "option.subathon.update_timer.description": "The time between updates, setting this to 0 disables it\nFormat: HH:mm:ss.tt\nH = Hour | m= Minute | s = Second | t = Tick\nTo insert the value in ticks just insert the number and a \u00a7ct\u00a7r on the end\nTo insert in seconds just insert the number",
   "option.subathon.show_reset_timer.description": "Shows reset timer",
   "option.subathon.show_update_timer.description": "Shows update timer"
 }

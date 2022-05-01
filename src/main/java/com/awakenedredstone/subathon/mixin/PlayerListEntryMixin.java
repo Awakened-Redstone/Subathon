@@ -20,7 +20,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,7 +59,7 @@ public class PlayerListEntryMixin {
                         }
                     }
                 }
-            } catch (IOException ignored) {}
+            } catch (Exception ignored) {}
         }
     }
 
@@ -74,7 +73,7 @@ public class PlayerListEntryMixin {
                 if (capeId != null) {
                     return new Identifier(Subathon.MOD_ID, String.format("%s", capeId.getAsString()));
                 }
-            } catch (IOException ignored) {}
+            } catch (Exception ignored) {}
         }
         return null;
     }

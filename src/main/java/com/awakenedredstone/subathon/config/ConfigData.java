@@ -23,7 +23,7 @@ public class ConfigData {
 
     //Client
     public float fontScale = 1;
-    public boolean showResetTimer = false;
+//    public boolean showResetTimer = false;
     public boolean showUpdateTimer = false;
 
     //Advanced

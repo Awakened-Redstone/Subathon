@@ -6,6 +6,10 @@
 - [ ] Special messages (show banner on 5 gifted, etc)
 - [ ] Add different ways to show the overlay messages
 
+# Fixes
+
+- [ ] Fix horse jump not being affected (not step, JUMP)
+
 # Features
 
 - [ ] Show the value for players without the mod
@@ -13,9 +17,11 @@
 - [x] Save mod data per world
 - [x] Better startup process and notifications
 - [x] Logs screen for checking all events easily
-- [ ] Show sub/bits messages on events
+- [x] Show sub/bits messages on events
 - [ ] Spawn a raid when someone does a channel raid
-- [ ] Hold increment and add it every x seconds (add random interval too)
+- [x] Hold increment and add it every x seconds
+- [ ] Hold increment and add it every x seconds + random interval
+- [x] Reset modifier every x seconds
 - [ ] Reset modifier every x seconds [when above specified value]
 - [ ] Reset modifier on death
 - [ ] Custom advancements
@@ -29,6 +35,7 @@
     - [ ] To the moon! (get a value of at least 100 on JUMP or SUPER_JUMP)
 
 # Modes
+
 - [x] Jump mode
 - [x] Super jump mode
 - [x] Speed mode

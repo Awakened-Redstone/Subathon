@@ -21,6 +21,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.logging.UncaughtExceptionHandler;
 
@@ -327,8 +328,8 @@ public class TwitchIntegration {
     public void addBits(int bits) {
         data.bits += bits;
         if (data.bits >= getConfigData().bitMin) {
-            data.bits %= getConfigData().bitMin;
             increaseValueFromBits(getConfigData().onePerCheer ? 1 : Math.floorDiv(data.bits, getConfigData().bitMin));
+            data.bits %= getConfigData().bitMin;
         }
     }
 
@@ -348,6 +349,7 @@ public class TwitchIntegration {
         double increase = amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
         if (getConfigData().updateTimer > 0) integration.data.tempValue += increase;
         else data.value += increase;
+        if (getConfigData().resetTimer > 0) subTimers.add(new Pair<>(amount, server.getTicks() + getConfigData().resetTimer));
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(getDisplayValue());
         MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
@@ -360,6 +362,13 @@ public class TwitchIntegration {
             buf.writeDouble(getDisplayValue());
             MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
         } else increaseValue(amount);
+    }
+
+    public void decreaseValue(double amount) {
+        data.value -= amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeDouble(getDisplayValue());
+        MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "value"), buf), "value");
     }
 
     public void setValue(double amount) {

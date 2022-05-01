@@ -182,11 +182,11 @@ public class SubathonClient implements ClientModInitializer {
                 if (client.options.showAutosaveIndicator && minecraftServer != null && minecraftServer.isSaving()) y -= 12;
                 positionedTexts.put(-11L, new PositionedText(message, true, x, y, 0xFFFFFF, fontScale));
 
-                if (Subathon.getConfigData().showResetTimer && resetTimer != 0 && serverTicks != 0) {
+                /*if (Subathon.getConfigData().showResetTimer && resetTimer != 0 && serverTicks != 0) {
                     message = new LiteralText(MessageUtils.ticksToSimpleTime(resetTimer - serverTicks % resetTimer));
                     x = toFloat(client.getWindow().getScaledWidth() - (client.textRenderer.getWidth(message) * (fontScale / 2)) - 4);
                     positionedTexts.put(-10L, new PositionedText(message, true, x, y -= 12 * fontScale / 2, 0xFFFFFF, fontScale / 2, 4, 0, 0));
-                }
+                }*/
 
                 if (Subathon.getConfigData().showUpdateTimer && updateTimer != 0 && serverTicks != 0) {
                     message = new LiteralText(MessageUtils.ticksToSimpleTime(updateTimer - serverTicks % updateTimer + 19));

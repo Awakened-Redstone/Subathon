@@ -31,6 +31,7 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.registry.Registry;
 import okhttp3.OkHttpClient;
@@ -42,6 +43,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Subathon implements ModInitializer {
     public static String MOD_ID = "subathon";
@@ -50,6 +53,7 @@ public class Subathon implements ModInitializer {
     public static CommandBossBar mainProgressBar;
     public static CommandBossBar usersProgressBar;
 
+    public static final List<Pair<Double, Integer>> subTimers = new ArrayList<>();
     public static final OkHttpClient OKHTTPCLIENT = new OkHttpClient();
     public static final StatusEffect SUBATHON_EFFECT = new SubathonStatusEffect();
     public static final EventListener eventListener = new EventListener();
@@ -65,7 +69,14 @@ public class Subathon implements ModInitializer {
     public void onInitialize() {
         Registry.register(Registry.STATUS_EFFECT, new Identifier(MOD_ID, "subathon"), SUBATHON_EFFECT);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (getConfigData().resetTimer > 0 && server.getTicks() % getConfigData().resetTimer == 0) integration.setValue(0);
+            //if (getConfigData().resetTimer > 0 && server.getTicks() % getConfigData().resetTimer == 0) integration.setValue(0);
+            subTimers.removeIf(pair -> {
+                if (pair.getRight() <= server.getTicks()) {
+                    integration.decreaseValue(pair.getLeft());
+                    return true;
+                } else return false;
+            });
+
             if (getConfigData().updateTimer > 0 && server.getTicks() % getConfigData().updateTimer == 0) {
                 integration.increaseValue(integration.data.tempValue, true);
                 integration.data.tempValue = 0;

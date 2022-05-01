@@ -5,15 +5,15 @@ import org.kohsuke.github.GitHub
 
 buildscript {
     dependencies {
-        classpath 'org.kohsuke:github-api:1.135'
+        classpath 'org.kohsuke:github-api:1.306'
     }
 }
 
 plugins {
-    id 'fabric-loom' version '0.11-SNAPSHOT'
+    id "fabric-loom" version "0.12.+"
+    id "maven-publish"
     id "org.ajoberstar.grgit" version "3.1.0"
     id "com.modrinth.minotaur" version "2.+"
-    id 'maven-publish'
 }
 
 loom {
@@ -21,6 +21,7 @@ loom {
 }
 
 def ENV = System.getenv()
+def CHANGELOG = new File('CHANGELOG.md').text
 
 version = project.mod_version
 group = project.maven_group
@@ -135,7 +136,7 @@ task github(dependsOn: remapMavenJar) {
 
         def releaseBuilder = new GHReleaseBuilder(repository, version)
         releaseBuilder.name("[$project.minecraft_version] Subathon - $project.version")
-        releaseBuilder.body(ENV.CHANGELOG ?: "No changelog provided")
+        releaseBuilder.body(CHANGELOG ?: "No changelog provided")
         releaseBuilder.commitish(getBranch())
 
         def ghRelease = releaseBuilder.create()
@@ -148,12 +149,8 @@ tasks.modrinth.dependsOn(tasks.remapMavenJar)
 modrinth {
     token = ENV.MODRINTH_TOKEN
     projectId = "amLXPXxi"
-    versionNumber = version
     versionName = "[$project.minecraft_version] Subathon - $project.version"
-    versionType = "release"
-    changelog = ENV.CHANGELOG ?: "No changelog provided"
-    gameVersions = [project.minecraft_version]
-    loaders = ["fabric"]
+    changelog = CHANGELOG ?: "No changelog provided"
     uploadFile = remapJar
     dependencies = [
             new ModDependency("P7dR8mSH", "required"), //FabricAPI

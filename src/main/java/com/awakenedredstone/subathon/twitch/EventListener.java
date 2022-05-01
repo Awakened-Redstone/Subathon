@@ -11,9 +11,7 @@ import com.github.twitch4j.common.util.TwitchUtils;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 
 import static com.awakenedredstone.subathon.Subathon.getConfigData;
@@ -25,7 +23,8 @@ public class EventListener {
         if (event.getGifted()) return;
         Subscription tier = Subscription.valueOf(event.getSubPlan().name().replace("TWITCH_", ""));
         String name = event.getMessageEvent() != null ? event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName()) : event.getUser().getName();
-        Text message = new TranslatableText("text.subathon.event.subscription", name, tier.getName());
+        BaseText message = new TranslatableText("text.subathon.event.subscription", name, tier.getName());
+        if (event.getMessage().isPresent()) message.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(event.getMessage().get()))));
 
         integration.addSubs(getConfigData().subModifiers.get(tier.name().toLowerCase()));
 
@@ -37,7 +36,7 @@ public class EventListener {
             buf.writeInt(event.getMonths());
             buf.writeEnumConstant(tier);
             buf.writeEnumConstant(event.getMonths() == 1 ? SubathonCommand.Events.SUBSCRIPTION : SubathonCommand.Events.RESUBSCRIPTION);
-            buf.writeString("");
+            buf.writeString(event.getMessage().orElse(""));
             MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
         }
     }
@@ -84,6 +83,16 @@ public class EventListener {
             integration.addSubs(getConfigData().subModifiers.get(tier.name().toLowerCase()));
 
             MessageUtils.sendEventMessage(message);
+
+            {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeString(gifterName);
+                buf.writeInt(0);
+                buf.writeEnumConstant(tier);
+                buf.writeEnumConstant(SubathonCommand.Events.GIFT_USER);
+                buf.writeString(name);
+                MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
+            }
         } else {
             e.getEvents().forEach(event -> {
                 SubscriptionPlan subscriptionPlan = SubscriptionPlan.fromString(event.getSubscriptionPlan());
@@ -117,14 +126,16 @@ public class EventListener {
     public void cheerListener(CheerEvent event) {
         String name = event.getUser().equals(TwitchUtils.ANONYMOUS_CHEERER) ? "Anonymous" :
                 (event.getMessageEvent() != null ? event.getMessageEvent().getTagValue("display-name").orElse(event.getUser().getName()) : event.getUser().getName());
-        Text message = new TranslatableText("text.subathon.event.cheer", name, event.getBits());
+        BaseText message = new TranslatableText("text.subathon.event.cheer", name, event.getBits());
         if (getConfigData().cumulativeBits) {
             if (getConfigData().cumulativeIgnoreMin || event.getBits() >= getConfigData().bitMin) {
                 integration.addBits(event.getBits());
             }
-        } else if(event.getBits() >= getConfigData().bitMin) {
+        } else if (event.getBits() >= getConfigData().bitMin) {
             integration.increaseValueFromBits(getConfigData().onePerCheer ? 1 : Math.floorDiv(event.getBits(), getConfigData().bitMin));
         }
+
+        message.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(event.getMessage()))));
 
         MessageUtils.sendEventMessage(message);
 
@@ -134,7 +145,7 @@ public class EventListener {
             buf.writeInt(event.getBits());
             buf.writeEnumConstant(Subscription.PRIME);
             buf.writeEnumConstant(SubathonCommand.Events.CHEER);
-            buf.writeString("");
+            buf.writeString(event.getMessage());
             MessageUtils.broadcastToOps(player -> ServerPlayNetworking.send(player, new Identifier(Subathon.MOD_ID, "event"), buf), "event_packet");
         }
     }

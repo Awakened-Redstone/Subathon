@@ -225,11 +225,11 @@ public class ClothConfig {
                 .setSaveConsumer(newValue -> Subathon.getConfigData().fontScale = newValue)
                 .build());
 
-        client.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.show_reset_timer"), Subathon.getConfigData().showResetTimer)
+        /*client.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.show_reset_timer"), Subathon.getConfigData().showResetTimer)
                 .setDefaultValue(false)
                 .setTooltip(new TranslatableText("option.subathon.show_reset_timer.description"))
                 .setSaveConsumer(newValue -> Subathon.getConfigData().showResetTimer = newValue)
-                .build());
+                .build());*/
 
         client.addEntry(entryBuilder.startBooleanToggle(new TranslatableText("option.subathon.show_update_timer"), Subathon.getConfigData().showUpdateTimer)
                 .setDefaultValue(false)

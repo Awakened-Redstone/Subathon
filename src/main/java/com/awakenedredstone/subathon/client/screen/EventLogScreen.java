@@ -13,9 +13,14 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+
+import static com.awakenedredstone.subathon.commands.SubathonCommand.Events.GIFT_USER;
 
 @Environment(value= EnvType.CLIENT)
 public class EventLogScreen extends Screen {
@@ -74,7 +79,8 @@ public class EventLogScreen extends Screen {
         public long duration;
 
         public EventEntryListWidget(MinecraftClient minecraftClient) {
-            super(minecraftClient, EventLogScreen.this.width, EventLogScreen.this.height, 32, EventLogScreen.this.height - 64, 20);
+            super(minecraftClient, EventLogScreen.this.width, EventLogScreen.this.height, 32, EventLogScreen.this.height - 36, 20);
+            this.setRenderSelection(false);
             for (TwitchEvent event : SubathonClient.events) {
                 this.addEntry(new EventLogScreen.Entry(event, this));
             }
@@ -141,6 +147,7 @@ public class EventLogScreen extends Screen {
     class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
         private final TwitchEvent event;
         private final EventEntryListWidget parent;
+        private Rectangle area = new Rectangle(0, 0, 0 , 0);
 
         Entry(TwitchEvent event, EventEntryListWidget parent) {
             this.event = event;
@@ -161,16 +168,28 @@ public class EventLogScreen extends Screen {
         }
 
         @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if ((button == 1 && area.contains(mouseX, mouseY) && !event.message().isEmpty() && event.event() != GIFT_USER) || button == 0) {
+                EventLogScreen.this.client.setScreen(new EventMessageScreen(EventLogScreen.this, event, button == 1));
+                EventLogScreen.this.client.getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0f));
+                return true;
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             int width = parent == null ? EventLogScreen.this.width : parent.getRowWidth();
             int messageWidth = EventLogScreen.this.textRenderer.getWidth(event.getMessage());
             int textStart = width < 512 ? (width - messageWidth) / 2 : EventLogScreen.this.width / 32 * 9;
             int rectWidth = Math.max(EventLogScreen.this.width / 8 * 5, messageWidth + 16);
             int start = width < 512 ? (width / 2) - (rectWidth / 2) : textStart - 8;
-            if (isMouseInside(mouseX, mouseY, start, y - 1, rectWidth, entryHeight + 8)) {
+            if (isMouseInside(mouseX, mouseY, start, y - 1, rectWidth, entryHeight + 7)) {
                 Rectangle area = getEntryArea(start, y - 1, rectWidth, entryHeight + 8);
-                if (parent != null)
-                    parent.thisTimeTarget = area;
+                if (!this.area.equals(area)) this.area = area;
+                if (parent != null) parent.thisTimeTarget = area;
+                Style style = EventLogScreen.this.textRenderer.getTextHandler().getStyleAt(event.getMessage(), 0);
+                if (style != null && style.getHoverEvent() != null) EventLogScreen.this.renderTextHoverEffect(matrices, style, mouseX, mouseY);
             }
 
 

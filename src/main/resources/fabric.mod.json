@@ -34,11 +34,11 @@
   "depends": {
     "fabricloader": ">=0.13.3",
     "fabric": ">=0.47.8",
-    "minecraft": ">=1.18.2"
+    "minecraft": ">=1.18.2",
+    "twitch4j": "1.9.0"
   },
   "recommends": {
     "modmenu": ">=3.1.0",
-    "cloth-config": ">=6.2",
-    "twitch4j": "1.9.0"
+    "cloth-config": ">=6.2"
   }
 }
