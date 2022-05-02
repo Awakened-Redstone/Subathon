@@ -21,7 +21,7 @@ loom {
 }
 
 def ENV = System.getenv()
-def CHANGELOG = new File('CHANGELOG.md').text
+def CHANGELOG = new File('CHANGELOG.md').exists() ? new File('CHANGELOG.md').text : "No changelog provided"
 
 version = project.mod_version
 group = project.maven_group
