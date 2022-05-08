@@ -5,6 +5,7 @@ import com.awakenedredstone.subathon.config.Config;
 import com.awakenedredstone.subathon.config.ConfigData;
 import com.awakenedredstone.subathon.config.Mode;
 import com.awakenedredstone.subathon.events.LivingEntityCallback;
+import com.awakenedredstone.subathon.events.TwitchEvents;
 import com.awakenedredstone.subathon.json.JsonHelper;
 import com.awakenedredstone.subathon.potions.SubathonStatusEffect;
 import com.awakenedredstone.subathon.twitch.EventListener;
@@ -12,6 +13,7 @@ import com.awakenedredstone.subathon.twitch.SubathonData;
 import com.awakenedredstone.subathon.twitch.TwitchIntegration;
 import com.awakenedredstone.subathon.util.BotStatus;
 import com.awakenedredstone.subathon.util.ConfigUtils;
+import com.awakenedredstone.subathon.util.ConversionUtils;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -27,13 +29,16 @@ import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.boss.CommandBossBar;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 import net.minecraft.util.WorldSavePath;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryEntry;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +50,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 
 public class Subathon implements ModInitializer {
     public static String MOD_ID = "subathon";
@@ -89,7 +96,7 @@ public class Subathon implements ModInitializer {
                 MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(MOD_ID, "server_ticks"), buf), "send_ticks");
             }
 
-            if (Subathon.integration.data.value != 0 && potionTick-- == 0) {
+            if (Subathon.integration.data.value != 0 && potionTick-- == 0 && ConfigUtils.getMode().isValueBased()) {
                 potionTick = 10;
                 MessageUtils.broadcast(player -> player.addStatusEffect(
                         new StatusEffectInstance(SUBATHON_EFFECT, potionTick + 5, 0, false, false)), "apply_potion");
@@ -148,8 +155,28 @@ public class Subathon implements ModInitializer {
         });
 
         LivingEntityCallback.JUMP.register((entity) -> {
-            if (!entity.isPlayer() && ConfigUtils.getMode() != Mode.SUPER_JUMP) return;
-            if (ConfigUtils.getMode() == Mode.JUMP || ConfigUtils.getMode() == Mode.SUPER_JUMP) increaseJump(entity);
+            if (!entity.isPlayer() && !ConfigUtils.isModeEnabled(Mode.SUPER_JUMP)) return;
+            if (ConfigUtils.isModeEnabled(Mode.JUMP) || ConfigUtils.isModeEnabled(Mode.SUPER_JUMP))
+                increaseJump(entity);
+        });
+
+        TwitchEvents.VALUE_UPDATE.register(() -> {
+            if (ConfigUtils.isModeEnabled(Mode.POTION_CHAOS)) {
+                MessageUtils.broadcast(player -> {
+                    Random random = new Random();
+                    double _time = random.nextGaussian(16, 7) + Math.max(0, random.nextGaussian(-50, 80));
+                    double _modifier = random.nextGaussian(3, 2) + Math.max(0, random.nextGaussian(-10, 20));
+                    int time = ConversionUtils.toInt(Math.round(MathHelper.clamp(3, _time, 90) * 20));
+                    int modifier = ConversionUtils.toInt(Math.round(MathHelper.clamp(0, _modifier, 100)));
+                    Optional<RegistryEntry<StatusEffect>> randomPotion;
+                    StatusEffect effect;
+                    do {
+                        randomPotion = Registry.STATUS_EFFECT.getRandom(random);
+                        effect = randomPotion.isPresent() ? randomPotion.get().value() : StatusEffects.SLOWNESS;
+                    } while (effect == SUBATHON_EFFECT);
+                    player.addStatusEffect(new StatusEffectInstance(effect, time, modifier, false, false, true));
+                }, "potion_chaos");
+            }
         });
 
         generateConfig();

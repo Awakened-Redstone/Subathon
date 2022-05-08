@@ -1,11 +1,9 @@
 package com.awakenedredstone.subathon.twitch;
 
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.events.TwitchEvents;
 import com.awakenedredstone.subathon.json.JsonHelper;
-import com.awakenedredstone.subathon.util.BotStatus;
-import com.awakenedredstone.subathon.util.MessageUtils;
-import com.awakenedredstone.subathon.util.ProcessSubGift;
-import com.awakenedredstone.subathon.util.TwitchUtils;
+import com.awakenedredstone.subathon.util.*;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
 import com.github.twitch4j.chat.events.channel.CheerEvent;
@@ -346,6 +344,8 @@ public class TwitchIntegration {
     }
 
     public void increaseValue(double amount) {
+        TwitchEvents.VALUE_UPDATE.invoker().valueUpdated();
+        if (!ConfigUtils.getMode().isValueBased()) return;
         double increase = amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
         if (getConfigData().updateTimer > 0) integration.data.tempValue += increase;
         else data.value += increase;
@@ -357,6 +357,8 @@ public class TwitchIntegration {
 
     public void increaseValue(double amount, boolean force) {
         if (force) {
+            TwitchEvents.VALUE_UPDATE.invoker().valueUpdated();
+            if (!ConfigUtils.getMode().isValueBased()) return;
             data.value += amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
             PacketByteBuf buf = PacketByteBufs.create();
             buf.writeDouble(getDisplayValue());
@@ -365,6 +367,8 @@ public class TwitchIntegration {
     }
 
     public void decreaseValue(double amount) {
+        TwitchEvents.VALUE_UPDATE.invoker().valueUpdated();
+        if (!ConfigUtils.getMode().isValueBased()) return;
         data.value -= amount * (getConfigData().effectMultiplier * getConfigData().effectIncrement);
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(getDisplayValue());
@@ -372,6 +376,7 @@ public class TwitchIntegration {
     }
 
     public void setValue(double amount) {
+        TwitchEvents.VALUE_UPDATE.invoker().valueUpdated();
         data.value = amount;
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeDouble(getDisplayValue());

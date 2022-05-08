@@ -25,6 +25,14 @@ public class AbstractInventoryScreenMixin {
             MutableText mutableText = cir.getReturnValue().shallowCopy();
             mutableText.append(" ").append(new LiteralText("" + (MessageUtils.formatDouble(SubathonClient.value))));
             cir.setReturnValue(mutableText);
+        } else if (statusEffect.getAmplifier() < 0) {
+            MutableText mutableText = cir.getReturnValue().shallowCopy();
+            mutableText.append(" ").append("?");
+            cir.setReturnValue(mutableText);
+        } else if (statusEffect.getAmplifier() > 9) {
+            MutableText mutableText = cir.getReturnValue().shallowCopy();
+            mutableText.append(" ").append(String.valueOf(statusEffect.getAmplifier()));
+            cir.setReturnValue(mutableText);
         }
     }
 }

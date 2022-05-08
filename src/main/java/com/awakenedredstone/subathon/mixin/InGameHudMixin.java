@@ -2,7 +2,7 @@ package com.awakenedredstone.subathon.mixin;
 
 import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.events.HudRenderCallback;
-import com.awakenedredstone.subathon.renderer.PositionedText;
+import com.awakenedredstone.subathon.render.PositionedText;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;

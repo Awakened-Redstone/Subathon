@@ -25,7 +25,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
     @Inject(method = "getMovementSpeed", at = @At(value = "RETURN"), cancellable = true)
     public void getMovementSpeed(CallbackInfoReturnable<Float> cir) {
         BigDecimal value = BigDecimal.valueOf(Subathon.integration.data.value).multiply(BigDecimal.valueOf(0.01f));
-        if (ConfigUtils.getMode() == Mode.SPEED) cir.setReturnValue(BigDecimal.valueOf(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)).add(value).floatValue());
-        if (ConfigUtils.getMode() == Mode.SLOWNESS) cir.setReturnValue(Math.max(BigDecimal.valueOf(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)).subtract(value).floatValue(), 0.001f));
+        if (ConfigUtils.isModeEnabled(Mode.SPEED)) cir.setReturnValue(BigDecimal.valueOf(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)).add(value).floatValue());
+        if (ConfigUtils.isModeEnabled(Mode.SLOWNESS)) cir.setReturnValue(Math.max(BigDecimal.valueOf(this.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED)).subtract(value).floatValue(), 0.001f));
     }
 }

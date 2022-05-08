@@ -4,7 +4,7 @@ import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.screen.EventLogScreen;
 import com.awakenedredstone.subathon.commands.SubathonCommand;
 import com.awakenedredstone.subathon.events.HudRenderCallback;
-import com.awakenedredstone.subathon.renderer.PositionedText;
+import com.awakenedredstone.subathon.render.PositionedText;
 import com.awakenedredstone.subathon.twitch.Subscription;
 import com.awakenedredstone.subathon.util.BotStatus;
 import com.awakenedredstone.subathon.util.MessageUtils;

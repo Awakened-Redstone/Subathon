@@ -1,3 +1,7 @@
+# Big changes
+
+- [ ] Move game control to a library mod
+
 # General
 
 - [x] Toggle messages showing on chat or on overlay
@@ -40,7 +44,11 @@
 - [x] Super jump mode
 - [x] Speed mode
 - [x] Slowness mode
+- [x] Potion mode
 - [ ] Chaos mode
 - [ ] Fov mode
 - [x] Health mode
 - [ ] Reach mode
+- [ ] Random modes mode
+- [ ] Random chaos mode
+- [ ] Randomized randomizer mode
