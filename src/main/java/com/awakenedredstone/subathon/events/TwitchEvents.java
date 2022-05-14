@@ -27,4 +27,10 @@ public interface TwitchEvents {
          */
         void valueUpdated();
     }
+
+    /*Event<CubeControllerEvents> POTION_CHAOS = EventFactory.createArrayBacked(CubeControllerEvents.class, (listeners) -> () -> {
+        for (CubeControllerEvents event : listeners) {
+            event.trigger();
+        }
+    });*/
 }

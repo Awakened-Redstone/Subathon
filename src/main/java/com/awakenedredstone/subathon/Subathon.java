@@ -54,12 +54,12 @@ import java.util.Optional;
 import java.util.Random;
 
 public class Subathon implements ModInitializer {
-    public static String MOD_ID = "subathon";
     public static MinecraftServer server;
     public static TwitchIntegration integration = new TwitchIntegration();
     public static CommandBossBar mainProgressBar;
     public static CommandBossBar usersProgressBar;
 
+    public static final String MOD_ID = "subathon";
     public static final List<Pair<Double, Integer>> subTimers = new ArrayList<>();
     public static final OkHttpClient OKHTTPCLIENT = new OkHttpClient();
     public static final StatusEffect SUBATHON_EFFECT = new SubathonStatusEffect();
@@ -164,17 +164,22 @@ public class Subathon implements ModInitializer {
             if (ConfigUtils.isModeEnabled(Mode.POTION_CHAOS)) {
                 MessageUtils.broadcast(player -> {
                     Random random = new Random();
-                    double _time = random.nextGaussian(16, 7) + Math.max(0, random.nextGaussian(-50, 80));
-                    double _modifier = random.nextGaussian(3, 2) + Math.max(0, random.nextGaussian(-10, 20));
-                    int time = ConversionUtils.toInt(Math.round(MathHelper.clamp(3, _time, 90) * 20));
-                    int modifier = ConversionUtils.toInt(Math.round(MathHelper.clamp(0, _modifier, 100)));
+                    double _duration = random.nextGaussian(16, 7) + Math.max(0, random.nextGaussian(-50, 80));
+                    double _amplifier = random.nextGaussian(3, 2) + Math.max(0, random.nextGaussian(-10, 20));
+                    int duration = ConversionUtils.toInt(Math.round(MathHelper.clamp(3, _duration, 90) * 20));
+                    int amplifier = ConversionUtils.toInt(Math.round(MathHelper.clamp(0, _amplifier, 100)));
                     Optional<RegistryEntry<StatusEffect>> randomPotion;
                     StatusEffect effect;
                     do {
                         randomPotion = Registry.STATUS_EFFECT.getRandom(random);
                         effect = randomPotion.isPresent() ? randomPotion.get().value() : StatusEffects.SLOWNESS;
                     } while (effect == SUBATHON_EFFECT);
-                    player.addStatusEffect(new StatusEffectInstance(effect, time, modifier, false, false, true));
+                    if (player.hasStatusEffect(effect)) {
+                        StatusEffectInstance playerEffect = player.getStatusEffect(effect);
+                        duration += playerEffect.getDuration();
+                        amplifier = Math.max(amplifier, playerEffect.getAmplifier());
+                    }
+                    player.addStatusEffect(new StatusEffectInstance(effect, duration, amplifier, false, false, true));
                 }, "potion_chaos");
             }
         });
