@@ -16,10 +16,6 @@ plugins {
     id "com.modrinth.minotaur" version "2.+"
 }
 
-loom {
-    accessWidenerPath = file("src/main/resources/subathon.accesswidener")
-}
-
 def ENV = System.getenv()
 def CHANGELOG = new File('CHANGELOG.md').exists() ? new File('CHANGELOG.md').text : "No changelog provided"
 
@@ -36,7 +32,12 @@ repositories {
         url "https://maven.terraformersmc.com/releases/"
     }
     maven {
-        url = "https://minecraft.guntram.de/maven/"
+        name "Crowdin Translate"
+        url "https://minecraft.guntram.de/maven/"
+    }
+    maven {
+        name "CubeController"
+        url "https://maven.awakenedredstone.com/"
     }
 }
 dependencies {
@@ -51,10 +52,13 @@ dependencies {
     modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}") {
         exclude(group: "net.fabricmc.fabric-api")
     }
+    modApi("com.awakenedredstone:cubecontroller:${project.cubecontroller_version}") {
+        exclude(group: "net.fabricmc.fabric-api")
+    }
 
     include modImplementation("de.guntram.mcmod:crowdin-translate:1.4+1.18.2")
 
-    modImplementation("com.github.twitch4j:twitch4j:${project.twitch4j_version}") {
+    modImplementation("com.github.twitch4j:twitch4j-fabric:${project.twitch4j_version}") {
         exclude group: 'org.slf4j'
         exclude group: 'commons-io', module: 'commons-io'
         exclude group: 'org.apache.commons', module: 'commons-lang3'
@@ -147,14 +151,32 @@ task github(dependsOn: remapMavenJar) {
 tasks.modrinth.dependsOn(tasks.remapMavenJar)
 
 modrinth {
+    String projectVersion = project.version.toString();
+    List<String> projectVersionNumber = projectVersion.split("-", 2)
+    String projectVersionName = "Release ${projectVersionNumber[0]}"
+    if (projectVersion.contains("beta")) {
+        List<String> projectBeta = projectVersionNumber[1].split("[.]", 2)
+        projectVersionName = "${projectVersionNumber[0]} - Beta ${projectBeta[1]}"
+        versionType = "beta"
+    } else if (projectVersion.contains("alpha")) {
+        List<String> projectAlpha = projectVersionNumber[1].split("[.]", 2)
+        projectVersionName = "${projectVersionNumber[0]} - Alpha ${projectAlpha[1]}"
+        versionType = "alpha"
+    } else if (projectVersion.contains("rc")) {
+        List<String> projectRC = projectVersionNumber[1].split("[.]", 2)
+        projectVersionName = "${projectVersionNumber[0]} - Release Candidate ${projectRC[1]}"
+        versionType = "beta"
+    }
+
     token = ENV.MODRINTH_TOKEN
     projectId = "amLXPXxi"
-    versionName = "[$project.minecraft_version] Subathon - $project.version"
+    versionName = projectVersionName
     changelog = CHANGELOG ?: "No changelog provided"
     uploadFile = remapJar
     dependencies = [
             new ModDependency("P7dR8mSH", "required"), //FabricAPI
             new ModDependency("CmHD69Pj", "required"), //Twitch4J
-            new ModDependency("mOgUt4GM", "optional") //ModMenu
+            new ModDependency("mOgUt4GM", "optional"), //ModMenu
+            new ModDependency("9s6osm5g", "optional") //Cloth Config
     ]
 }

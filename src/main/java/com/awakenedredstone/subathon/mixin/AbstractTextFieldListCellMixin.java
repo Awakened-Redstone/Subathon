@@ -6,7 +6,6 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -26,7 +25,7 @@ public abstract class AbstractTextFieldListCellMixin extends AbstractListListEnt
 
     @Inject(method = "render", at = @At("TAIL"))
     private void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isSelected, float delta, CallbackInfo ci) {
-        if (!isSelected && StringUtils.isBlank(this.widget.getText())) {
+        if (!isSelected) {
             fill(matrices, x, y + 12, x + entryWidth - 12, y + 13, this.getConfigError().isPresent() ? 0xffff5555 : 0xff707070);
         }
     }

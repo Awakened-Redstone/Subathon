@@ -1,7 +1,0 @@
-accessWidener v1 named
-
-#Classes
-accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
-
-#Methods
-accessible method net/minecraft/client/gui/hud/InGameHud$HeartType fromPlayerState (Lnet/minecraft/entity/player/PlayerEntity;)Lnet/minecraft/client/gui/hud/InGameHud$HeartType;

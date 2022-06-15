@@ -10,15 +10,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 
 import static com.awakenedredstone.subathon.commands.SubathonCommand.Events.GIFT_USER;
 
@@ -28,7 +27,7 @@ public class EventLogScreen extends Screen {
     private final Screen parent;
 
     public EventLogScreen(Screen parent) {
-        super(new TranslatableText("gui.subathon.event_logs"));
+        super(Text.translatable("gui.subathon.event_logs"));
         this.parent = parent;
     }
 
@@ -37,15 +36,15 @@ public class EventLogScreen extends Screen {
         this.entryListWidget = new EventEntryListWidget(this.client);
         this.addSelectableChild(entryListWidget);
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 155, this.height - 28, 150, 20, ScreenTexts.DONE, button -> this.client.setScreen(this.parent)));
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 5, this.height - 28, 150, 20, new TranslatableText("gui.subathon.clear_logs"), button ->
+        this.addDrawableChild(new ButtonWidget(this.width / 2 + 5, this.height - 28, 150, 20, Text.translatable("gui.subathon.clear_logs"), button ->
                 client.setScreen(new ConfirmScreen(bool -> {
                         if (bool) {
                             SubathonClient.events.clear();
                             this.entryListWidget = new EventEntryListWidget(this.client);
                         }
                         this.client.setScreen(this);
-                    }, new TranslatableText("gui.subathon.clear_logs.question"), new TranslatableText("gui.subathon.clear_logs.message"),
-                        new TranslatableText("gui.subathon.clear_logs"), new TranslatableText("gui.cancel")))));
+                    }, Text.translatable("gui.subathon.clear_logs.question"), Text.translatable("gui.subathon.clear_logs.message"),
+                        Text.translatable("gui.subathon.clear_logs"), Text.translatable("gui.cancel")))));
         super.init();
     }
 
@@ -156,7 +155,7 @@ public class EventLogScreen extends Screen {
 
         @Override
         public Text getNarration() {
-            return new TranslatableText("narrator.select", event.getMessage());
+            return Text.translatable("narrator.select", event.getMessage());
         }
 
         public Rectangle getEntryArea(int x, int y, int entryWidth, int entryHeight) {

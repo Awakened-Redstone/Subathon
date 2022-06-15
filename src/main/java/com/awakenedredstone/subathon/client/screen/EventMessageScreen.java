@@ -11,14 +11,13 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ScreenTexts;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
+import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Style;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -30,7 +29,7 @@ public class EventMessageScreen extends Screen {
     private final boolean filterMessages;
 
     public EventMessageScreen(Screen parent, TwitchEvent event, boolean filterMessages) {
-        super(new TranslatableText("gui.subathon.event_logs"));
+        super(Text.translatable("gui.subathon.event_logs"));
         this.parent = parent;
         this.event = event;
         this.filterMessages = filterMessages;
@@ -88,12 +87,12 @@ public class EventMessageScreen extends Screen {
                 EventMessageScreen.this.textRenderer.getTextHandler().wrapLines(event.message(), width - 64, Style.EMPTY).forEach(line -> {
                     if (lineNumber[0] * (textRenderer.fontHeight + 4) > bottom - top - 44 - textRenderer.fontHeight * 2) {
                         DrawableHelper.drawCenteredText(matrices, EventMessageScreen.this.textRenderer,
-                                new TranslatableText("text.subathon.error.message_too_long"), width / 2,
+                                Text.translatable("text.subathon.error.message_too_long"), width / 2,
                                 top + 32 + (lineNumber[0] * (textRenderer.fontHeight + 4)) + 3, 0xFFFFFF);
                         return;
                     }
                     ;
-                    DrawableHelper.drawTextWithShadow(matrices, EventMessageScreen.this.textRenderer, new LiteralText(line.getString()),
+                    DrawableHelper.drawTextWithShadow(matrices, EventMessageScreen.this.textRenderer, Text.literal(line.getString()),
                             32, top + 32 + (lineNumber[0]++ * (textRenderer.fontHeight + 4)), 0xFFFFFF);
                 });
 

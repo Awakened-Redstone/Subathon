@@ -1,45 +1,27 @@
 package com.awakenedredstone.subathon.util;
 
-import com.awakenedredstone.subathon.Subathon;
-import com.google.gson.JsonObject;
-import okhttp3.*;
-import org.jetbrains.annotations.NotNull;
+import com.github.twitch4j.TwitchClient;
+import net.minecraft.text.Text;
 
-import java.io.IOException;
-import java.util.Objects;
-import java.util.function.Consumer;
+import static com.awakenedredstone.subathon.Subathon.getConfigData;
+import static com.awakenedredstone.subathon.Subathon.usersProgressBar;
 
 public class TwitchUtils {
-    public static void getChannelData(String channelName, Consumer<JsonObject> consumer) {
-        try {
-            HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(String.format("https://api.ivr.fi/twitch/resolve/%s", channelName))).newBuilder();
+    public void joinChannels(TwitchClient client) {
+        short joinedChannels = 0;
+        int totalChannels = getConfigData().channels.size();
 
-            Request request = new Request.Builder().url(urlBuilder.build().toString()).build();
+        usersProgressBar.setMaxValue(getConfigData().channels.size());
+        usersProgressBar.setValue(0);
+        usersProgressBar.setName(Text.translatable("text.subathon.load.users", 0, totalChannels));
+        usersProgressBar.setVisible(true);
 
-            Subathon.OKHTTPCLIENT.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                    consumer.accept(null);
-                }
-
-                @Override
-                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
-                    String responseBody = Objects.requireNonNull(response.body()).string();
-
-                    JsonObject responseJson = Subathon.GSON.fromJson(responseBody, JsonObject.class);
-                    JsonObject json = new JsonObject();
-                    if (responseJson.get("status").getAsInt() != 200) {
-                        consumer.accept(null);
-                        return;
-                    }
-                    json.add("channelId", responseJson.get("id"));
-                    json.add("displayName", responseJson.get("displayName"));
-                    consumer.accept(json);
-                }
-            });
-        } catch (Exception e) {
-            consumer.accept(null);
+        for (String channel : getConfigData().channels) {
+            client.getChat().joinChannel(channel);
+            usersProgressBar.setName(Text.translatable("text.subathon.load.users", ++joinedChannels, totalChannels));
+            usersProgressBar.setValue(joinedChannels);
         }
-    }
 
+        usersProgressBar.setVisible(false);
+    }
 }

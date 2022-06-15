@@ -12,107 +12,107 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
-public class ShortFieldBuilder extends FieldBuilder<Short, ShortListEntry> {
-    private Consumer<Short> saveConsumer = null;
+public class ByteFieldBuilder extends FieldBuilder<Byte, ByteListEntry> {
+    private Consumer<Byte> saveConsumer = null;
     private RenderAction render = (q, w, e, r, t, y, u, i, o, p, a) -> {};
-    private Function<Short, Optional<Text[]>> tooltipSupplier = (i) -> {
+    private Function<Byte, Optional<Text[]>> tooltipSupplier = (i) -> {
         return Optional.empty();
     };
-    private final short value;
-    private Short min = null;
-    private Short max = null;
+    private final byte value;
+    private Byte min = null;
+    private Byte max = null;
 
-    public ShortFieldBuilder(Text fieldNameKey, short value) {
+    public ByteFieldBuilder(Text fieldNameKey, byte value) {
         super(Text.translatable("text.cloth-config.reset_value"), fieldNameKey);
         this.value = value;
     }
 
-    public ShortFieldBuilder requireRestart() {
+    public ByteFieldBuilder requireRestart() {
         this.requireRestart(true);
         return this;
     }
 
-    public ShortFieldBuilder setErrorSupplier(Function<Short, Optional<Text>> errorSupplier) {
+    public ByteFieldBuilder setErrorSupplier(Function<Byte, Optional<Text>> errorSupplier) {
         this.errorSupplier = errorSupplier;
         return this;
     }
 
-    public ShortFieldBuilder setSaveConsumer(Consumer<Short> saveConsumer) {
+    public ByteFieldBuilder setSaveConsumer(Consumer<Byte> saveConsumer) {
         this.saveConsumer = saveConsumer;
         return this;
     }
 
-    public ShortFieldBuilder setDefaultValue(Supplier<Short> defaultValue) {
+    public ByteFieldBuilder setDefaultValue(Supplier<Byte> defaultValue) {
         this.defaultValue = defaultValue;
         return this;
     }
 
-    public ShortFieldBuilder setDefaultValue(short defaultValue) {
+    public ByteFieldBuilder setDefaultValue(byte defaultValue) {
         this.defaultValue = () -> {
             return defaultValue;
         };
         return this;
     }
 
-    public ShortFieldBuilder setTooltipSupplier(Function<Short, Optional<Text[]>> tooltipSupplier) {
+    public ByteFieldBuilder setTooltipSupplier(Function<Byte, Optional<Text[]>> tooltipSupplier) {
         this.tooltipSupplier = tooltipSupplier;
         return this;
     }
 
-    public ShortFieldBuilder setTooltipSupplier(Supplier<Optional<Text[]>> tooltipSupplier) {
+    public ByteFieldBuilder setTooltipSupplier(Supplier<Optional<Text[]>> tooltipSupplier) {
         this.tooltipSupplier = (i) -> {
             return tooltipSupplier.get();
         };
         return this;
     }
 
-    public ShortFieldBuilder setTooltip(Optional<Text[]> tooltip) {
+    public ByteFieldBuilder setTooltip(Optional<Text[]> tooltip) {
         this.tooltipSupplier = (i) -> {
             return tooltip;
         };
         return this;
     }
 
-    public ShortFieldBuilder setTooltip(Text... tooltip) {
+    public ByteFieldBuilder setTooltip(Text... tooltip) {
         this.tooltipSupplier = (i) -> {
             return Optional.ofNullable(tooltip);
         };
         return this;
     }
 
-    public ShortFieldBuilder setMin(short min) {
+    public ByteFieldBuilder setMin(byte min) {
         this.min = min;
         return this;
     }
 
-    public ShortFieldBuilder setMax(short max) {
+    public ByteFieldBuilder setMax(byte max) {
         this.max = max;
         return this;
     }
 
-    public ShortFieldBuilder removeMin() {
+    public ByteFieldBuilder removeMin() {
         this.min = null;
         return this;
     }
 
-    public ShortFieldBuilder removeMax() {
+    public ByteFieldBuilder removeMax() {
         this.max = null;
         return this;
     }
 
-    public ShortFieldBuilder setRender(RenderAction render) {
+    public ByteFieldBuilder setRender(RenderAction render) {
         this.render = render;
         return this;
     }
 
-    public ShortFieldBuilder removeRender() {
+    public ByteFieldBuilder removeRender() {
         this.render = (q, w, e, r, t, y, u, i, o, p, a) -> {};
         return this;
     }
 
     @NotNull
-    public ShortListEntry build() {
-        ShortListEntry entry = new ShortListEntry(this.getFieldNameKey(), this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, null, this.isRequireRestart(), this.render);
+    public ByteListEntry build() {
+        ByteListEntry entry = new ByteListEntry(this.getFieldNameKey(), this.value, this.getResetButtonKey(), this.defaultValue, this.saveConsumer, null, this.isRequireRestart(), this.render);
         if (this.min != null) {
             entry.setMinimum(this.min);
         }

@@ -5,32 +5,36 @@ import com.awakenedredstone.subathon.twitch.Subscription;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.resource.language.I18n;
-import net.minecraft.text.*;
+import net.minecraft.text.HoverEvent;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 
 @Environment(EnvType.CLIENT)
-public record TwitchEvent(String name, int amount, Subscription tier, SubathonCommand.Events event, String message) {
+public record TwitchEvent(String user, int amount, Subscription tier, SubathonCommand.Events event, String target, String message) {
 
-    public Text getMessage() {
+    public MutableText getMessage() {
         switch (event) {
             case SUBSCRIPTION -> {
-                return new LiteralText(I18n.translate("gui.subathon.event_logs.sub", name, tier.getName()));
+                return Text.literal(I18n.translate("gui.subathon.event_logs.sub", user, tier.getName()));
             }
             case RESUBSCRIPTION -> {
-                BaseText text = new LiteralText(I18n.translate("gui.subathon.event_logs.resub", name, amount, tier.getName()));
-                if (!message.isEmpty()) text.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(message))));
+                MutableText text = Text.literal(I18n.translate("gui.subathon.event_logs.resub", user, amount, tier.getName()));
+                if (!message.isEmpty()) text.setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(message))));
                 return text;
             }
             case SUB_GIFT -> {
-                return new LiteralText(I18n.translate("gui.subathon.event_logs.gift", name, amount, tier.getName(), amount != 1 ? "s" : ""));
+                String key = amount != 1 ? "gui.subathon.event_logs.gift.plural" : "gui.subathon.event_logs.gift.singular";
+                return Text.literal(I18n.translate(key, user, amount, tier.getName()));
             }
             case GIFT_USER -> {
-                return new LiteralText(I18n.translate("gui.subathon.event_logs.gift_user", name, amount, tier.getName(), message));
+                return Text.literal(I18n.translate("gui.subathon.event_logs.gift_user", user, amount, tier.getName(), target));
             }
             case CHEER -> {
-                return new LiteralText(I18n.translate("gui.subathon.event_logs.cheer", name, amount))
-                        .setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new LiteralText(message))));
+                return Text.literal(I18n.translate("gui.subathon.event_logs.cheer", user, amount))
+                        .setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(message))));
             }
         }
-        return new TranslatableText("gui.subathon.event_logs.error");
+        return Text.translatable("gui.subathon.event_logs.error");
     }
 }

@@ -1,6 +1,6 @@
 package com.awakenedredstone.subathon.util;
 
-public enum BotStatus {
+public enum IntegrationStatus {
     UNKNOWN,
     STARTING,
     RUNNING,

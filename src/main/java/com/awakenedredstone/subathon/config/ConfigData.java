@@ -1,33 +1,35 @@
 package com.awakenedredstone.subathon.config;
 
+import com.awakenedredstone.subathon.twitch.Subscription;
+import com.awakenedredstone.subathon.util.MapBuilder;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ConfigData {
     //General
-    public String mode = Mode.JUMP.name();
-    public String messageMode = MessageMode.OVERLAY.name();
-    public double effectIncrement = 1;
     public boolean runAtServerStart = true;
-
     public List<String> channels = new ArrayList<>();
-    public transient List<String> channelIds = new ArrayList<>();
-    public transient List<String> channelDisplayNames = new ArrayList<>();
-
-    //Timers
     public int resetTimer = 0;
     public int updateTimer = 0;
 
-    //Client
-    public float fontScale = 1;
-//    public boolean showResetTimer = false;
-    public boolean showUpdateTimer = false;
+    //CubeController
+    public Map<String, Double> scales = new HashMap<>();
+    public Map<String, Boolean> invoke = new HashMap<>();
 
-    //Advanced
-    public double effectMultiplier = 1f;
+    //Client
+    public boolean showEventsInChat = true;
+    public boolean showUpdateTimer = false;
+    public boolean showToasts = true;
+    public int minBitsForToast = 1000;
+    public Subscription minSubTierForToast = Subscription.TIER2;
+    public Map<Subscription, Byte> minSubsGiftedForToast = new MapBuilder<Subscription, Byte>()
+            .put(Subscription.TIER1, (byte) 10)
+            .put(Subscription.TIER2, (byte) 3)
+            .put(Subscription.TIER3, (byte) 1)
+            .build();
 
     //Bits
     public boolean enableBits = false;
@@ -38,13 +40,13 @@ public class ConfigData {
     public boolean cumulativeIgnoreMin = true;
 
     //Subs
-    public boolean enableSubs = false;
+    public boolean enableSubs = true;
     public short subsPerIncrement = 1;
     public boolean onePerGift = false;
-    public Map<String, Short> subModifiers = Stream.of(new Object[][] {
-        { "prime", (short) 1 },
-        { "tier1", (short) 1 },
-        { "tier2", (short) 1 },
-        { "tier3", (short) 1 },
-    }).collect(Collectors.toMap(data -> (String) data[0], data -> (Short) data[1]));
+    public Map<Subscription, Short> subModifiers = new MapBuilder<Subscription, Short>()
+            .put(Subscription.PRIME, (short) 1)
+            .put(Subscription.TIER1, (short) 1)
+            .put(Subscription.TIER2, (short) 1)
+            .put(Subscription.TIER3, (short) 1)
+            .build();
 }

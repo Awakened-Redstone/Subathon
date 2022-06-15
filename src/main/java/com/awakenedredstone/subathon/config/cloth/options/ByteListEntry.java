@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
-public class ShortListEntry extends TextFieldListEntry<Short> {
+public class ByteListEntry extends TextFieldListEntry<Byte> {
     private static final Function<String, String> stripCharacters = (s) -> {
         StringBuilder builder = new StringBuilder();
 
@@ -27,37 +27,37 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
         return builder.toString();
     };
-    private short minimum;
-    private short maximum;
-    private final Consumer<Short> saveConsumer;
-    private final RenderAction<ShortListEntry> render;
+    private byte minimum;
+    private byte maximum;
+    private final Consumer<Byte> saveConsumer;
+    private final RenderAction<ByteListEntry> render;
 
     /** @deprecated */
     @Deprecated
     @ApiStatus.Internal
-    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, RenderAction<ShortListEntry> render) {
+    public ByteListEntry(Text fieldName, Byte value, Text resetButtonKey, Supplier<Byte> defaultValue, Consumer<Byte> saveConsumer, RenderAction<ByteListEntry> render) {
         super(fieldName, value, resetButtonKey, defaultValue);
         this.render = render;
-        this.minimum = Short.MIN_VALUE;
-        this.maximum = Short.MAX_VALUE;
+        this.minimum = Byte.MIN_VALUE;
+        this.maximum = Byte.MAX_VALUE;
         this.saveConsumer = saveConsumer;
     }
 
     /** @deprecated */
     @Deprecated
     @ApiStatus.Internal
-    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, RenderAction<ShortListEntry> render) {
+    public ByteListEntry(Text fieldName, Byte value, Text resetButtonKey, Supplier<Byte> defaultValue, Consumer<Byte> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, RenderAction<ByteListEntry> render) {
         this(fieldName, value, resetButtonKey, defaultValue, saveConsumer, tooltipSupplier, false, render);
     }
 
     /** @deprecated */
     @Deprecated
     @ApiStatus.Internal
-    public ShortListEntry(Text fieldName, Short value, Text resetButtonKey, Supplier<Short> defaultValue, Consumer<Short> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, boolean requiresRestart, RenderAction<ShortListEntry> render) {
+    public ByteListEntry(Text fieldName, Byte value, Text resetButtonKey, Supplier<Byte> defaultValue, Consumer<Byte> saveConsumer, Supplier<Optional<Text[]>> tooltipSupplier, boolean requiresRestart, RenderAction<ByteListEntry> render) {
         super(fieldName, value, resetButtonKey, defaultValue, tooltipSupplier, requiresRestart);
         this.render = render;
-        this.minimum = Short.MIN_VALUE;
-        this.maximum = Short.MAX_VALUE;
+        this.minimum = Byte.MIN_VALUE;
+        this.maximum = Byte.MAX_VALUE;
         this.saveConsumer = saveConsumer;
     }
 
@@ -75,7 +75,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
     protected void textFieldPreRender(TextFieldWidget widget) {
         try {
-            short i = Short.parseShort(this.textFieldWidget.getText());
+            byte i = Byte.parseByte(this.textFieldWidget.getText());
             if (!(i < this.minimum) && !(i > this.maximum)) {
                 widget.setEditableColor(14737632);
             } else {
@@ -98,19 +98,19 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
     }
 
-    public ShortListEntry setMaximum(short maximum) {
+    public ByteListEntry setMaximum(byte maximum) {
         this.maximum = maximum;
         return this;
     }
 
-    public ShortListEntry setMinimum(short minimum) {
+    public ByteListEntry setMinimum(byte minimum) {
         this.minimum = minimum;
         return this;
     }
 
-    public Short getValue() {
+    public Byte getValue() {
         try {
-            return Short.valueOf(this.textFieldWidget.getText());
+            return Byte.valueOf(this.textFieldWidget.getText());
         } catch (Exception var2) {
             return 0;
         }
@@ -122,7 +122,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
 
     public Optional<Text> getError() {
         try {
-            short i = Short.parseShort(this.textFieldWidget.getText());
+            byte i = Byte.parseByte(this.textFieldWidget.getText());
             if (i > this.maximum) {
                 return Optional.of(Text.translatable("text.cloth-config.error.too_large", this.maximum));
             }
@@ -131,7 +131,7 @@ public class ShortListEntry extends TextFieldListEntry<Short> {
                 return Optional.of(Text.translatable("text.cloth-config.error.too_small", this.minimum));
             }
         } catch (NumberFormatException var2) {
-            return Optional.of(Text.translatable("text.subathon.config.error.not_valid_number_short"));
+            return Optional.of(Text.translatable("text.subathon.config.error.not_valid_number_byte"));
         }
 
         return super.getError();
