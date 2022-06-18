@@ -29,7 +29,6 @@ public class TwitchIntegration {
     public InternalData data = new InternalData(0, 0, new TreeMap<>());
     public IntegrationStatus status = IntegrationStatus.OFFLINE;
 
-    /*TODO:UPDATE_THIS*/
     public void start() {
         if (getConfigData().channels.isEmpty()) {
             MessageUtils.sendError(Text.translatable("text.subathon.error.missing_channel_name"));
@@ -56,12 +55,10 @@ public class TwitchIntegration {
         simpleExecutor.execute(() -> init(twitchClient, finalProgress, steps));
     }
 
-    /*TODO:UPDATE_THIS*/
     public void stop() {
         stop(true);
     }
 
-    /*TODO:UPDATE_THIS*/
     public void stop(boolean notify) {
         simpleExecutor.execute(new ClearProgressBar());
 
@@ -84,7 +81,6 @@ public class TwitchIntegration {
         }
     }
 
-    /*TODO:UPDATE_THIS*/
     public void reload() {
         mainProgressBar.setMaxValue(4);
         if (status == IntegrationStatus.OFFLINE) {
@@ -137,7 +133,6 @@ public class TwitchIntegration {
         simpleExecutor.schedule(new ClearProgressBar(), 3, TimeUnit.SECONDS);
     }
 
-    /*TODO:REPLACE_THIS*/
     public void addBits(int bits) {
         data.bits += bits;
         if (data.bits >= getConfigData().bitMin) {
@@ -147,7 +142,6 @@ public class TwitchIntegration {
         }
     }
 
-    /*TODO:REPLACE_THIS*/
     public void addSubs(int subs) {
         data.subs += subs;
         if (data.subs >= getConfigData().subsPerIncrement) {
@@ -160,7 +154,6 @@ public class TwitchIntegration {
         CubeController.GAME_CONTROL.stream().filter(GameControl::enabled).forEach(control -> increaseValue(control, amount));
     }
 
-    /*TODO:REPLACE_THIS*/
     public void increaseValue(GameControl control, double amount) {
         double toAdd = control.valueBased() ? amount * getConfigData().scales.get(control.identifier().toString()) : 0;
         if (getConfigData().updateTimer > 0) {
@@ -172,7 +165,7 @@ public class TwitchIntegration {
         }
 
         if (getConfigData().resetTimer > 0 && control.valueBased()) {
-            ScheduleUtils.scheduleDelay(server, getConfigData().resetTimer, new ScheduleUtils.UpdateControlValue(control.identifier(), -toAdd));
+            ScheduleUtils.scheduleDelay(control.identifier(), server, getConfigData().resetTimer, new ScheduleUtils.UpdateControlValue(control.identifier(), -toAdd));
         }
     }
 

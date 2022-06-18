@@ -24,11 +24,9 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ReloadableResourceManagerImpl;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang.StringUtils;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -87,7 +85,6 @@ public class SubathonClient implements ClientModInitializer {
         });
 
         //Packet sent by the server to inform the client that it has the mod
-        /*TODO:UPDATE_THIS*/
         ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("has_mod"), (client, handler, buf, responseSender) ->
                 client.execute(() -> {
                     showData = true;
@@ -95,28 +92,24 @@ public class SubathonClient implements ClientModInitializer {
                 }));
 
         //Packet sent by the server to inform the client the current tick
-        /*TODO:IDK_WHAT_TO_DO_WITH_THIS*/
         ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("next_update"), (client, handler, buf, responseSender) -> {
             int value = buf.readInt();
             client.execute(() -> SubathonClient.nextUpdate = value);
         });
 
         //Packet sent by the server to inform the client the timer values
-        /*TODO:UPDATE_THIS*/
         ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("timer"), (client, handler, buf, responseSender) -> {
             int updateTimer = buf.readInt();
             client.execute(() -> SubathonClient.updateTimer = updateTimer);
         });
 
         //Packet sent by the server to inform the client the bot status
-        /*TODO:UPDATE_THIS*/
         ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("bot_status"), (client, handler, buf, responseSender) -> {
             IntegrationStatus status = buf.readEnumConstant(IntegrationStatus.class);
             client.execute(() -> integrationStatus = status);
         });
 
         //Packet sent by the server with a new event
-        /*TODO:UPDATE_THIS*/
         ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("event"), (client, handler, buf, responseSender) -> {
             String user = buf.readString();
             String target = buf.readString();
@@ -150,7 +143,8 @@ public class SubathonClient implements ClientModInitializer {
                         if (getConfigData().showToasts && tier.getValue() >= getConfigData().minSubTierForToast.getValue()) {
                             Text title = Text.translatable("toast.event.resub", tier.getName());
                             Text msg;
-                            if (message.length() <= 100) {
+                            List<OrderedText> list = client.textRenderer.wrapLines(Text.literal(user + ": " + message), 125);
+                            if (list.size() <= 2 && StringUtils.isNotBlank(message)) {
                                 msg = Text.literal(user + ": " + message);
                             } else msg = Text.translatable("toast.event.resub.message", user, tier.getName());
                             client.getToastManager().add(new TwitchEventToast(identifier("gift"), title, msg));
@@ -181,7 +175,8 @@ public class SubathonClient implements ClientModInitializer {
                         if (getConfigData().showToasts && amount >= getConfigData().minBitsForToast) {
                             Text title = Text.translatable("toast.event.cheer", amount);
                             Text msg;
-                            if (message.length() <= 100) {
+                            List<OrderedText> list = client.textRenderer.wrapLines(Text.literal(user + ": " + message), 125);
+                            if (list.size() <= 2) {
                                 msg = Text.literal(user + ": " + message);
                             } else msg = Text.translatable("toast.event.cheer.message", user, amount);
                             client.getToastManager().add(new TwitchEventToast(getBitsBadge(amount), title, msg));
@@ -191,7 +186,6 @@ public class SubathonClient implements ClientModInitializer {
             });
         });
 
-        /*TODO:IDK_WHAT_TO_DO_WITH_THIS*/
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (showData && updateTimer > -1 && nextUpdate > 0 && !client.isPaused()) {
                 nextUpdate--;

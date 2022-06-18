@@ -121,6 +121,8 @@ public class Subathon implements ModInitializer {
             integration.stop(false);
         });
 
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> Subathon.server = null);
+
         config.loadOrCreateConfig();
     }
 

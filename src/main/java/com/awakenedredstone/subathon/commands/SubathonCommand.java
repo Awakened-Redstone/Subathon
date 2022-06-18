@@ -229,7 +229,7 @@ public class SubathonCommand {
     }
 
     public static int executeClean(ServerCommandSource source) {
-        source.getServer().getSaveProperties().getMainWorldProperties().getScheduledEvents().remove("subathon");
+        CubeController.GAME_CONTROL.forEach(control -> source.getServer().getSaveProperties().getMainWorldProperties().getScheduledEvents().remove(control.identifier().toString()));
 
         try {
 
@@ -254,7 +254,6 @@ public class SubathonCommand {
         return 0;
     }
 
-    /*TODO:UPDATE_THIS*/
     public static int executeTest(ServerCommandSource source, Events event, int count, @Nullable SubTiers tier) throws CommandSyntaxException {
         if (integration.status == IntegrationStatus.OFFLINE)
             throw new SimpleCommandExceptionType(Text.translatable("commands.subathon.error.offline")).create();

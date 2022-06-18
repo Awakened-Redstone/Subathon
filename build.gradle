@@ -177,6 +177,7 @@ modrinth {
             new ModDependency("P7dR8mSH", "required"), //FabricAPI
             new ModDependency("CmHD69Pj", "required"), //Twitch4J
             new ModDependency("mOgUt4GM", "optional"), //ModMenu
-            new ModDependency("9s6osm5g", "optional") //Cloth Config
+            new ModDependency("9s6osm5g", "optional"), //Cloth Config
+            new ModDependency("cubecontroller", "required") //Cube controller
     ]
 }

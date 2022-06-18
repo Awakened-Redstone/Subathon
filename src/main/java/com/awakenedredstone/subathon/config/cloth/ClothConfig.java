@@ -1,6 +1,7 @@
 package com.awakenedredstone.subathon.config.cloth;
 
 import com.awakenedredstone.cubecontroller.CubeController;
+import com.awakenedredstone.cubecontroller.util.MessageUtils;
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.config.cloth.options.ByteFieldBuilder;
 import com.awakenedredstone.subathon.config.cloth.options.RenderAction;
@@ -12,9 +13,11 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.SubCategoryBuilder;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.apache.commons.lang.StringUtils;
@@ -168,7 +171,15 @@ public class ClothConfig {
         general.addEntry(entryBuilder.startTextField(Text.translatable("option.subathon.general.update_timer"), SubathonMessageUtils.ticksToTime(Subathon.getConfigData().updateTimer))
                 .setDefaultValue("00:00:00.00")
                 .setTooltip(Text.translatable("option.subathon.general.update_timer.description"))
-                .setSaveConsumer(newValue -> Subathon.getConfigData().updateTimer = timeStringToTicks(newValue))
+                .setSaveConsumer(newValue -> {
+                    Subathon.getConfigData().updateTimer = timeStringToTicks(newValue);
+
+                    if (timeStringToTicks(newValue) == 0 && Subathon.server != null) {
+                        PacketByteBuf buf = PacketByteBufs.create();
+                        buf.writeInt(-1);
+                        MessageUtils.broadcastPacket(Subathon.identifier("next_update"), buf);
+                    }
+                })
                 .setErrorSupplier(v -> {
                     Optional<Text> badFormat = Optional.of(Text.translatable("text.subathon.config.error.not_valid_time"));
                     if (TIME_PATTERN.matcher(v).matches()) {

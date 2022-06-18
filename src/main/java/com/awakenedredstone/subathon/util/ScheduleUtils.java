@@ -12,14 +12,14 @@ import net.minecraft.world.timer.TimerCallback;
 import java.util.Optional;
 
 public class ScheduleUtils {
-    public static void scheduleDelay(MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
+    public static void scheduleDelay(Identifier identifier, MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
-        timer.setEvent("subathon", server.getSaveProperties().getMainWorldProperties().getTime() + delay, callback);
+        timer.setEvent(identifier.toString(), server.getSaveProperties().getMainWorldProperties().getTime() + delay, callback);
     }
 
-    public static void schedule(MinecraftServer server, long time, TimerCallback<MinecraftServer> callback) {
+    public static void schedule(Identifier identifier,MinecraftServer server, long time, TimerCallback<MinecraftServer> callback) {
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
-        timer.setEvent("subathon", time, callback);
+        timer.setEvent(identifier.toString(), time, callback);
     }
 
     public record UpdateControlValue(Identifier identifier, double amount) implements TimerCallback<MinecraftServer> {
