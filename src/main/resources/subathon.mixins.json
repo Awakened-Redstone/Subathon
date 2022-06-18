@@ -6,7 +6,8 @@
   "mixins": [
     "PlayerListEntryMixin",
     "PlayerManagerMixin",
-    "ServerConfigEntryMixin"
+    "ServerConfigEntryMixin",
+    "TimerMixin"
   ],
   "client": [
     "AbstractTextFieldListCellMixin",

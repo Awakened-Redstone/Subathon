@@ -10,16 +10,17 @@ import net.minecraft.world.timer.Timer;
 import net.minecraft.world.timer.TimerCallback;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class ScheduleUtils {
-    public static void scheduleDelay(Identifier identifier, MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
+    public static void scheduleDelay(MinecraftServer server, long delay, TimerCallback<MinecraftServer> callback) {
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
-        timer.setEvent(identifier.toString(), server.getSaveProperties().getMainWorldProperties().getTime() + delay, callback);
+        timer.setEvent("subathon#" + UUID.randomUUID(), server.getSaveProperties().getMainWorldProperties().getTime() + delay, callback);
     }
 
-    public static void schedule(Identifier identifier,MinecraftServer server, long time, TimerCallback<MinecraftServer> callback) {
+    public static void schedule(MinecraftServer server, long time, TimerCallback<MinecraftServer> callback) {
         Timer<MinecraftServer> timer = server.getSaveProperties().getMainWorldProperties().getScheduledEvents();
-        timer.setEvent(identifier.toString(), time, callback);
+        timer.setEvent("subathon#" + UUID.randomUUID(), time, callback);
     }
 
     public record UpdateControlValue(Identifier identifier, double amount) implements TimerCallback<MinecraftServer> {

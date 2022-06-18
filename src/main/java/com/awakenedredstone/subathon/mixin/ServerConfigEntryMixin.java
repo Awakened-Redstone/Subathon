@@ -7,7 +7,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(ServerConfigEntry.class)
 public interface ServerConfigEntryMixin<T> {
 
-    @Accessor
-    T getKey();
+    @Accessor T getKey();
 
 }

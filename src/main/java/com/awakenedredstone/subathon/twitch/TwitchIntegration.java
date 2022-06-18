@@ -165,7 +165,7 @@ public class TwitchIntegration {
         }
 
         if (getConfigData().resetTimer > 0 && control.valueBased()) {
-            ScheduleUtils.scheduleDelay(control.identifier(), server, getConfigData().resetTimer, new ScheduleUtils.UpdateControlValue(control.identifier(), -toAdd));
+            ScheduleUtils.scheduleDelay(server, getConfigData().resetTimer, new ScheduleUtils.UpdateControlValue(control.identifier(), -toAdd));
         }
     }
 

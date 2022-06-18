@@ -3,6 +3,7 @@ package com.awakenedredstone.subathon.commands;
 import com.awakenedredstone.cubecontroller.CubeController;
 import com.awakenedredstone.cubecontroller.GameControl;
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.mixin.TimerMixin;
 import com.awakenedredstone.subathon.util.IntegrationStatus;
 import com.github.twitch4j.chat.events.TwitchEvent;
 import com.github.twitch4j.chat.events.channel.CheerEvent;
@@ -16,6 +17,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import net.minecraft.command.CommandSource;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -23,6 +25,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.timer.Timer;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -229,7 +232,8 @@ public class SubathonCommand {
     }
 
     public static int executeClean(ServerCommandSource source) {
-        CubeController.GAME_CONTROL.forEach(control -> source.getServer().getSaveProperties().getMainWorldProperties().getScheduledEvents().remove(control.identifier().toString()));
+        Timer<MinecraftServer> timer = source.getServer().getSaveProperties().getMainWorldProperties().getScheduledEvents();
+        ((TimerMixin<MinecraftServer>) timer).getEvents().stream().filter(v -> v.name.startsWith("subathon#")).forEach(v -> timer.remove(v.name));
 
         try {
 
