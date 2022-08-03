@@ -324,7 +324,7 @@ public class SubathonCommand {
 
             source.sendFeedback(Text.translatable("commands.subathon.test.trigger", event.name()).formatted(Formatting.GRAY).formatted(Formatting.ITALIC), true);
 
-            integration.getTwitchClient().getEventManager().publish(testEvent);
+            integration.getChatPool().getEventManager().publish(testEvent);
         } catch (CommandSyntaxException e) {
             throw e;
         } catch (Exception e) {
@@ -358,6 +358,7 @@ public class SubathonCommand {
         RESUBSCRIPTION,
         SUB_GIFT,
         GIFT_USER,
-        CHEER
+        CHEER,
+        REWARD
     }
 }

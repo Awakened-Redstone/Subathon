@@ -25,8 +25,8 @@ public abstract class RenderUpdateTimer extends AbstractInventoryScreen<PlayerSc
 
     @Inject(method = "render", at = @At("TAIL"))
     private void render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (Subathon.getConfigData().showUpdateTimer && SubathonClient.updateTimer > 0 && SubathonClient.nextUpdate > -1) {
-            Text message = Text.literal(SubathonMessageUtils.ticksToSimpleTime(SubathonClient.nextUpdate + 20));
+        if (Subathon.getConfigData().showUpdateTimer && SubathonClient.nextUpdate > -1) {
+            Text message = Text.literal(SubathonMessageUtils.ticksToSimpleTime(SubathonClient.nextUpdate));
             this.textRenderer.draw(matrices, message, x + 127, this.y + 65, 0x404040);
         }
     }

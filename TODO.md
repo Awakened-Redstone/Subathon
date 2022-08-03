@@ -11,3 +11,11 @@
 # Features
 
 - [ ] Support channel points
+
+- increases sensitivity each sub
+- If someone gifts 25 subs, a charged creeper spawns
+- 10 silverfish spawn on the player
+- Phantoms spawn every night
+- Nausea X for 20 seconds
+- Random Darkness effect
+- random ghast noises start spamming

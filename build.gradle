@@ -1,19 +1,14 @@
 import com.modrinth.minotaur.dependencies.ModDependency
 import net.fabricmc.loom.task.RemapJarTask
-import org.kohsuke.github.GHReleaseBuilder
-import org.kohsuke.github.GitHub
-
-buildscript {
-    dependencies {
-        classpath 'org.kohsuke:github-api:1.306'
-    }
-}
 
 plugins {
     id "fabric-loom" version "0.12.+"
     id "maven-publish"
-    id "org.ajoberstar.grgit" version "3.1.0"
     id "com.modrinth.minotaur" version "2.+"
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/subathon.accesswidener")
 }
 
 def ENV = System.getenv()
@@ -113,40 +108,6 @@ task remapMavenJar(type: RemapJarTask, dependsOn: jar) {
 }
 
 build.dependsOn remapMavenJar
-
-def getBranch() {
-    def ENV = System.getenv()
-    if (ENV.GITHUB_REF) {
-        def branch = ENV.GITHUB_REF
-        return branch.substring(branch.lastIndexOf("/") + 1)
-    }
-
-    if (grgit == null) {
-        return "unknown"
-    }
-
-    def branch = grgit.branch.current().name
-    return branch.substring(branch.lastIndexOf("/") + 1)
-}
-
-task github(dependsOn: remapMavenJar) {
-    onlyIf {
-        ENV.GITHUB_TOKEN
-    }
-
-    doLast {
-        def github = GitHub.connectUsingOAuth(ENV.GITHUB_TOKEN as String)
-        def repository = github.getRepository(ENV.GITHUB_REPOSITORY)
-
-        def releaseBuilder = new GHReleaseBuilder(repository, version)
-        releaseBuilder.name("[$project.minecraft_version] Subathon - $project.version")
-        releaseBuilder.body(CHANGELOG ?: "No changelog provided")
-        releaseBuilder.commitish(getBranch())
-
-        def ghRelease = releaseBuilder.create()
-        ghRelease.uploadAsset(file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar"), "application/java-archive");
-    }
-}
 
 tasks.modrinth.dependsOn(tasks.remapMavenJar)
 

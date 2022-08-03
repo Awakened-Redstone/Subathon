@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 public class ConfigData {
+    public boolean devMode = false;
+    public String mockApiUrl = "";
+
     //General
     public boolean runAtServerStart = true;
     public List<String> channels = new ArrayList<>();
@@ -18,6 +21,21 @@ public class ConfigData {
     //CubeController
     public Map<String, Double> scales = new HashMap<>();
     public Map<String, Boolean> invoke = new HashMap<>();
+
+    //Advanced
+    //-Chaos mode
+    public Map<String, Double> actWeight = new HashMap<>();
+    //--Arrows
+    public int arrowMinDamage = 3;
+    public int arrowMaxDamage = 5;
+    public int arrowMinKnockback = 3;
+    public int arrowMaxKnockback = 3;
+    //--Mobs
+    public Map<String, Double> mobWeight = new HashMap<>();
+    public int mobsToSpawn = 1;
+    //--Nuke
+    public int explosionMinPower = 5;
+    public int explosionMaxPower = 5;
 
     //Client
     public boolean showEventsInChat = true;
@@ -30,6 +48,10 @@ public class ConfigData {
             .put(Subscription.TIER2, (byte) 3)
             .put(Subscription.TIER3, (byte) 1)
             .build();
+
+    //Rewards
+    public boolean enableRewards = false;
+    public Map<String, String> rewardId = new HashMap<>();
 
     //Bits
     public boolean enableBits = false;

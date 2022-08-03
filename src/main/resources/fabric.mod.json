@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "subathon",
   "version": "${version}",
-  "name": "Subathon",
+  "name": "Sub-a-thon",
   "description": "Minecraft but every sub...",
   "authors": [
-    "AwakenedRedstone"
+    "Awakened Redstone"
   ],
   "contact": {
     "repo": "https://githu.com/Awakened-Redstone/Subathon"
@@ -32,7 +32,7 @@
     "fabric": ">=0.55.3",
     "minecraft": ">=1.19",
     "cubecontroller": ">=1.0.0-beta.4",
-    "twitch4j": "1.10.0"
+    "twitch4j": "1.11.0"
   },
   "recommends": {
     "modmenu": ">=3.1.0",

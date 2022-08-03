@@ -4,6 +4,8 @@ import com.awakenedredstone.cubecontroller.events.HudRenderEvents;
 import com.awakenedredstone.cubecontroller.events.MinecraftClientCallback;
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.screen.EventLogScreen;
+import com.awakenedredstone.subathon.client.screen.PercentageScreen;
+import com.awakenedredstone.subathon.client.screen.PickChannelScreen;
 import com.awakenedredstone.subathon.client.texture.TwitchSpriteManager;
 import com.awakenedredstone.subathon.client.toast.TwitchEventToast;
 import com.awakenedredstone.subathon.commands.SubathonCommand;
@@ -21,10 +23,12 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.toast.SystemToast;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ReloadableResourceManagerImpl;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.apache.commons.lang.StringUtils;
 import org.lwjgl.glfw.GLFW;
@@ -41,7 +45,6 @@ public class SubathonClient implements ClientModInitializer {
     private static boolean showData = false;
     private static IntegrationStatus integrationStatus = IntegrationStatus.UNKNOWN;
     public static TwitchSpriteManager twitchSpriteManager;
-    public static int updateTimer = -1;
     public static int nextUpdate = -1;
     public static final List<TwitchEvent> events = new ArrayList<>();
     public static final List<Identifier> TWITCH_SPRITES = new ArrayList<>(Arrays.asList(identifier("gift"),
@@ -51,10 +54,22 @@ public class SubathonClient implements ClientModInitializer {
             identifier("10000"),
             identifier("100000")));
 
-    private static final KeyBinding keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+    private static final KeyBinding logKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
             "key.subathon.event_logs", // The translation key of the keybinding's user
             InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
             GLFW.GLFW_KEY_R, // The keycode of the key
+            "category.subathon.keybinds" // The translation key of the keybinding's category.
+    ));
+    private static final KeyBinding rewardKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.subathon.pick_reward", // The translation key of the keybinding's user
+            InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
+            GLFW.GLFW_KEY_H, // The keycode of the key
+            "category.subathon.keybinds" // The translation key of the keybinding's category.
+    ));
+    private static final KeyBinding percentageKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+            "key.subathon.percentage", // The translation key of the keybinding's user
+            InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
+            GLFW.GLFW_KEY_O, // The keycode of the key
             "category.subathon.keybinds" // The translation key of the keybinding's category.
     ));
 
@@ -71,17 +86,49 @@ public class SubathonClient implements ClientModInitializer {
             events.clear();
             integrationStatus = IntegrationStatus.UNKNOWN;
             showData = false;
-            updateTimer = -1;
             nextUpdate = -1;
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (keyBinding.isPressed()) {
+            if (logKeyBinding.isPressed()) {
                 client.setScreen(new EventLogScreen(client.currentScreen));
             }
-            //noinspection StatementWithEmptyBody
-            while (keyBinding.wasPressed()) {
+
+            //TODO: Multiplayer support
+            if (rewardKeyBinding.isPressed()) {
+                if (client.getServer() == null || client.getServer().isDedicated() || client.isConnectedToRealms()) {
+                    MutableText error = Text.literal("This function only works on singleplayer!");
+                    if (client.player != null) {
+                        client.player.sendMessage(error.formatted(Formatting.RED));
+                    } else {
+                        client.getToastManager().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, Text.literal("Function unavailable"), error));
+                    }
+                } else if (client.player != null && !client.player.hasPermissionLevel(2)) {
+                    MutableText error = Text.literal("You need operator to use this function!");
+                    client.player.sendMessage(error.formatted(Formatting.RED));
+                }
+                client.setScreen(new PickChannelScreen(client.currentScreen));
             }
+
+            //TODO: Multiplayer support
+            if (percentageKeyBinding.isPressed()) {
+                if (client.getServer() == null || client.getServer().isDedicated() || client.isConnectedToRealms()) {
+                    MutableText error = Text.literal("This function only works on singleplayer!");
+                    if (client.player != null) {
+                        client.player.sendMessage(error.formatted(Formatting.RED));
+                    } else {
+                        client.getToastManager().add(new SystemToast(SystemToast.Type.TUTORIAL_HINT, Text.literal("Function unavailable"), error));
+                    }
+                } else if (client.player != null && !client.player.hasPermissionLevel(2)) {
+                    MutableText error = Text.literal("You need operator to use this function!");
+                    client.player.sendMessage(error.formatted(Formatting.RED));
+                }
+                client.setScreen(new PercentageScreen(client.currentScreen));
+            }
+
+            while (logKeyBinding.wasPressed()) {/**/}
+            while (rewardKeyBinding.wasPressed()) {/**/}
+            while (percentageKeyBinding.wasPressed()) {/**/}
         });
 
         //Packet sent by the server to inform the client that it has the mod
@@ -95,12 +142,6 @@ public class SubathonClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("next_update"), (client, handler, buf, responseSender) -> {
             int value = buf.readInt();
             client.execute(() -> SubathonClient.nextUpdate = value);
-        });
-
-        //Packet sent by the server to inform the client the timer values
-        ClientPlayNetworking.registerGlobalReceiver(Subathon.identifier("timer"), (client, handler, buf, responseSender) -> {
-            int updateTimer = buf.readInt();
-            client.execute(() -> SubathonClient.updateTimer = updateTimer);
         });
 
         //Packet sent by the server to inform the client the bot status
@@ -182,12 +223,16 @@ public class SubathonClient implements ClientModInitializer {
                             client.getToastManager().add(new TwitchEventToast(getBitsBadge(amount), title, msg));
                         }
                     }
+                    case REWARD -> {
+                        if (getConfigData().showEventsInChat)
+                            client.inGameHud.getChatHud().addMessage(Text.translatable("text.subathon.event.reward", user));
+                    }
                 }
             });
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (showData && updateTimer > -1 && nextUpdate > 0 && !client.isPaused()) {
+            if (showData && nextUpdate > 0 && !client.isPaused()) {
                 nextUpdate--;
             }
         });

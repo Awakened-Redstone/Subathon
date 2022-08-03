@@ -28,8 +28,8 @@ public abstract class RenderUpdateTimerCreative extends AbstractInventoryScreen<
 
     @Inject(method = "render", at = @At("TAIL"))
     private void render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (Subathon.getConfigData().showUpdateTimer && SubathonClient.updateTimer > 0 && SubathonClient.nextUpdate > -1) {
-            Text message = Text.literal(SubathonMessageUtils.ticksToSimpleTime(SubathonClient.nextUpdate + 20));
+        if (Subathon.getConfigData().showUpdateTimer && SubathonClient.nextUpdate > -1) {
+            Text message = Text.literal(SubathonMessageUtils.ticksToSimpleTime(SubathonClient.nextUpdate));
             int width = textRenderer.getWidth(message);
             if (selectedTab == ItemGroup.INVENTORY.getIndex()) {
                 this.textRenderer.draw(matrices, message, x + 130, this.y + 42, 0x404040);
