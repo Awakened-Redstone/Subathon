@@ -1,168 +1,227 @@
 package com.awakenedredstone.subathon;
 
-import com.awakenedredstone.subathon.commands.SubathonCommand;
-import com.awakenedredstone.subathon.config.Config;
-import com.awakenedredstone.subathon.config.ConfigData;
-import com.awakenedredstone.subathon.config.Mode;
-import com.awakenedredstone.subathon.events.LivingEntityCallback;
-import com.awakenedredstone.subathon.json.JsonHelper;
-import com.awakenedredstone.subathon.potions.SubathonStatusEffect;
-import com.awakenedredstone.subathon.twitch.EventListener;
-import com.awakenedredstone.subathon.twitch.SubathonData;
-import com.awakenedredstone.subathon.twitch.TwitchIntegration;
-import com.awakenedredstone.subathon.util.BotStatus;
-import com.awakenedredstone.subathon.util.ConfigUtils;
-import com.awakenedredstone.subathon.util.MessageUtils;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.neovisionaries.ws.client.WebSocketFactory;
+import blue.endless.jankson.JsonArray;
+import blue.endless.jankson.JsonObject;
+import blue.endless.jankson.JsonPrimitive;
+import com.awakenedredstone.subathon.command.SubathonCommand;
+import com.awakenedredstone.subathon.config.CommonConfigs;
+import com.awakenedredstone.subathon.config.ConfigsClient;
+import com.awakenedredstone.subathon.core.DataManager;
+import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
+import com.awakenedredstone.subathon.core.effect.chaos.process.ChaosRegistry;
+import com.awakenedredstone.subathon.core.effect.process.Effect;
+import com.awakenedredstone.subathon.core.effect.process.EffectRegistry;
+import com.awakenedredstone.subathon.entity.FireballEntity;
+import com.awakenedredstone.subathon.event.RegistryFreezeCallback;
+import com.awakenedredstone.subathon.twitch.Twitch;
+import com.awakenedredstone.subathon.util.*;
+import io.wispforest.owo.config.ConfigWrapper;
+import io.wispforest.owo.network.serialization.PacketBufSerializer;
+import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.CommandBossBar;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.block.Block;
+import net.minecraft.block.InfestedBlock;
+import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.WorldSavePath;
-import net.minecraft.util.registry.Registry;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.UUID;
 
 public class Subathon implements ModInitializer {
-    public static String MOD_ID = "subathon";
-    public static MinecraftServer server;
-    public static TwitchIntegration integration = new TwitchIntegration();
-    public static CommandBossBar mainProgressBar;
-    public static CommandBossBar usersProgressBar;
-
-    public static final OkHttpClient OKHTTPCLIENT = new OkHttpClient();
-    public static final StatusEffect SUBATHON_EFFECT = new SubathonStatusEffect();
-    public static final EventListener eventListener = new EventListener();
-    public static final WebSocketFactory webSocketFactory = new WebSocketFactory();
-    public static final Config config = new Config();
-    public static final Logger LOGGER = LoggerFactory.getLogger("Subathon");
-    public static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private int potionTick = 10;
-
-    private static final File configFile = new File(config.getConfigDirectory(), "subathon.json");
+    public static final String MOD_ID = "subathon";
+    public static final Logger LOGGER = LoggerFactory.getLogger("Sub-a-thon");
+    public static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID);
+    public static final CommonConfigs COMMON_CONFIGS;
+    //public static final ServerConfigs SERVER_CONFIGS = ServerConfigs.createAndLoad();
+    public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder().build();
+    public static MinecraftServer server = null;
+    public static ScheduleUtils scheduler;
+    public static WeightedRandom<StatusEffect> potionsRandom = new WeightedRandom<>();
+    public static WeightedRandom<Chaos> chaosRandom = new WeightedRandom<>();
+    public static final Queue<Runnable> delayedEvents = new LinkedList<>();
+    public static List<Block> infestedBlocks;
 
     @Override
     public void onInitialize() {
-        Registry.register(Registry.STATUS_EFFECT, new Identifier(MOD_ID, "subathon"), SUBATHON_EFFECT);
-        ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (getConfigData().resetTimer > 0 && server.getTicks() % getConfigData().resetTimer == 0) integration.setValue(0);
-            if (getConfigData().updateTimer > 0 && server.getTicks() % getConfigData().updateTimer == 0) {
-                integration.increaseValue(integration.data.tempValue, true);
-                integration.data.tempValue = 0;
-            }
+        Twitch.init();
 
-            //Send the server ticks to the players every second
-            if ((getConfigData().resetTimer > 0 || getConfigData().updateTimer > 0) && server.getTicks() % 20 == 0) {
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeInt(server.getTicks());
-                MessageUtils.broadcast(player -> ServerPlayNetworking.send(player, new Identifier(MOD_ID, "server_ticks"), buf), "send_ticks");
-            }
-
-            if (Subathon.integration.data.value != 0 && potionTick-- == 0) {
-                potionTick = 10;
-                MessageUtils.broadcast(player -> player.addStatusEffect(
-                        new StatusEffectInstance(SUBATHON_EFFECT, potionTick + 5, 0, false, false)), "apply_potion");
-            }
+        FieldRegistrationHandler.register(EntityInitializer.class, MOD_ID, false);
+        EffectRegistry.registry.forEach((identifier, effect) -> {
+            COMMON_CONFIGS.effects().putIfAbsent(identifier, effect);
         });
-        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            mainProgressBar.addPlayer(handler.player);
-            usersProgressBar.addPlayer(handler.player);
 
-            sender.sendPacket(new Identifier(Subathon.MOD_ID, "has_mod"), PacketByteBufs.create());
+        Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
+        ChaosRegistry.registry.forEach((identifier, chaos) -> COMMON_CONFIGS.chaosWeights().putIfAbsent(identifier, 1));
 
-            if (handler.player.hasPermissionLevel(1)) {
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeEnumConstant(Subathon.integration.isRunning ? BotStatus.RUNNING : BotStatus.OFFLINE);
-                sender.sendPacket(new Identifier(Subathon.MOD_ID, "bot_status"), buf);
-            }
+        COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
+        COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> chaosRandom.add(integer, ChaosRegistry.registry.get(identifier)));
 
-            if (integration.data != null) {
-                PacketByteBuf buf = PacketByteBufs.create();
-                buf.writeDouble(integration.getDisplayValue());
-                sender.sendPacket(new Identifier(Subathon.MOD_ID, "value"), buf);
-            }
+        COMMON_CONFIGS.subscribeToPotionWeights(map -> {
+            potionsRandom = new WeightedRandom<>();
+            map.forEach((identifier, integer) -> {
+                potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier));
+            });
         });
-        ServerLifecycleEvents.SERVER_STARTING.register(this::registerCommands);
-        ServerLifecycleEvents.END_DATA_PACK_RELOAD.register((server, serverResourceManager, success) -> registerCommands(server));
-        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+
+        registerPacketReceivers();
+        registerEventListeners();
+    }
+
+    private void registerPacketReceivers() {
+        ServerPlayNetworking.registerGlobalReceiver(Subathon.id("auth_key"), (server, player, handler, buf, responseSender) -> {
+            String token = buf.readString();
+            server.execute(() -> {
+                Twitch.data.put(player.getUuid(), new Twitch.Data(token));
+                Twitch.connect(token, player);
+            });
+        });
+        
+        ServerPlayNetworking.registerGlobalReceiver(Subathon.id("disconnect"), (server, player, handler, buf, responseSender) -> {
+            String token = buf.readString();
+            server.execute(() -> {
+                Twitch.disconnect(token);
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(Subathon.id("reward_id"), (server, player, handler, buf, responseSender) -> {
+            UUID rewardId = buf.readUuid();
+            server.execute(() -> {
+                Twitch.data.get(player.getUuid()).setRewardId(rewardId);
+            });
+        });
+    }
+
+    private void registerEventListeners() {
+        RegistryFreezeCallback.EVENT.register(() -> {
+            infestedBlocks = Registries.BLOCK.stream().filter(block -> block instanceof InfestedBlock).toList();
+        });
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            SubathonCommand.register(dispatcher);
+        });
+
+        ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Subathon.server = server;
+            Subathon.scheduler = new ScheduleUtils();
+        });
 
-            mainProgressBar = server.getBossBarManager().add(new Identifier(MOD_ID, "loading_progress_main"), new TranslatableText("text.subathon.load.main", "", 0));
-            mainProgressBar.setColor(BossBar.Color.RED);
-            mainProgressBar.setMaxValue(6);
-            mainProgressBar.setValue(0);
-            mainProgressBar.setVisible(false);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            while (!delayedEvents.isEmpty()) {
+                delayedEvents.poll().run();
+            }
 
-            usersProgressBar = server.getBossBarManager().add(new Identifier(MOD_ID, "loading_progress_users"), new TranslatableText("text.subathon.load.users", 0, 0));
-            usersProgressBar.setColor(BossBar.Color.RED);
-            usersProgressBar.setMaxValue(1);
-            usersProgressBar.setValue(0);
-            usersProgressBar.setVisible(false);
+            Subathon.server = null;
+            Twitch.data.clear();
+            Twitch.reset();
+            Subathon.scheduler.destroy();
+            Subathon.scheduler = null;
+        });
 
-            File file = server.getSavePath(WorldSavePath.ROOT).resolve("subathon_data.json").toFile();
-            if (!file.exists())
-                JsonHelper.writeJsonToFile(Subathon.GSON.toJsonTree(new SubathonData()).getAsJsonObject(), file);
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                SubathonData data = Subathon.GSON.fromJson(reader, SubathonData.class);
-                if (getConfigData().runAtServerStart) integration.start(data);
-                else integration.data = data;
-            } catch (IOException e) {
-                if (getConfigData().runAtServerStart) Subathon.LOGGER.error("Failed to start the integration!", e);
-                integration.simpleExecutor.execute(new TwitchIntegration.ClearProgressBar());
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            String version = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().getMetadata().getVersion().getFriendlyString();
+            sender.sendPacket(Subathon.id("mod_version"), PacketByteBufs.create().writeString(version));
+            sender.sendPacket(Subathon.id("eventsub_warning"), PacketByteBufs.create());
+        });
+
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            Twitch.disconnect(Twitch.data.remove(handler.getPlayer().getUuid()).token);
+        });
+
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            scheduler.tick(server);
+            if (updateCooldown() > 0 && server.getTicks() % updateCooldown() == 0) {
+                while (!delayedEvents.isEmpty()) {
+                    delayedEvents.poll().run();
+                }
+            }
+
+            if (updateCooldown() > 0 && server.getTicks() % 20 == 0) {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeInt(updateCooldown() - (server.getTicks() % updateCooldown()));
+                MessageUtils.broadcastPacket(id("next_update"), buf);
+            } else if (updateCooldown() == 0) {
+                PacketByteBuf buf = PacketByteBufs.create();
+                buf.writeInt(-1);
+                MessageUtils.broadcastPacket(id("next_update"), buf);
             }
         });
-        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-            if (getConfigData().updateTimer > 0) integration.data.value += integration.data.tempValue;
-            integration.stop(false);
+    }
+
+    public static Identifier id(String path) {
+        return new Identifier(MOD_ID, path);
+    }
+
+    public static Identifier spriteId(String path) {
+        return new Identifier(MOD_ID, "subathon/" + path);
+    }
+
+    public static int updateCooldown() {
+        return ConversionUtils.timeStringToTicks(COMMON_CONFIGS.updateCooldown());
+    }
+
+    public static <T extends FireballEntity> FabricEntityTypeBuilder<T> createEntity(SpawnGroup spawnGroup, EntityType.EntityFactory<T> factory) {
+        return FabricEntityTypeBuilder.create(spawnGroup, factory);
+    }
+
+    static {
+        PacketBufSerializer.register(Effect.class, (buf, effect) -> {
+            buf.writeIdentifier(effect.identifier);
+            buf.writeDouble(effect.scale);
+            buf.writeBoolean(effect.enabled);
+        }, buf -> {
+            Identifier identifier = buf.readIdentifier();
+            double scale = buf.readDouble();
+            boolean enabled = buf.readBoolean();
+            Effect effect = EffectRegistry.registry.get(identifier);
+            effect.enabled = enabled;
+            effect.scale = scale;
+            return effect;
+        });
+        COMMON_CONFIGS = CommonConfigs.createAndLoad(builder -> {
+            builder.registerSerializer(Effect.class, (effect, marshaller) -> {
+                JsonObject json = new JsonObject();
+                json.put("identifier", new JsonPrimitive(effect.identifier));
+                json.put("enabled", new JsonPrimitive(effect.enabled));
+                json.put("scale", new JsonPrimitive(effect.scale));
+                return json;
+            });
+
+            builder.registerDeserializer(JsonObject.class, Effect.class, (json, m) -> {
+                try {
+                    Identifier identifier = new Identifier(((JsonPrimitive) json.get("identifier")).asString());
+                    boolean enabled = json.getBoolean("enabled", false);
+                    double scale = json.getDouble("scale", 1.0);
+
+                    var effect = EffectRegistry.registry.get(identifier);
+                    effect.enabled = enabled;
+                    effect.scale = scale;
+                    return effect;
+                } catch (Exception e) {
+                    return null;
+                }
+            });
         });
 
-        LivingEntityCallback.JUMP.register((entity) -> {
-            if (!entity.isPlayer() && ConfigUtils.getMode() != Mode.SUPER_JUMP) return;
-            if (ConfigUtils.getMode() == Mode.JUMP || ConfigUtils.getMode() == Mode.SUPER_JUMP) increaseJump(entity);
-        });
-
-        generateConfig();
-        config.loadConfigs();
-    }
-
-    private void registerCommands(MinecraftServer server) {
-        SubathonCommand.register(server.getCommandManager().getDispatcher());
-    }
-
-    public static ConfigData getConfigData() {
-        return config.getConfigData();
-    }
-
-    public static void generateConfig() {
-        File dir = config.getConfigDirectory();
-        if ((dir.exists() && dir.isDirectory()) || dir.mkdirs()) {
-            if (!configFile.exists()) {
-                JsonHelper.writeJsonToFile(config.generateDefaultConfig(), configFile);
-            }
-        }
-    }
-
-    private void increaseJump(LivingEntity entity) {
-        entity.addVelocity(0, BigDecimal.valueOf(Subathon.integration.data.value).multiply(BigDecimal.valueOf(0.1f)).floatValue(), 0);
     }
 }

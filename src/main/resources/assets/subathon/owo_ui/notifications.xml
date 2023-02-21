@@ -1,0 +1,58 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/1.19/owo-ui.xsd">
+    <components>
+        <flow-layout direction="vertical">
+            <children />
+        </flow-layout>
+    </components>
+    <templates>
+        <notification>
+            <flow-layout direction="horizontal">
+                <children>
+                    <label id="subathon.notification.label">
+                        <text translate="true" />
+                        <shadow>true</shadow>
+                        <positioning type="absolute">0,0</positioning>
+                        <horizontal-text-alignment>center</horizontal-text-alignment>
+                    </label>
+                </children>
+                <sizing>
+                    <vertical method="fixed">0</vertical>
+                    <horizontal method="fixed">100</horizontal>
+                </sizing>
+                <padding>
+                    <horizontal>4</horizontal>
+                    <top>2</top>
+                    <bottom>2</bottom>
+                </padding>
+                <!--<surface>
+                    <vanilla-translucent />
+                </surface>-->
+            </flow-layout>
+        </notification>
+        <notifications>
+            <flow-layout direction="vertical" id="subathon-notifications-parent">
+                <children />
+                <horizontal-alignment>right</horizontal-alignment>
+                <positioning type="relative">100,100</positioning>
+            </flow-layout>
+        </notifications>
+        <points>
+            <flow-layout direction="vertical" id="subathon-points-parent">
+                <children>
+                    <label id="subathon.points">
+                        <text translate="true" />
+                        <shadow>true</shadow>
+                    </label>
+                </children>
+                <horizontal-alignment>right</horizontal-alignment>
+                <positioning type="relative">0,100</positioning>
+                <padding>
+                    <all>4</all>
+                </padding>
+                <surface>
+                    <vanilla-translucent />
+                </surface>
+            </flow-layout>
+        </points>
+    </templates>
+</owo-ui>

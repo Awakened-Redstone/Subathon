@@ -1,0 +1,81 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/1.19/owo-ui.xsd">
+    <components>
+        <flow-layout direction="vertical">
+            <children>
+                <flow-layout direction="horizontal">
+                    <children>
+                        <button id="common">
+                            <text translate="true">text.config.subathon/common.title</text>
+                            <sizing>
+                                <horizontal method="content">4</horizontal>
+                            </sizing>
+                        </button>
+                        <button id="server">
+                            <text translate="true">text.config.subathon/server.title</text>
+                            <sizing>
+                                <horizontal method="content">4</horizontal>
+                            </sizing>
+                            <margins>
+                                <left>4</left>
+                            </margins>
+                        </button>
+                        <button id="client">
+                            <text translate="true">text.config.subathon/client.title</text>
+                            <sizing>
+                                <horizontal method="content">4</horizontal>
+                            </sizing>
+                            <margins>
+                                <left>4</left>
+                            </margins>
+                        </button>
+                    </children>
+                    <margins>
+                        <all>4</all>
+                    </margins>
+                </flow-layout>
+                <flow-layout direction="horizontal">
+                    <children>
+                        <button id="rewards">
+                            <text translate="true">text.subathon.screen.rewards.title</text>
+                            <sizing>
+                                <horizontal method="content">4</horizontal>
+                            </sizing>
+                        </button>
+                        <button id="effects">
+                            <text translate="true">text.subathon.screen.effects.title</text>
+                            <sizing>
+                                <horizontal method="content">4</horizontal>
+                            </sizing>
+                            <margins>
+                                <left>4</left>
+                            </margins>
+                        </button>
+                    </children>
+                    <margins>
+                        <all>4</all>
+                    </margins>
+                </flow-layout>
+
+                <flow-layout direction="horizontal">
+                    <children>
+                        <button id="done">
+                            <text translate="true">gui.done</text>
+                            <sizing>
+                                <horizontal method="fill">90</horizontal>
+                            </sizing>
+                        </button>
+                    </children>
+                    <positioning type="relative">50,100</positioning>
+                    <margins>
+                        <bottom>4</bottom>
+                    </margins>
+                </flow-layout>
+            </children>
+            <surface>
+                <vanilla-translucent/>
+            </surface>
+        </flow-layout>
+    </components>
+    <templates>
+    </templates>
+</owo-ui>

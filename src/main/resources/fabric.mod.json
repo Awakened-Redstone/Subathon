@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "subathon",
   "version": "${version}",
-  "name": "Subathon",
-  "description": "Minecraft but every sub...",
+  "name": "Sub-a-thon",
+  "description": "Minecraft but your Twitch chat can torture you with subs",
   "authors": [
-    "AwakenedRedstone"
+    "Awakened Redstone"
   ],
   "contact": {
     "repo": "https://githu.com/Awakened-Redstone/Subathon"
@@ -15,30 +15,42 @@
   "environment": "*",
   "accessWidener": "subathon.accesswidener",
   "entrypoints": {
+    "main": [
+      "com.awakenedredstone.subathon.Subathon"
+    ],
     "client": [
       "com.awakenedredstone.subathon.client.SubathonClient"
     ],
     "server": [
       "com.awakenedredstone.subathon.server.SubathonServer"
     ],
-    "main": [
-      "com.awakenedredstone.subathon.Subathon"
+    "preLaunch": [
+      "com.awakenedredstone.subathon.SubathonPreLaunch"
     ],
-      "modmenu": [
-        "com.awakenedredstone.subathon.config.cloth.ModMenuIntegration"
-      ]
+    "modmenu": [
+      "com.awakenedredstone.subathon.config.ModMenuIntegration"
+    ],
+    "cardinal-components": [
+      "com.awakenedredstone.subathon.core.data.Components"
+    ]
   },
   "mixins": [
     "subathon.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.13.3",
-    "fabric": ">=0.47.8",
-    "minecraft": ">=1.18.2"
+    "fabricloader": ">=0.14.10",
+    "fabric-api": ">=0.66.0",
+    "owo": "0.9.4+pre.5+1.19.3",
+    "twitch4j": "1.13.0",
+    "minecraft": "1.19.3"
   },
   "recommends": {
-    "modmenu": ">=3.1.0",
-    "cloth-config": ">=6.2",
-    "twitch4j": "1.9.0"
+    "modmenu": ">=4.1.0"
+  },
+  "custom": {
+    "cardinal-components": [
+      "subathon:world_data",
+      "subathon:player_data"
+    ]
   }
 }

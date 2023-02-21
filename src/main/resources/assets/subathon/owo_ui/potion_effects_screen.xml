@@ -1,0 +1,163 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/1.19/owo-ui.xsd">
+    <components>
+        <flow-layout direction="vertical">
+            <children>
+                <scroll direction="vertical">
+                    <flow-layout direction="vertical" id="effects">
+                        <children>
+                            <label>
+                                <text translate="true">text.subathon.screen.potion_effects.tip</text>
+                                <margins>
+                                    <top>2</top>
+                                    <bottom>2</bottom>
+                                    <left>10</left>
+                                </margins>
+                            </label>
+                        </children>
+                        <margins>
+                            <top>8</top>
+                        </margins>
+                        <padding>
+                            <bottom>8</bottom>
+                        </padding>
+                    </flow-layout>
+                    <sizing>
+                        <horizontal method="fill">100</horizontal>
+                        <vertical method="fill">90</vertical>
+                    </sizing>
+                </scroll>
+
+                <flow-layout direction="horizontal">
+                    <children>
+                        <button id="done">
+                            <text translate="true">gui.done</text>
+                            <sizing>
+                                <horizontal method="fill">90</horizontal>
+                            </sizing>
+                        </button>
+                        <button id="refresh">
+                            <text>⇄</text>
+                            <tooltip-text translate="true">text.subathon.screen.potion_effects.refresh.tooltip</tooltip-text>
+                            <margins>
+                                <left>2</left>
+                            </margins>
+                            <sizing>
+                                <horizontal method="fixed">20</horizontal>
+                            </sizing>
+                        </button>
+                    </children>
+                    <positioning type="relative">50,99</positioning>
+                    <margins>
+                        <bottom>1</bottom>
+                    </margins>
+                </flow-layout>
+            </children>
+            <surface>
+                <vanilla-translucent />
+            </surface>
+        </flow-layout>
+    </components>
+    <templates>
+        <effect>
+            <flow-layout direction="horizontal" id="{{identifier}}">
+                <children>
+                    <texture texture="{{namespace}}:textures/mob_effect/{{path}}.png" texture-width="16" texture-height="16" region-width="16" region-height="16">
+                        <margins>
+                            <right>4</right>
+                        </margins>
+                        <sizing>
+                            <horizontal method="fixed">16</horizontal>
+                            <vertical method="fixed">16</vertical>
+                        </sizing>
+                    </texture>
+                    <label>
+                        <text translate="true">{{translation}}</text>
+                        <margins>
+                            <top>7</top>
+                        </margins>
+                    </label>
+                    <flow-layout direction="horizontal" id="config-field">
+                        <children/>
+                        <positioning type="relative">100,0</positioning>
+                    </flow-layout>
+                </children>
+                <sizing>
+                    <horizontal method="fill">100</horizontal>
+                    <vertical method="fixed">32</vertical>
+                </sizing>
+                <padding>
+                    <horizontal>10</horizontal>
+                    <vertical>5</vertical>
+                </padding>
+                <margins>
+                    <top>2</top>
+                </margins>
+            </flow-layout>
+        </effect>
+        <mode-options>
+            <flow-layout direction="vertical">
+                <children>
+                    <flow-layout direction="vertical" id="container">
+                        <children/>
+                    </flow-layout>
+                </children>
+                <padding>
+                    <all>6</all>
+                </padding>
+                <surface>
+                    <panel dark="true"/>
+                </surface>
+            </flow-layout>
+        </mode-options>
+        <text-box-config-option>
+            <template name="config-option">
+                <child id="value-container">
+                    <config-text-box id="value-box">
+                        <text>{{config-option-value}}</text>
+                    </config-text-box>
+                </child>
+            </template>
+        </text-box-config-option>
+        <config-option>
+            <flow-layout direction="horizontal">
+                <children>
+                    <label id="option-name">
+                        <text translate="true">{{config-option-name}}</text>
+                        <positioning type="relative">0,50</positioning>
+                        <shadow>true</shadow>
+                    </label>
+
+                    <flow-layout direction="horizontal">
+                        <children>
+                            <template-child id="value-container">
+                                <sizing>
+                                    <horizontal method="fixed">120</horizontal>
+                                </sizing>
+                            </template-child>
+
+                            <button id="reset-button">
+                                <text>⇄</text>
+                                <margins>
+                                    <horizontal>5</horizontal>
+                                </margins>
+                            </button>
+                        </children>
+
+                        <positioning type="relative">100,50</positioning>
+                        <vertical-alignment>center</vertical-alignment>
+                    </flow-layout>
+                </children>
+
+                <sizing>
+                    <horizontal method="fixed">240</horizontal>
+                    <vertical method="fixed">32</vertical>
+                </sizing>
+
+                <padding>
+                    <all>5</all>
+                </padding>
+
+            </flow-layout>
+        </config-option>
+    </templates>
+</owo-ui>

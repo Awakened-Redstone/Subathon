@@ -34,7 +34,7 @@ public class PlayerListEntryMixin {
     @Shadow private boolean texturesLoaded;
 
     @Inject(method = "loadTextures", at = @At("HEAD"))
-    private void loadTextures(CallbackInfo ci) {
+    private void subathon$addCustomCapes(CallbackInfo ci) {
         if (profile.getId().toString() != null) {
             if (!texturesLoaded) {
                 registerCapes();
@@ -46,7 +46,7 @@ public class PlayerListEntryMixin {
     }
 
     private void registerCapes() {
-        Optional<Path> capesPath = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath("data/subathon/special/capes.json");
+        Optional<Path> capesPath = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath("data/subathon/capes/players.json");
         if (capesPath.isPresent()) {
             try (BufferedReader reader = Files.newBufferedReader(capesPath.get())) {
                 JsonElement json = JsonParser.parseReader(new JsonReader(reader));
@@ -65,7 +65,7 @@ public class PlayerListEntryMixin {
     }
 
     private Identifier getCape(GameProfile profile) {
-        Optional<Path> capesPath = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath("data/subathon/special/capes.json");
+        Optional<Path> capesPath = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().findPath("data/subathon/capes/players.json");
         if (capesPath.isPresent()) {
             try (BufferedReader reader = Files.newBufferedReader(capesPath.get())) {
                 JsonElement json = JsonParser.parseReader(new JsonReader(reader));

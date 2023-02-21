@@ -1,17 +1,8 @@
 import com.modrinth.minotaur.dependencies.ModDependency
 import net.fabricmc.loom.task.RemapJarTask
-import org.kohsuke.github.GHReleaseBuilder
-import org.kohsuke.github.GitHub
-
-buildscript {
-    dependencies {
-        classpath 'org.kohsuke:github-api:1.135'
-    }
-}
 
 plugins {
-    id 'fabric-loom' version '0.11-SNAPSHOT'
-    id "org.ajoberstar.grgit" version "3.1.0"
+    id 'fabric-loom' version '1.0-SNAPSHOT'
     id "com.modrinth.minotaur" version "2.+"
     id 'maven-publish'
 }
@@ -26,18 +17,22 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
+    mavenLocal()
+    maven { url "https://maven.terraformersmc.com/releases/" } //ModMenu
+    maven { url "https://maven.wispforest.io" } //owo-lib
+    maven { url "https://maven.awakenedredstone.com"} //Twitch4J (Fabric)
+    maven { url "https://maven.nucleoid.xyz/" } //stimuli && placeholder api
+    maven { url "https://ladysnake.jfrog.io/artifactory/mods" } //cardinal-components
+    maven { url 'https://jitpack.io' } //Mixin extras
     maven {
-        name "ClothConfigAPI"
-        url "https://maven.shedaniel.me/"
-    }
-    maven {
-        name "ModMenu"
-        url "https://maven.terraformersmc.com/releases/"
-    }
-    maven {
-        url = "https://minecraft.guntram.de/maven/"
+        name = "Modrinth"
+        url = "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
+        }
     }
 }
+
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -47,19 +42,22 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-    modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_version}") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
 
-    include modImplementation("de.guntram.mcmod:crowdin-translate:1.4+1.18.2")
+    annotationProcessor modImplementation("io.wispforest:owo-lib:${project.owo_version}")
+    include "io.wispforest:owo-sentinel:${project.owo_version}"
 
-    modImplementation("com.github.twitch4j:twitch4j:${project.twitch4j_version}") {
-        exclude group: 'org.slf4j'
-        exclude group: 'commons-io', module: 'commons-io'
-        exclude group: 'org.apache.commons', module: 'commons-lang3'
-        exclude group: 'org.checkerframework', module: 'checker-qual'
-        exclude group: 'org.jetbrains', module: 'annotations'
-    }
+    modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-api:${project.cardinal_version}"
+    include "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cardinal_version}"
+    include "dev.onyxstudios.cardinal-components-api:cardinal-components-world:${project.cardinal_version}"
+    include "dev.onyxstudios.cardinal-components-api:cardinal-components-entity:${project.cardinal_version}"
+
+    modImplementation "com.github.twitch4j:twitch4j-fabric:${project.twitch4j_version}"
+    modImplementation include("xyz.nucleoid:stimuli:${project.stimuli_version}")
+    modImplementation include("eu.pb4:placeholder-api:${project.placeholders_version}")
+
+    //Mixin extras
+    implementation include("com.github.LlamaLad7:MixinExtras:${project.mixin_extra}")
+    annotationProcessor("com.github.LlamaLad7:MixinExtras:${project.mixin_extra}")
 }
 
 processResources {
@@ -108,40 +106,6 @@ task remapMavenJar(type: RemapJarTask, dependsOn: jar) {
 }
 
 build.dependsOn remapMavenJar
-
-def getBranch() {
-    def ENV = System.getenv()
-    if (ENV.GITHUB_REF) {
-        def branch = ENV.GITHUB_REF
-        return branch.substring(branch.lastIndexOf("/") + 1)
-    }
-
-    if (grgit == null) {
-        return "unknown"
-    }
-
-    def branch = grgit.branch.current().name
-    return branch.substring(branch.lastIndexOf("/") + 1)
-}
-
-task github(dependsOn: remapMavenJar) {
-    onlyIf {
-        ENV.GITHUB_TOKEN
-    }
-
-    doLast {
-        def github = GitHub.connectUsingOAuth(ENV.GITHUB_TOKEN as String)
-        def repository = github.getRepository(ENV.GITHUB_REPOSITORY)
-
-        def releaseBuilder = new GHReleaseBuilder(repository, version)
-        releaseBuilder.name("[$project.minecraft_version] Subathon - $project.version")
-        releaseBuilder.body(ENV.CHANGELOG ?: "No changelog provided")
-        releaseBuilder.commitish(getBranch())
-
-        def ghRelease = releaseBuilder.create()
-        ghRelease.uploadAsset(file("${project.buildDir}/libs/${archivesBaseName}-${version}.jar"), "application/java-archive");
-    }
-}
 
 tasks.modrinth.dependsOn(tasks.remapMavenJar)
 

@@ -1,212 +1,420 @@
 package com.awakenedredstone.subathon.client;
 
+import blue.endless.jankson.JsonArray;
+import blue.endless.jankson.JsonPrimitive;
+import com.awakenedredstone.subathon.EntityInitializer;
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.client.screen.EventLogScreen;
-import com.awakenedredstone.subathon.commands.SubathonCommand;
-import com.awakenedredstone.subathon.events.HudRenderCallback;
-import com.awakenedredstone.subathon.renderer.PositionedText;
-import com.awakenedredstone.subathon.twitch.Subscription;
-import com.awakenedredstone.subathon.util.BotStatus;
-import com.awakenedredstone.subathon.util.MessageUtils;
-import de.guntram.mcmod.crowdintranslate.CrowdinTranslate;
+import com.awakenedredstone.subathon.client.toast.TwitchEventToast;
+import com.awakenedredstone.subathon.config.ClientConfigs;
+import com.awakenedredstone.subathon.config.ConfigsClient;
+import com.awakenedredstone.subathon.core.data.ComponentManager;
+import com.awakenedredstone.subathon.duck.BaseParentComponentDuck;
+import com.awakenedredstone.subathon.duck.ComponentDuck;
+import com.awakenedredstone.subathon.duck.LabelComponentDuck;
+import com.awakenedredstone.subathon.mixin.owo.LabelComponentAccessor;
+import com.awakenedredstone.subathon.owo.SubathonTextBox;
+import com.awakenedredstone.subathon.twitch.EventMessages;
+import com.awakenedredstone.subathon.twitch.Twitch;
+import com.awakenedredstone.subathon.ui.ConnectScreen;
+import com.awakenedredstone.subathon.ui.NotificationsScreen;
+import com.awakenedredstone.subathon.util.ClientUtils;
+import com.awakenedredstone.subathon.util.MapBuilder;
+import com.awakenedredstone.subathon.util.Texts;
+import com.github.twitch4j.common.util.TypeConvert;
+import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
+import com.github.twitch4j.graphql.internal.FetchCommunityPointsSettingsQuery;
+import io.github.xanthic.cache.api.Cache;
+import io.github.xanthic.cache.core.CacheApi;
+import io.wispforest.owo.ui.base.BaseParentComponent;
+import io.wispforest.owo.ui.component.ButtonComponent;
+import io.wispforest.owo.ui.component.LabelComponent;
+import io.wispforest.owo.ui.container.FlowLayout;
+import io.wispforest.owo.ui.core.Component;
+import io.wispforest.owo.ui.core.Easing;
+import io.wispforest.owo.ui.core.Positioning;
+import io.wispforest.owo.ui.core.Sizing;
+import io.wispforest.owo.ui.hud.Hud;
+import io.wispforest.owo.ui.parsing.UIModel;
+import io.wispforest.owo.ui.parsing.UIModelLoader;
+import io.wispforest.owo.ui.parsing.UIParsing;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.text.LiteralText;
+import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import org.apache.http.util.Asserts;
+import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
 
-import static com.awakenedredstone.subathon.util.ConversionUtils.toFloat;
+import static com.awakenedredstone.subathon.Subathon.id;
+import static com.awakenedredstone.subathon.Subathon.spriteId;
 
 @Environment(EnvType.CLIENT)
 public class SubathonClient implements ClientModInitializer {
-    public static final Map<Long, PositionedText> positionedTexts = new HashMap<>();
-    public static final List<TwitchEvent> events = new ArrayList<>();
-    private BotStatus botStatus = BotStatus.UNKNOWN;
     private boolean showData = false;
-    public static double value = 0.0;
-    public static int resetTimer = 0;
-    public static int updateTimer = 0;
-    public static int serverTicks = 0;
 
-    private static KeyBinding keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.subathon.event_logs", // The translation key of the keybinding's name
-            InputUtil.Type.KEYSYM, // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-            GLFW.GLFW_KEY_R, // The keycode of the key
-            "category.subathon.keybinds" // The translation key of the keybinding's category.
-    ));
+    public static final List<Notification> messages = new ArrayList<>();
+    public static final Queue<Notification> quickMessages = new LinkedList<>();
+    public static final Queue<QuickMessageTimer> quickMessageTimers = new LinkedList<>();
+
+    //In memory cache
+    public static final Cache<String, String> cache = CacheApi.create(spec -> {/**/});
+    public static final Cache<String, FlowLayout> hudRenderCache = CacheApi.create(spec -> {/**/});
+    private static UIModel model = null;
+    public static int nextUpdate = -1;
+
+    public static final Set<FetchCommunityPointsSettingsQuery.CustomReward> rewards = new LinkedHashSet<>();
+    public static final RuntimeRewardTextures runtimeRewardTextures = new RuntimeRewardTextures();
+    public static final Map<String, Boolean> connectionStatus = new HashMap<>();
+    public static boolean authenticated = false;
+
+    @Deprecated(forRemoval = true)
+    public static TriConsumer<String, Boolean, Boolean> twitchStatus = (a, b, c) -> {/**/};
+    @Deprecated(forRemoval = true)
+    public static Runnable accountName = () -> {/**/};
+    public static final ClientConfigs CLIENT_CONFIGS;
+
+    private static final KeyBinding connectKeybind = ClientUtils.addKeybind("connect", GLFW.GLFW_KEY_F4);
+    private static final KeyBinding notificationsKeybind = ClientUtils.addKeybind("notifications", GLFW.GLFW_KEY_H);
+    //private static final KeyBinding devKeybind = ClientUtils.addKeybind("dev", GLFW.GLFW_KEY_R);
+
+    static {
+        CLIENT_CONFIGS = ClientConfigs.createAndLoad(builder -> {
+            builder.registerSerializer(UUID.class, (uuid, marshaller) -> {
+                JsonArray array = new JsonArray();
+                array.add(new JsonPrimitive(uuid.getMostSignificantBits()));
+                array.add(new JsonPrimitive(uuid.getLeastSignificantBits()));
+                return array;
+            });
+            builder.registerDeserializer(JsonArray.class, UUID.class, (json, m) -> new UUID(json.getLong(0, 0), json.getLong(1, 0)));
+        });
+    }
 
     @Override
     public void onInitializeClient() {
-        CrowdinTranslate.downloadTranslations("subathon-mod", Subathon.MOD_ID);
+        EntityRendererRegistry.register(EntityInitializer.FIREBALL, (context) -> new FlyingItemEntityRenderer<>(context, 3.0f, true));
+        registerPacketListeners();
+
+        CLIENT_CONFIGS.subscribeToPointsFontScale(value -> {
+            ((LabelComponentDuck) hudRenderCache.get("subathon-points-parent").childById(LabelComponent.class, "subathon.points")).subathon$setScale(value);
+        });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (keyBinding.isPressed()) {
-                client.setScreen(new EventLogScreen(client.currentScreen));
+            while (connectKeybind.wasPressed()) {
+                client.setScreen(new ConnectScreen());
             }
-            while (keyBinding.wasPressed()) {}
+
+            while (notificationsKeybind.wasPressed()) {
+                client.setScreen(new NotificationsScreen());
+            }
+
+            //while (devKeybind.wasPressed()) {}
         });
 
-        //Packet sent by the server to inform the client that it has the mod
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "has_mod"), (client, handler, buf, responseSender) -> {
-            client.execute(() -> {
-                this.showData = true;
-                responseSender.sendPacket(new Identifier("has_mod"), PacketByteBufs.create());
-            });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            authenticated = false;
+            connectionStatus.clear();
+            runtimeRewardTextures.clear();
+            rewards.clear();
+            cache.clear();
         });
 
-        //Packet sent by the server to inform the client the current modifier value
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "value"), (client, handler, buf, responseSender) -> {
-            double value = buf.readDouble();
-            client.execute(() -> {
-                SubathonClient.value = value;
-            });
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            Twitch.nuke();
         });
 
-        //Packet sent by the server to inform the client the current tick
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "server_ticks"), (client, handler, buf, responseSender) -> {
-            int value = buf.readInt();
-            client.execute(() -> {
-                SubathonClient.serverTicks = value;
-            });
+        Hud.add(Subathon.id("quick_notifications"), () -> {
+            if (model == null) model = UIModelLoader.getPreloaded(id("notifications"));
+            FlowLayout template = model.expandTemplate(FlowLayout.class, "notifications", new HashMap<>());
+            hudRenderCache.put("subathon-notifications-parent", template);
+            return template;
         });
 
-        //Packet sent by the server to inform the client the timer values
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "timers"), (client, handler, buf, responseSender) -> {
-            int resetTimer = buf.readInt();
-            int updateTimer = buf.readInt();
-            client.execute(() -> {
-                SubathonClient.resetTimer = resetTimer;
-                SubathonClient.updateTimer = updateTimer;
-            });
+        Hud.add(Subathon.id("points_view"), () -> {
+            if (model == null) model = UIModelLoader.getPreloaded(id("notifications"));
+            FlowLayout template = model.expandTemplate(FlowLayout.class, "points", new HashMap<>());
+            hudRenderCache.put("subathon-points-parent", template);
+            ((LabelComponentDuck) template.childById(LabelComponent.class, "subathon.points")).subathon$setScale(CLIENT_CONFIGS.pointsFontScale());
+            return template;
         });
 
-        //Packet sent by the server to inform the client the bot status
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "bot_status"), (client, handler, buf, responseSender) -> {
-            BotStatus status = buf.readEnumConstant(BotStatus.class);
-            client.execute(() -> {
-                botStatus = status;
-            });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (showData && client.world != null) {
+                if (model == null) model = UIModelLoader.getPreloaded(id("notifications"));
+
+                FlowLayout parent = hudRenderCache.get("subathon-notifications-parent");
+                FlowLayout pointsParent = hudRenderCache.get("subathon-points-parent");
+
+                if (pointsParent != null && client.player != null && CLIENT_CONFIGS.showValue()) {
+                    BaseParentComponentDuck parentDuck = (BaseParentComponentDuck) pointsParent;
+                    if (!parentDuck.subathon$render()) parentDuck.subathon$render(true);
+                    pointsParent.childById(LabelComponent.class, "subathon.points")
+                            .text(Texts.of("text.subathon.points", new MapBuilder.StringMap()
+                                    .putAny("%points%", ComponentManager.getComponent(client.world, client.player).getPoints())
+                                    .build()));
+                } else if (pointsParent != null && !CLIENT_CONFIGS.showValue()) {
+                    BaseParentComponentDuck parentDuck = (BaseParentComponentDuck) pointsParent;
+                    if (parentDuck.subathon$render()) parentDuck.subathon$render(false);
+                    pointsParent.childById(LabelComponent.class, "subathon.points").text(Text.empty());
+                }
+
+                if (parent == null) return;
+
+                quickMessageTimers.removeIf(timer -> !parent.children().contains(timer.component) || timer.timer < -20);
+
+                while (!quickMessages.isEmpty()) {
+                    Notification notification = quickMessages.poll();
+                    FlowLayout template = model.expandTemplate(FlowLayout.class, "notification", new HashMap<>());
+                    LabelComponent label = template.childById(LabelComponent.class, "subathon.notification.label");
+                    LabelComponentAccessor labelMixin = (LabelComponentAccessor) label;
+                    label.text(Texts.of(notification.quickMessage.translation, map -> map.putAll(notification.placeholders)));
+                    quickMessageTimers.add(new QuickMessageTimer(template, client));
+                    int vSize = Sizing.content(2).inflate(0, labelMixin::callDetermineVerticalContentSize);
+                    int hSize = Sizing.content(4).inflate(0, labelMixin::callDetermineHorizontalContentSize);
+                    template.verticalSizing().animate(200, Easing.CUBIC, Sizing.fixed(vSize)).forwards();
+                    template.horizontalSizing(Sizing.fixed(hSize));
+                    parent.child(template);
+                }
+
+                List<Component> children = parent.children();
+                while (children.size() > 10) {
+                    parent.removeChild(children.get(0));
+                }
+            }
         });
+    }
 
-        //Packet sent by the server with a new event
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "event"), (client, handler, buf, responseSender) -> {
-             String name = buf.readString();
-             int amount = buf.readInt();
-             Subscription tier = buf.readEnumConstant(Subscription.class);
-             SubathonCommand.Events event = buf.readEnumConstant(SubathonCommand.Events.class);
-             String target = buf.readString();
+    private void registerPacketListeners() {
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("mod_version"), (client, handler, buf, responseSender) -> {
+            String serverVersion = buf.readString();
             client.execute(() -> {
-                TwitchEvent twitchEvent = new TwitchEvent(name, amount, tier, event, target);
-                events.add(twitchEvent);
+                showData = true;
+                @SuppressWarnings("OptionalGetWithoutIsPresent")
+                String version = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().getMetadata().getVersion().getFriendlyString();
+                if (serverVersion.equals(version)) this.showData = true;
+                else {
+                    SystemToast systemToast = SystemToast.create(client, SystemToast.Type.NARRATOR_TOGGLE,
+                            Text.translatable("toast.subathon.warning.mismatch_version.title"),
+                            Text.translatable("toast.subathon.warning.mismatch_version.description"));
 
-                if (client.currentScreen instanceof EventLogScreen) {
-                    ((EventLogScreen) client.currentScreen).addToList(twitchEvent);
+                    client.getToastManager().add(systemToast);
                 }
             });
         });
 
-        //Deprecated: Packet sent by the server to render a text on a chosen position of the screen
-        ClientPlayNetworking.registerGlobalReceiver(new Identifier(Subathon.MOD_ID, "positioned_text"), (client, handler, buf, responseSender) -> {
-            try {
-                Text text = buf.readText();
-                boolean withShadow = buf.readBoolean();
-                boolean centeredText = buf.readBoolean();
-                int[] values = buf.readIntArray();
-                long id = buf.readLong();
-                if (values.length != 3) {
-                    Subathon.LOGGER.error("Packet \"suathon:positioned_text\" int array size is different than 3");
-                    return;
-                }
-                client.execute(() -> {
-                    Subathon.LOGGER.info("[POSITIONED TEXT] {}", text.getString().replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n"));
-                    final int[] positionedTextData = values.clone();
-                    Text positionedText;
-                    boolean positionedTextShadow;
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("eventsub_warning"), (client, handler, buf, responseSender) -> {
+            client.execute(() -> {
+                SystemToast systemToast = SystemToast.create(client, SystemToast.Type.NARRATOR_TOGGLE,
+                        Text.translatable("toast.subathon.warning.eventsub.title"),
+                        Text.translatable("toast.subathon.warning.eventsub.description"));
 
-                    positionedText = text;
-                    if (centeredText) {
-                        positionedTextData[0] = client.getWindow().getScaledWidth() / 2 - client.textRenderer.getWidth(text) / 2;
-                    } else {
-                        positionedTextData[0] = values[0];
+                client.getToastManager().add(systemToast);
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("twitch_status"), (client, handler, buf, responseSender) -> {
+            String object = buf.readString();
+            boolean status = buf.readBoolean();
+            boolean complete = buf.readBoolean();
+            client.execute(() -> twitchStatus.accept(object, status, complete));
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("account_name"), (client, handler, buf, responseSender) -> {
+            String name = buf.readString();
+            client.execute(() -> {
+                cache.put("accountName", name);
+                accountName.run();
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("connection_fail"), (client, handler, buf, responseSender) -> {
+            client.execute(() -> {
+                //TODO: Use translations
+                client.getToastManager().add(new TwitchEventToast(spriteId("warning"),
+                        Text.literal("Connection failed!"),
+                        Text.literal("Failed to initiate a stable connection with Twitch!")));
+
+                authenticated = false;
+
+                if (client.currentScreen instanceof ConnectScreen connect) {
+                    ButtonComponent connectButton = connect.rootComponent().childById(ButtonComponent.class, "the-button");
+                    Asserts.notNull(connectButton, "connectButton");
+
+                    var accountLabel = connect.rootComponent().childById(LabelComponent.class, "account");
+                    Asserts.notNull(accountLabel, "accountLabel");
+
+                    accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
+
+                    FlowLayout extraOptions = connect.extraOptions();
+                    Asserts.notNull(extraOptions, "extraOptions");
+
+                    ButtonComponent disconnectButton = extraOptions.childById(ButtonComponent.class, "disconnect");
+                    Asserts.notNull(disconnectButton, "disconnectButton");
+
+                    ButtonComponent reconnectButton = extraOptions.childById(ButtonComponent.class, "reconnect");
+                    Asserts.notNull(reconnectButton, "reconnectButton");
+
+                    ButtonComponent resetCacheButton = extraOptions.childById(ButtonComponent.class, "reset-cache");
+                    Asserts.notNull(resetCacheButton, "resetCacheButton");
+
+                    ButtonComponent resetKeyButton = extraOptions.childById(ButtonComponent.class, "reset-key");
+                    Asserts.notNull(resetKeyButton, "resetKeyButton");
+
+                    FlowLayout items = connect.rootComponent().childById(FlowLayout.class, "connect-items");
+                    Asserts.notNull(items, "items");
+
+                    SubathonClient.connectionStatus.forEach((object, status) -> {
+                        FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
+                        Asserts.notNull(item, "item");
+                        LabelComponent statusCompent = item.childById(LabelComponent.class, "status");
+                        Asserts.notNull(statusCompent, "statusCompent");
+                        statusCompent.text(Text.translatable("text.subathon.screen.connect.disconnected"));
+                    });
+
+                    connectionStatus.clear();
+                    runtimeRewardTextures.clear();
+                    rewards.clear();
+
+                    disconnectButton.active = false;
+                    reconnectButton.active = false;
+                    resetCacheButton.active = true;
+                    resetKeyButton.active = Subathon.CONFIG_DIR.resolve("auth").toFile().exists();
+
+                    connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connect"));
+                    connectButton.active = true;
+                }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("event_message"), (client, handler, buf, responseSender) -> {
+            EventMessages message = buf.readEnumConstant(EventMessages.class);
+            EventMessages quickMessage = buf.readEnumConstant(EventMessages.class);
+            Map<String, String> placeholders = buf.readMap(PacketByteBuf::readString, PacketByteBuf::readString);
+            String content = buf.readString();
+            client.execute(() -> {
+                Notification notification = new Notification(message, quickMessage, placeholders, content, UUID.randomUUID());
+                quickMessages.add(notification);
+                messages.add(notification);
+
+                if (CLIENT_CONFIGS.toasts.enabled()) {
+                    Identifier icon = spriteId(NotificationsScreen.getType(message, placeholders));
+
+                    switch (message) {
+                        case SUB, RESUB -> {
+                            if (CLIENT_CONFIGS.toasts.subs.enabled()) {
+                                ConfigsClient.Client$Toasts.Client$Subs.Tier tier = getTier(quickMessage);
+                                if (tier == null) {
+                                    client.getToastManager().add(new TwitchEventToast(spriteId("warning"),
+                                            Text.literal("Error!"), Text.literal("Failed to create notification toast!")));
+                                    return;
+                                }
+
+                                if (CLIENT_CONFIGS.toasts.subs.minimumTier().compareTo(tier) <= 0) {
+                                    client.getToastManager().add(new TwitchEventToast(icon,
+                                            Texts.of(notification.getToastTitle(), map -> map.putAll(notification.placeholders)),
+                                            Texts.of(notification.message().translation, map -> map.putAll(notification.placeholders()))));
+                                }
+                            }
+                        }
+                        case GIFT -> {
+                            if (!CLIENT_CONFIGS.toasts.gifts.enabled()) break;
+
+                            int amount = Integer.parseInt(placeholders.get("%amount%"));
+                            ConfigsClient.Client$Toasts.Client$Subs.Tier tier = getTier(quickMessage);
+
+                            if ((CLIENT_CONFIGS.toasts.gifts.tier1.enabled() && tier == ConfigsClient.Client$Toasts.Client$Subs.Tier.TIER1 && amount >= CLIENT_CONFIGS.toasts.gifts.tier1.minimum()) ||
+                                    (CLIENT_CONFIGS.toasts.gifts.tier2.enabled() && tier == ConfigsClient.Client$Toasts.Client$Subs.Tier.TIER2 && amount >= CLIENT_CONFIGS.toasts.gifts.tier2.minimum()) ||
+                                    (CLIENT_CONFIGS.toasts.gifts.tier3.enabled() && tier == ConfigsClient.Client$Toasts.Client$Subs.Tier.TIER3) && amount >= CLIENT_CONFIGS.toasts.gifts.tier3.minimum()) {
+                                client.getToastManager().add(new TwitchEventToast(icon,
+                                        Texts.of(notification.getToastTitle(), map -> map.putAll(notification.placeholders)),
+                                        Texts.of(notification.message().translation, map -> map.putAll(notification.placeholders()))));
+                            }
+                        }
+
+                        case CHEER -> {
+                            int amount = Integer.parseInt(placeholders.get("%amount%"));
+                            if (CLIENT_CONFIGS.toasts.bits.enabled() && amount >= CLIENT_CONFIGS.toasts.bits.minimum()) {
+                                client.getToastManager().add(new TwitchEventToast(icon,
+                                        Texts.of(notification.getToastTitle(), map -> map.putAll(notification.placeholders)),
+                                        Texts.of(notification.message().translation, map -> map.putAll(notification.placeholders()))));
+                            }
+                        }
                     }
-                    positionedTextShadow = withShadow;
-
-                    positionedTexts.put(id, new PositionedText(positionedText, positionedTextShadow, positionedTextData));
-                });
-            } catch (Exception e) {
-                Subathon.LOGGER.error("Packet \"suathon:positioned_text\" failed to be processed", e);
-            }
-        });
-
-        ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (showData && serverTicks != 0 && !client.isPaused()) {
-                serverTicks++;
-            }
-        });
-
-
-        HudRenderCallback.RENDER.register((matrix, delta) -> {
-            positionedTexts.forEach((id, text) -> text.render(matrix, delta));
-        });
-
-        HudRenderCallback.TICK.register(() -> {
-            positionedTexts.forEach((id, text) -> text.tick());
-        });
-
-        HudRenderCallback.PRE_TICK.register(paused -> {
-            if (showData) {
-                MinecraftClient client = MinecraftClient.getInstance();
-                float fontScale = Subathon.getConfigData().fontScale;
-                Text message = new TranslatableText("text.subathon.integration.value", MessageUtils.formatDouble(value));
-                float y = toFloat(client.getWindow().getScaledHeight() - (client.textRenderer.fontHeight * fontScale) - 4);
-                float x = toFloat(client.getWindow().getScaledWidth() - (client.textRenderer.getWidth(message) * fontScale) - 4);
-                if (client.currentScreen instanceof ChatScreen) y -= 12;
-                IntegratedServer minecraftServer = client.getServer();
-                if (client.options.showAutosaveIndicator && minecraftServer != null && minecraftServer.isSaving()) y -= 12;
-                positionedTexts.put(-11L, new PositionedText(message, true, x, y, 0xFFFFFF, fontScale));
-
-                if (Subathon.getConfigData().showResetTimer && resetTimer != 0 && serverTicks != 0) {
-                    message = new LiteralText(MessageUtils.ticksToSimpleTime(resetTimer - serverTicks % resetTimer));
-                    x = toFloat(client.getWindow().getScaledWidth() - (client.textRenderer.getWidth(message) * (fontScale / 2)) - 4);
-                    positionedTexts.put(-10L, new PositionedText(message, true, x, y -= 12 * fontScale / 2, 0xFFFFFF, fontScale / 2, 4, 0, 0));
                 }
-
-                if (Subathon.getConfigData().showUpdateTimer && updateTimer != 0 && serverTicks != 0) {
-                    message = new LiteralText(MessageUtils.ticksToSimpleTime(updateTimer - serverTicks % updateTimer + 19));
-                    x = toFloat(client.getWindow().getScaledWidth() - (client.textRenderer.getWidth(message) * (fontScale / 2)) - 4);
-                    positionedTexts.put(-9L, new PositionedText(message, true, x, y -= 12 * fontScale / 2, 0xFFFFFF, fontScale / 2, 4, 0, 0));
-                }
-            }
+            });
         });
 
-        HudRenderCallback.PRE_TICK.register(paused -> {
-            if (showData) {
-                if (botStatus != BotStatus.UNKNOWN) {
-                    MinecraftClient client = MinecraftClient.getInstance();
-                    int y = client.getWindow().getScaledHeight() - client.textRenderer.fontHeight - 4;
-                    if (client.currentScreen instanceof ChatScreen) y -= 12;
-                    String status = botStatus.name().toLowerCase();
-                    positionedTexts.put(-12L, new PositionedText(new TranslatableText(String.format("text.subathon.integration.%s", status)),
-                            true, new int[]{4, y, 0xFFFFFF}));
-                }
-            }
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("next_update"), (client, handler, buf, responseSender) -> {
+            int time = buf.readInt();
+            client.execute(() -> {
+                nextUpdate = time;
+            });
         });
+    }
+
+    static {
+        UIParsing.registerFactory("subathon-text-box", element -> new SubathonTextBox());
+    }
+
+    private ConfigsClient.Client$Toasts.Client$Subs.Tier getTier(EventMessages message) {
+        return switch (message) {
+            case QUICK_SUB_TIER1, QUICK_GIFT_TIER1 -> ConfigsClient.Client$Toasts.Client$Subs.Tier.TIER1;
+            case QUICK_SUB_TIER2, QUICK_GIFT_TIER2 -> ConfigsClient.Client$Toasts.Client$Subs.Tier.TIER2;
+            case QUICK_SUB_TIER3, QUICK_GIFT_TIER3 -> ConfigsClient.Client$Toasts.Client$Subs.Tier.TIER3;
+            default -> null;
+        };
+    }
+
+    public record Notification(EventMessages message, EventMessages quickMessage, Map<String, String> placeholders, String content, UUID uuid) {
+        public String getToastTitle() {
+            return quickMessage.translation.replace("quick_notification", "toast");
+        }
+    }
+
+    public static class QuickMessageTimer {
+        private final BaseParentComponent component;
+        public float timer = (float) (CLIENT_CONFIGS.quickMessageStayTime() / 20d);
+
+        public QuickMessageTimer(BaseParentComponent component, MinecraftClient client) {
+            this.component = component;
+            getDuckComponent().subathon$registerUpdateListener((delta, mouseX, mouseY) -> {
+                if (timer > 0) {
+                    timer -= delta;
+                } else if (timer > -20) {
+                    LabelComponent label = component.childById(LabelComponent.class, "subathon.notification.label");
+                    if (label.positioning().animation() == null) {
+                        LabelComponentAccessor labelMixin = (LabelComponentAccessor) label;
+                        int hSize = Sizing.content().inflate(0, labelMixin::callDetermineHorizontalContentSize);
+                        label.positioning().animate(200, Easing.CUBIC, Positioning.absolute(hSize * 2 + 32, 0)).forwards();
+                    }
+                    timer--;
+                } else {
+                    component.parent().removeChild(component);
+                    timer = -1300;
+                }
+            });
+        }
+
+        public BaseParentComponent getComponent() {
+            return component;
+        }
+
+        public ComponentDuck getDuckComponent() {
+            return (ComponentDuck) component;
+        }
     }
 }

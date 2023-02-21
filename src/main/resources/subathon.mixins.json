@@ -4,22 +4,29 @@
   "package": "com.awakenedredstone.subathon.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "EntityMixin",
+    "ExperienceOrbEntityMixin",
     "LivingEntityMixin",
-    "MinecraftServerMixin",
-    "PlayerEntityMixin",
+    "PersistentProjectileEntityAccessor",
     "PlayerListEntryMixin",
-    "ServerConfigEntryMixin"
+    "RegistriesMixin",
+    "ServerConfigEntryMixin",
+    "ShulkerBulletEntityMixin",
+    "twitch4j.TwitchEventSocketPoolAccessor"
   ],
   "client": [
-    "AbstractInventoryScreenMixin",
-    "AbstractTextFieldListCellMixin",
-    "AbstractTextFieldListMixin",
-    "InGameHudMixin"
+    "InGameHudMixin",
+    "RenderUpdateTimer",
+    "RenderUpdateTimerCreative",
+    "TextureManagerMixin",
+    "owo.BaseComponentMixin",
+    "owo.BaseParentComponentMixin",
+    "owo.ConfigScreenMixin",
+    "owo.FlowLayoutAccessor",
+    "owo.LabelComponentAccessor",
+    "owo.LabelComponentMixin"
   ],
-  "server": [
-    "DeOpCommandMixin",
-    "OpCommandMixin"
-  ],
+  "server": [],
   "injectors": {
     "defaultRequire": 1
   }

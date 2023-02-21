@@ -1,0 +1,61 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/1.19/owo-ui.xsd">
+    <components>
+        <flow-layout direction="vertical">
+            <children>
+                <flow-layout direction="horizontal">
+                    <children>
+                        <box>
+                            <sizing>
+                                <vertical method="fixed">2</vertical>
+                                <horizontal method="fill">20</horizontal>
+                            </sizing>
+
+                            <start-color>#FFFF0000</start-color>
+                            <end-color>#00000000</end-color>
+
+                            <direction>right-to-left</direction>
+
+                            <fill>true</fill>
+                        </box>
+                        <label>
+                            <text translate="true">text.subathon.warning</text>
+                        </label>
+                        <box>
+                            <sizing>
+                                <vertical method="fixed">2</vertical>
+                                <horizontal method="fill">20</horizontal>
+                            </sizing>
+
+                            <start-color>#FFFF0000</start-color>
+                            <end-color>#00000000</end-color>
+
+                            <direction>left-to-right</direction>
+
+                            <fill>true</fill>
+                        </box>
+                    </children>
+                    <horizontal-alignment>center</horizontal-alignment>
+                    <vertical-alignment>center</vertical-alignment>
+                    <positioning type="relative">50,6</positioning>
+                </flow-layout>
+                <flow-layout direction="vertical">
+                    <children>
+                        <texture texture="subathon:textures/gui/warning.png" texture-width="96" texture-height="96" region-width="96" region-height="96" />
+                    </children>
+                </flow-layout>
+                <label>
+                    <text translate="true">text.subathon.warning.unsafe_auth</text>
+                    <horizontal-text-alignment>center</horizontal-text-alignment>
+                    <sizing>
+                        <horizontal method="fixed">300</horizontal>
+                    </sizing>
+                </label>
+            </children>
+            <vertical-alignment>center</vertical-alignment>
+            <horizontal-alignment>center</horizontal-alignment>
+            <surface>
+                <vanilla-translucent />
+            </surface>
+        </flow-layout>
+    </components>
+</owo-ui>

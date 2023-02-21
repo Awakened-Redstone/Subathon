@@ -1,0 +1,84 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/1.19/owo-ui.xsd">
+    <components>
+        <flow-layout direction="vertical">
+            <children>
+                <scroll direction="vertical">
+                    <flow-layout direction="vertical" id="notifications">
+                        <children>
+                            <label>
+                                <text translate="true">text.subathon.screen.notifications.tip</text>
+                                <shadow>true</shadow>
+                                <margins>
+                                    <top>2</top>
+                                    <bottom>8</bottom>
+                                    <left>10</left>
+                                </margins>
+                            </label>
+                        </children>
+                        <margins>
+                            <top>8</top>
+                        </margins>
+                        <padding>
+                            <bottom>8</bottom>
+                        </padding>
+                    </flow-layout>
+                    <sizing>
+                        <horizontal method="fill">100</horizontal>
+                        <vertical method="fill">90</vertical>
+                    </sizing>
+                </scroll>
+                <flow-layout direction="horizontal">
+                    <children>
+                        <button id="done">
+                            <text translate="true">gui.done</text>
+                            <sizing>
+                                <horizontal method="fill">90</horizontal>
+                            </sizing>
+                        </button>
+                    </children>
+                    <positioning type="relative">50,99</positioning>
+                    <margins>
+                        <bottom>1</bottom>
+                    </margins>
+                </flow-layout>
+            </children>
+            <surface>
+                <vanilla-translucent/>
+            </surface>
+        </flow-layout>
+    </components>
+    <templates>
+        <reward>
+            <flow-layout direction="horizontal" id="notification.{{id}}">
+                <children>
+                    <sprite atlas="minecraft:textures/atlas/blocks.png" sprite="subathon:subathon/{{type}}">
+                        <margins>
+                            <right>4</right>
+                        </margins>
+                        <sizing>
+                            <horizontal method="fixed">16</horizontal>
+                            <vertical method="fixed">16</vertical>
+                        </sizing>
+                    </sprite>
+                    <label>
+                        <text>{{message}}</text>
+                        <shadow>true</shadow>
+                        <margins>
+                            <top>4</top>
+                        </margins>
+                    </label>
+                </children>
+                <sizing>
+                    <horizontal method="fill">100</horizontal>
+                </sizing>
+                <padding>
+                    <horizontal>10</horizontal>
+                    <vertical>4</vertical>
+                </padding>
+                <margins>
+                    <top>0</top>
+                </margins>
+            </flow-layout>
+        </reward>
+    </templates>
+</owo-ui>

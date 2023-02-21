@@ -1,0 +1,122 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/1.19/owo-ui.xsd">
+    <components>
+        <flow-layout direction="vertical">
+            <children>
+                <label id="title">
+                    <text />
+                    <horizontal-text-alignment>center</horizontal-text-alignment>
+                    <sizing>
+                        <horizontal method="fill">100</horizontal>
+                    </sizing>
+                    <margins>
+                        <top>8</top>
+                        <bottom>8</bottom>
+                    </margins>
+                </label>
+
+                <flow-layout direction="horizontal">
+                    <children>
+                        <box>
+                            <sizing>
+                                <vertical method="fixed">2</vertical>
+                                <horizontal method="fill">50</horizontal>
+                            </sizing>
+
+                            <start-color>#00000000</start-color>
+                            <end-color>#FF000000</end-color>
+
+                            <direction>left-to-right</direction>
+
+                            <fill>true</fill>
+                        </box>
+                        <box>
+                            <sizing>
+                                <vertical method="fixed">2</vertical>
+                                <horizontal method="fill">50</horizontal>
+                            </sizing>
+
+                            <start-color>#00000000</start-color>
+                            <end-color>#FF000000</end-color>
+
+                            <direction>right-to-left</direction>
+
+                            <fill>true</fill>
+                        </box>
+                    </children>
+                    <horizontal-alignment>center</horizontal-alignment>
+                    <sizing>
+                        <horizontal method="fill">100</horizontal>
+                    </sizing>
+                </flow-layout>
+
+                <flow-layout direction="vertical">
+                    <children>
+                        <label id="message">
+                            <text />
+                        </label>
+                    </children>
+                    <margins>
+                        <top>8</top>
+                        <horizontal>32</horizontal>
+                    </margins>
+                    <padding>
+                        <all>4</all>
+                    </padding>
+                    <sizing>
+                        <horizontal method="fill">100</horizontal>
+                        <vertical method="fill">100</vertical>
+                    </sizing>
+                </flow-layout>
+
+                <button id="previous">
+                    <renderer>
+<!--                        <flat color="aqua" hovered-color="dark-gray" disabled-color="aqua" />-->
+                        <texture texture="subathon:textures/gui/page_buttons.png" u="0" v="0" texture-width="64" texture-height="96" />
+                    </renderer>
+                    <sizing>
+                        <vertical method="fixed">32</vertical>
+                        <horizontal method="fixed">32</horizontal>
+                    </sizing>
+                    <margins>
+                        <left>0</left>
+                    </margins>
+                    <tooltip-text translate="true">text.subathon.screen.notification.previous_page</tooltip-text>
+                    <positioning type="relative">0,50</positioning>
+                </button>
+                <button id="next">
+                    <renderer>
+<!--                        <flat color="aqua" hovered-color="dark-gray" disabled-color="aqua" />-->
+                        <texture texture="subathon:textures/gui/page_buttons.png" u="32" v="0" texture-width="64" texture-height="96" />
+                    </renderer>
+                    <sizing>
+                        <vertical method="fixed">32</vertical>
+                        <horizontal method="fixed">32</horizontal>
+                    </sizing>
+                    <margins>
+                        <right>0</right>
+                    </margins>
+                    <tooltip-text translate="true">text.subathon.screen.notification.next_page</tooltip-text>
+                    <positioning type="relative">100,50</positioning>
+                </button>
+
+                <flow-layout direction="vertical">
+                    <children>
+                        <button id="done">
+                            <text translate="true">gui.done</text>
+                            <sizing>
+                                <horizontal method="fill">90</horizontal>
+                            </sizing>
+                        </button>
+                    </children>
+                    <positioning type="relative">50,99</positioning>
+                    <margins>
+                        <bottom>1</bottom>
+                    </margins>
+                </flow-layout>
+            </children>
+            <surface>
+                <vanilla-translucent/>
+            </surface>
+        </flow-layout>
+    </components>
+</owo-ui>
