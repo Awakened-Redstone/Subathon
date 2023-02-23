@@ -9,8 +9,12 @@ import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.eventsub.EventSubTransport;
 import com.github.twitch4j.eventsub.EventSubTransportMethod;
+import com.github.twitch4j.eventsub.condition.ChannelEventSubCondition;
 import com.github.twitch4j.eventsub.events.*;
 import com.github.twitch4j.eventsub.socket.TwitchEventSocketPool;
+import com.github.twitch4j.eventsub.socket.events.EventSocketDeleteSubscriptionFailureEvent;
+import com.github.twitch4j.eventsub.socket.events.EventSocketSubscriptionFailureEvent;
+import com.github.twitch4j.eventsub.socket.events.EventSocketSubscriptionSuccessEvent;
 import com.github.twitch4j.eventsub.subscriptions.SubscriptionTypes;
 import com.github.twitch4j.graphql.internal.FetchCommunityPointsSettingsQuery;
 import com.github.twitch4j.helix.TwitchHelix;
@@ -23,6 +27,8 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Pair;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -33,22 +39,28 @@ public class Twitch {
     //private static final TwitchChatConnectionPool chatPool;
     public static final TwitchEventSocketPool eventSub;
     private static final Map<String, List<EventSubSubscription>> subscriptions = new HashMap<>();
+    private static final Map<UUID, LinkedList<String>> subscriptionQueue = new HashMap<>();
     public static final Map<UUID, Data> data = new HashMap<>();
 
-    public static void init() {/**/}
+    public static void init() {
+        eventSub.getEventManager().onEvent(EventSocketSubscriptionSuccessEvent.class, Twitch::subscriptionSuccess);
+        eventSub.getEventManager().onEvent(EventSocketSubscriptionFailureEvent.class, Twitch::subscriptionFailure);
+        eventSub.getEventManager().onEvent(EventSocketDeleteSubscriptionFailureEvent.class, Twitch::subscriptionDeleteFail);
+    }
 
     public static void connect(String token, ServerPlayerEntity player) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeString("core").writeBoolean(true).writeBoolean(false);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
+        Subathon.LOGGER.info("Starting Twitch connection of {}", player.getDisplayName().getString());
+        sendStatusPacket("core", ConnectionState.LOADING, ConnectionType.CONNECT, player);
 
         OAuth2Credential auth = new OAuth2Credential("twitch", token);
         TwitchIdentityProvider identityProvider = new TwitchIdentityProvider(null, null, null);
         Pair<String, String> userData = identityProvider.getAdditionalCredentialInformation(auth).map(v -> new Pair<>(v.getUserId(), v.getUserName())).orElse(null);
 
         if (userData == null || StringUtils.isBlank(userData.getLeft()) || StringUtils.isBlank(userData.getRight())) {
-            buf = PacketByteBufs.create();
-            buf.writeString("core").writeBoolean(false).writeBoolean(true);
+            Subathon.LOGGER.warn("Twitch connection of {} failed, could not get user information!", player.getDisplayName().getString());
+
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeString("core").writeEnumConstant(ConnectionState.FAILURE).writeBoolean(true);
             ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
             ServerPlayNetworking.send(player, Subathon.id("connection_fail"), PacketByteBufs.create());
             return;
@@ -59,61 +71,49 @@ public class Twitch {
             data.channelName = userData.getRight();
         });
 
-        buf = PacketByteBufs.create();
-        buf.writeString(userData.getRight());
-        ServerPlayNetworking.send(player, Subathon.id("account_name"), buf);
+        ServerPlayNetworking.send(player, Subathon.id("account_name"), PacketByteBufs.create().writeString(userData.getRight()));
 
-        ArrayList<EventSubSubscription> list = new ArrayList<>();
-        subscriptions.put(token, list);
+        ArrayList<EventSubSubscription> pool = new ArrayList<>();
+        subscriptions.put(token, pool);
+
+        LinkedList<String> queue = new LinkedList<>();
+        subscriptionQueue.put(player.getUuid(), queue);
 
         EventSubSubscription subs = SubscriptionTypes.CHANNEL_SUBSCRIBE.prepareSubscription(builder -> builder.broadcasterUserId(userData.getLeft()).build(), EventSubTransport.builder().method(EventSubTransportMethod.WEBSOCKET).build());
-        buf = PacketByteBufs.create();
-        buf.writeString("subs").writeBoolean(eventSub.register(auth, subs)).writeBoolean(false);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
-        list.add(subs);
+        addSubscription(pool, queue, subs, eventSub.register(auth, subs));
+        sendStatusPacket("subs", ConnectionState.LOADING, ConnectionType.CONNECT, player);
 
         EventSubSubscription resubs = SubscriptionTypes.CHANNEL_SUBSCRIPTION_MESSAGE.prepareSubscription(builder -> builder.broadcasterUserId(userData.getLeft()).build(), EventSubTransport.builder().method(EventSubTransportMethod.WEBSOCKET).build());
-        buf = PacketByteBufs.create();
-        buf.writeString("resubs").writeBoolean(eventSub.register(auth, resubs)).writeBoolean(false);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
-        list.add(resubs);
+        addSubscription(pool, queue, resubs, eventSub.register(auth, resubs));
+        sendStatusPacket("resubs", ConnectionState.LOADING, ConnectionType.CONNECT, player);
 
         EventSubSubscription gifts = SubscriptionTypes.CHANNEL_SUBSCRIPTION_GIFT.prepareSubscription(builder -> builder.broadcasterUserId(userData.getLeft()).build(), EventSubTransport.builder().method(EventSubTransportMethod.WEBSOCKET).build());
-        buf = PacketByteBufs.create();
-        buf.writeString("gifts").writeBoolean(eventSub.register(auth, gifts)).writeBoolean(false);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
-        list.add(gifts);
+        addSubscription(pool, queue, gifts, eventSub.register(auth, gifts));
+        sendStatusPacket("gifts", ConnectionState.LOADING, ConnectionType.CONNECT, player);
 
         EventSubSubscription cheer = SubscriptionTypes.CHANNEL_CHEER.prepareSubscription(builder -> builder.broadcasterUserId(userData.getLeft()).build(), EventSubTransport.builder().method(EventSubTransportMethod.WEBSOCKET).build());
-        buf = PacketByteBufs.create();
-        buf.writeString("bits").writeBoolean(eventSub.register(auth, cheer)).writeBoolean(false);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
-        list.add(cheer);
+        addSubscription(pool, queue, cheer, eventSub.register(auth, cheer));
+        sendStatusPacket("bits", ConnectionState.LOADING, ConnectionType.CONNECT, player);
 
         EventSubSubscription redemption = SubscriptionTypes.CHANNEL_POINTS_CUSTOM_REWARD_REDEMPTION_ADD.prepareSubscription(builder -> builder.broadcasterUserId(userData.getLeft()).build(), EventSubTransport.builder().method(EventSubTransportMethod.WEBSOCKET).build());
-        buf = PacketByteBufs.create();
-        buf.writeString("channel_points").writeBoolean(eventSub.register(auth, redemption)).writeBoolean(false);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
-        list.add(redemption);
-
-        boolean isUserConnected = ((TwitchEventSocketPoolAccessor) (Object) eventSub).getPoolByUserId().containsKey(userData.getLeft());
-        buf = PacketByteBufs.create();
-        buf.writeString("core").writeBoolean(isUserConnected).writeBoolean(true);
-        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
-
-        if (!isUserConnected) {
-            ServerPlayNetworking.send(player, Subathon.id("connection_fail"), PacketByteBufs.create());
-            return;
-        }
+        addSubscription(pool, queue, redemption, eventSub.register(auth, redemption));
+        sendStatusPacket("channel_points", ConnectionState.LOADING, ConnectionType.CONNECT, player);
     }
 
     public static void disconnect(String token) {
-        if (token != null && subscriptions.containsKey(token)) {
-            List<EventSubSubscription> subscriptionList = subscriptions.get(token);
-            List<String> strings = subscriptionList.stream().map(EventSubSubscription::getId).toList();
-            eventSub.getSubscriptions().stream().filter(v -> strings.contains(v.getId())).forEach(eventSub::unregister);
-            subscriptions.remove(token);
-        }
+        new Thread(() -> {
+            if (token != null && subscriptions.containsKey(token)) {
+                ServerPlayerEntity player = Subathon.server.getPlayerManager().getPlayer(getUuidFromToken(token).orElse(null));
+                sendStatusPacket("core", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player);
+                List<EventSubSubscription> subscriptionList = subscriptions.get(token);
+                List<String> strings = subscriptionList.stream().map(EventSubSubscription::getId).toList();
+                eventSub.getSubscriptions().stream().filter(v -> strings.contains(v.getId())).forEach(sub -> {
+                    boolean unregister = eventSub.unregister(sub);
+                    informConnection(sub, unregister ? ConnectionState.OFFLINE : ConnectionState.UNKNOWN, ConnectionType.DISCONNECT, player);
+                });
+                subscriptions.remove(token);
+            }
+        }).start();
     }
 
     public static void reset() {
@@ -129,21 +129,6 @@ public class Twitch {
             eventSub.close();
         } catch (Exception ignored) {/**/}
     }
-
-    /*public static void toggleReward(String token, String rewardId, boolean enable) {
-        new CompletableFuture<>().completeAsync(() -> {
-            OAuth2Credential auth = new OAuth2Credential("twitch", token);
-            TwitchIdentityProvider identityProvider = new TwitchIdentityProvider(null, null, null);
-            String userId = identityProvider.getAdditionalCredentialInformation(auth).map(OAuth2Credential::getUserId).orElse(null);
-
-            List<CustomReward> rewards = clientPool.getHelix().getCustomRewards(token, userId, Collections.singletonList(rewardId), true).execute().getRewards();
-            if (rewards.isEmpty()) return null;
-
-            CustomReward reward = rewards.get(0);
-            clientPool.getHelix().updateCustomReward(token, userId, rewardId, reward.withIsEnabled(enable));
-            return null;
-        });
-    }*/
 
     @Environment(EnvType.CLIENT)
     public static void toggleReward(String token, UUID rewardId, boolean enable) {
@@ -194,19 +179,108 @@ public class Twitch {
         return completableFuture;
     }
 
+    private static void sendStatusPacket(String conn, ConnectionState state, ConnectionType type, ServerPlayerEntity player) {
+        if (player == null) return;
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(conn).writeEnumConstant(state).writeEnumConstant(type).writeBoolean(false);
+        ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
+    }
+
+    private static void addSubscription(List<EventSubSubscription> pool, LinkedList<String> queue, EventSubSubscription subscription, boolean success) {
+        if (success) {
+            pool.add(subscription);
+            queue.add(subscription.getRawType());
+        }
+    }
+
+    private static void subscriptionSuccess(EventSocketSubscriptionSuccessEvent event) {
+        getUuidFromChannelId(((ChannelEventSubCondition) event.getSubscription().getCondition()).getBroadcasterUserId())
+                .ifPresentOrElse(
+                        uuid -> processSubscription(uuid, event.getSubscription(), ConnectionState.SUCCESS),
+                        () -> Subathon.LOGGER.error("Failed to get user of a connection")
+                );
+    }
+
+    private static void subscriptionFailure(EventSocketSubscriptionFailureEvent event) {
+        getUuidFromChannelId(((ChannelEventSubCondition) event.getSubscription().getCondition()).getBroadcasterUserId())
+                .ifPresentOrElse(
+                        uuid -> processSubscription(uuid, event.getSubscription(), ConnectionState.FAILURE),
+                        () -> Subathon.LOGGER.error("Failed to get user of a connection")
+                );
+    }
+
+    private static void processSubscription(UUID uuid, EventSubSubscription subscription, ConnectionState conn) {
+        ServerPlayerEntity player = Subathon.server.getPlayerManager().getPlayer(uuid);
+        if (player == null) {
+            Subathon.LOGGER.error("Failed to get player with UUID {}, twitch link may be broken until the server restarts!", uuid.toString());
+            return;
+        }
+        var queue = subscriptionQueue.get(uuid);
+        queue.remove(subscription.getRawType());
+
+        informConnection(subscription, conn, ConnectionType.CONNECT, player);
+
+        Optional<Data> data;
+        if (queue.isEmpty() && (data = getDataFromUuid(uuid)).isPresent()) {
+            boolean isUserConnected = ((TwitchEventSocketPoolAccessor) (Object) eventSub).getPoolByUserId().containsKey(data.get().channelId);
+            PacketByteBuf buf = PacketByteBufs.create();
+            buf.writeString("core").writeEnumConstant(isUserConnected ? ConnectionState.SUCCESS : ConnectionState.FAILURE).writeEnumConstant(ConnectionType.CONNECT).writeBoolean(true);
+            ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
+
+            if (!isUserConnected) {
+                Subathon.LOGGER.warn("Twitch connection of {} failed, final connection check failed!", player.getDisplayName().getString());
+                ServerPlayNetworking.send(player, Subathon.id("connection_fail"), PacketByteBufs.create());
+            }
+        }
+    }
+
+    public static void subscriptionDeleteFail(EventSocketDeleteSubscriptionFailureEvent event) {
+        getUuidFromChannelId(((ChannelEventSubCondition) event.getSubscription().getCondition()).getBroadcasterUserId())
+                .ifPresentOrElse(
+                        uuid -> {
+                            ServerPlayerEntity player = Subathon.server.getPlayerManager().getPlayer(uuid);
+                            if (player == null) {
+                                Subathon.LOGGER.error("Failed to get player with UUID {}, twitch link may be broken until the server restarts!", uuid);
+                                return;
+                            }
+
+                            informConnection(event.getSubscription(), ConnectionState.FAILURE, ConnectionType.DISCONNECT, player);
+                        },
+                        () -> Subathon.LOGGER.error("Failed to get user of a connection")
+                );
+    }
+
+    private static void informConnection(@NotNull EventSubSubscription subscription, @NotNull ConnectionState state, ConnectionType type, @Nullable ServerPlayerEntity player) {
+        if (player == null) return;
+        String conn = switch (subscription.getRawType()) {
+            case "channel.subscribe" -> "subs";
+            case "channel.subscription.message" -> "resubs";
+            case "channel.subscription.gift" -> "gifts";
+            case "channel.cheer" -> "bits";
+            case "channel.channel_points_custom_reward_redemption.add" -> "channel_points";
+            default -> "";
+        };
+
+        sendStatusPacket(conn, state, type, player);
+    }
+
     private static Optional<Data> getDataFromToken(String token) {
         return data.values().stream().filter(v -> v.token.equals(token)).findFirst();
     }
 
-    static Optional<Data> getDataFromId(String id) {
-        return data.values().stream().filter(v -> v.channelId.equals(id)).findFirst();
-    }
-
-    static Optional<UUID> getUuidFromId(String id) {
+    static Optional<UUID> getUuidFromChannelId(String id) {
         return data.entrySet().stream().filter(v -> v.getValue().channelId.equals(id)).map(Map.Entry::getKey).findFirst();
     }
 
-    static Optional<Pair<UUID, Data>> getFromId(String id) {
+    static Optional<UUID> getUuidFromToken(String id) {
+        return data.entrySet().stream().filter(v -> v.getValue().token.equals(id)).map(Map.Entry::getKey).findFirst();
+    }
+
+    static Optional<Data> getDataFromUuid(UUID uuid) {
+        return data.entrySet().stream().filter(v -> v.getKey().equals(uuid)).map(Map.Entry::getValue).findFirst();
+    }
+
+    static Optional<Pair<UUID, Data>> getPairFromChannelId(String id) {
         return data.entrySet().stream().filter(v -> v.getValue().channelId.equals(id)).map(v -> new Pair<>(v.getKey(), v.getValue())).findFirst();
     }
 
@@ -234,7 +308,20 @@ public class Twitch {
         eventSub.getEventManager().onEvent(CustomRewardRedemptionAddEvent.class, TwitchEvents::onRewardRedemption);
     }
 
-    public static class Data {
+    public enum ConnectionState {
+        OFFLINE,
+        SUCCESS,
+        FAILURE,
+        UNKNOWN,
+        LOADING
+    }
+
+    public enum ConnectionType {
+        CONNECT,
+        DISCONNECT
+    }
+
+    public static final class Data {
         public final String token;
         private String channelId = null;
         private String channelName = null;

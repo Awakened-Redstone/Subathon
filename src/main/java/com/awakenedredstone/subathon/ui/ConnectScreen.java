@@ -45,8 +45,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
     protected void build(FlowLayout rootComponent) {
         Asserts.notNull(client, "client");
 
-        var accountLabel = rootComponent.childById(LabelComponent.class, "account");
-        Asserts.notNull(accountLabel, "accountLabel");
+        var accountLabel = getComponent(rootComponent, LabelComponent.class, "account");
 
         if (SubathonClient.authenticated) {
             accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
@@ -57,8 +56,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         }
 
         //region SET HOVER EFFECT
-        FlowLayout items = rootComponent.childById(FlowLayout.class, "connect-items");
-        Asserts.notNull(items, "items");
+        FlowLayout items = getComponent(rootComponent, FlowLayout.class, "connect-items");
 
         for (Component child : items.children()) {
             if (child instanceof FlowLayout component) {
@@ -72,26 +70,18 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         }
         //endregion
 
-        ButtonComponent connectButton = rootComponent.childById(ButtonComponent.class, "the-button");
-        Asserts.notNull(connectButton, "connectButton");
+        ButtonComponent connectButton = getComponent(rootComponent, ButtonComponent.class, "connect-button");
 
         extraOptions = model.expandTemplate(FlowLayout.class, "extra-options", new HashMap<>());
-        Asserts.notNull(extraOptions, "extraOptions");
 
-        ButtonComponent extraOptionsButton = rootComponent.childById(ButtonComponent.class, "sandwich");
-        Asserts.notNull(extraOptionsButton, "extraOptionsButton");
+        ButtonComponent extraOptionsButton = getComponent(rootComponent, ButtonComponent.class, "sandwich");
+        ButtonComponent disconnectButton = getComponent(extraOptions, ButtonComponent.class, "disconnect");
+        ButtonComponent reconnectButton = getComponent(extraOptions, ButtonComponent.class, "reconnect");
+        ButtonComponent resetCacheButton = getComponent(extraOptions, ButtonComponent.class, "reset-cache");
+        ButtonComponent resetKeyButton = getComponent(extraOptions, ButtonComponent.class, "reset-key");
 
-        ButtonComponent disconnectButton = extraOptions.childById(ButtonComponent.class, "disconnect");
-        Asserts.notNull(disconnectButton, "disconnectButton");
-
-        ButtonComponent reconnectButton = extraOptions.childById(ButtonComponent.class, "reconnect");
-        Asserts.notNull(reconnectButton, "reconnectButton");
-
-        ButtonComponent resetCacheButton = extraOptions.childById(ButtonComponent.class, "reset-cache");
-        Asserts.notNull(resetCacheButton, "resetCacheButton");
-
-        ButtonComponent resetKeyButton = extraOptions.childById(ButtonComponent.class, "reset-key");
-        Asserts.notNull(resetKeyButton, "resetKeyButton");
+        reconnectButton.active = false;
+        reconnectButton.tooltip(Text.literal("Please use disconnect and connect for now"));
 
         Consumer<ButtonComponent> connect = button -> {
             button.active = false;
@@ -123,39 +113,6 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                 ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(cachedKey.get()));
                 button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
             }
-
-            SubathonClient.twitchStatus = (object, status, complete) -> {
-                if (complete) {
-                    button.setMessage(Text.translatable("text.subathon.screen.connect.button.connected"));
-                    disconnectButton.active = true;
-                    reconnectButton.active = true;
-                    SubathonClient.authenticated = true;
-
-                    if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
-                        UUID rewardId = SubathonClient.CLIENT_CONFIGS.rewardId();
-                        Twitch.toggleReward(SubathonClient.cache.get("token"), rewardId, true);
-                        ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeUUID(rewardId)));
-                    }
-                } else {
-                    button.setMessage(Text.translatable("text.subathon.screen.connect.button.packets"));
-                }
-                FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
-                Asserts.notNull(item, "item");
-                LabelComponent statusCompent = item.childById(LabelComponent.class, "status");
-                Asserts.notNull(statusCompent, "statusCompent");
-                statusCompent.text(Text.translatable("text.subathon.screen.connect." + (status ? "connected" : "disconnected")));
-                SubathonClient.connectionStatus.put(object, status);
-            };
-
-            SubathonClient.accountName = () -> {
-                if (SubathonClient.cache.get("accountName") != null) {
-                    accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
-                            .putAny("%user%", SubathonClient.cache.get("accountName"))
-                            .build()));
-                } else {
-                    accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
-                }
-            };
             //endregion
 
             //region GET REWARDS
@@ -216,21 +173,12 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         Runnable disconnect = () -> {
             accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
             disconnectButton.active = false;
-            reconnectButton.active = false;
+            //reconnectButton.active = false;
             resetCacheButton.active = true;
             resetKeyButton.active = Subathon.CONFIG_DIR.resolve("auth").toFile().exists();
             SubathonClient.authenticated = false;
-            SubathonClient.connectionStatus.forEach((object, status) -> {
-                FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
-                Asserts.notNull(item, "item");
-                LabelComponent statusCompent = item.childById(LabelComponent.class, "status");
-                Asserts.notNull(statusCompent, "statusCompent");
-                statusCompent.text(Text.translatable("text.subathon.screen.connect.disconnected"));
-            });
-            SubathonClient.connectionStatus.clear();
             SubathonClient.runtimeRewardTextures.clear();
             SubathonClient.rewards.clear();
-            SubathonClient.twitchStatus = (a, b, c) -> {/**/};
             if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
                 UUID rewardId = SubathonClient.CLIENT_CONFIGS.rewardId();
                 if (SubathonClient.cache.get("token") != null) Twitch.toggleReward(SubathonClient.cache.get("token"), rewardId, false);
@@ -241,7 +189,6 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                 ClientPlayNetworking.send(Subathon.id("disconnect"), PacketByteBufs.create().writeString(SubathonClient.cache.get("token")));
                 SubathonClient.cache.remove("token");
             }
-            connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connect"));
             connectButton.active = true;
         };
 
@@ -250,7 +197,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         };
         extraOptionsButton.onPress((ButtonComponent button) -> {
             disconnectButton.active = SubathonClient.authenticated;
-            reconnectButton.active = SubathonClient.authenticated;
+            //reconnectButton.active = SubathonClient.authenticated;
 
             ref.open = !ref.open;
             if (ref.open) {
@@ -273,33 +220,24 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             disconnect.run();
             FileUtil.delete(Subathon.CONFIG_DIR.resolve("cache"));
             SubathonClient.CLIENT_CONFIGS.rewardId(null);
-            SubathonClient.rewards.clear();
             SubathonClient.runtimeRewardTextures.clear();
-            SubathonClient.cache.remove("token");
+            SubathonClient.rewards.clear();
+            SubathonClient.cache.clear();
         });
 
-        reconnectButton.onPress((ButtonComponent button) -> {
+        /*reconnectButton.onPress((ButtonComponent button) -> {
             disconnectButton.active = false;
             reconnectButton.active = false;
             resetCacheButton.active = false;
             SubathonClient.authenticated = false;
-            SubathonClient.connectionStatus.forEach((object, status) -> {
-                FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
-                Asserts.notNull(item, "item");
-                LabelComponent statusCompent = item.childById(LabelComponent.class, "status");
-                Asserts.notNull(statusCompent, "statusCompent");
-                statusCompent.text(Text.translatable("text.subathon.screen.connect.disconnected"));
-            });
             SubathonClient.connectionStatus.clear();
             SubathonClient.runtimeRewardTextures.clear();
             SubathonClient.rewards.clear();
-            SubathonClient.twitchStatus = (a, b, c) -> {
-            };
             ClientPlayNetworking.send(Subathon.id("disconnect"), PacketByteBufs.create().writeString(SubathonClient.cache.get("token")));
             SubathonClient.cache.remove("token");
             connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.reconnecting"));
             connect.accept(connectButton);
-        });
+        });*/
 
         disconnectButton.onPress((ButtonComponent button) -> disconnect.run());
 
@@ -319,18 +257,18 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connected"));
 
             SubathonClient.connectionStatus.forEach((object, status) -> {
-                FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
+                FlowLayout item = getComponent(items, FlowLayout.class, "connect." + object);
                 assert item != null;
-                LabelComponent statusCompent = item.childById(LabelComponent.class, "status");
+                LabelComponent statusCompent = getComponent(item, LabelComponent.class, "status");
                 assert statusCompent != null;
-                statusCompent.text(Text.translatable("text.subathon.screen.connect." + (status ? "connected" : "disconnected")));
+                statusCompent.text(Text.translatable("text.subathon.screen.connect." + status.name().toLowerCase()));
             });
         }
         //endregion
 
         //region RESUBS TOOLTIP
         {
-            FlowLayout flowLayout = rootComponent.childById(FlowLayout.class, "connect.resubs");
+            FlowLayout flowLayout = getComponent(rootComponent, FlowLayout.class, "connect.resubs");
             assert flowLayout != null;
             assert client != null;
             List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.translatable("text.subathon.screen.connect.resubs.tooltip"), 200)
@@ -344,8 +282,6 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
 
     @Override
     public void close() {
-        SubathonClient.twitchStatus = (object, status, complete) -> {/**/};
-        SubathonClient.accountName = () -> {/**/};
         super.close();
     }
 
@@ -357,7 +293,11 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         return extraOptions;
     }
 
-    private UUID safeUUID(UUID uuid) {
+    public FlowLayout getExtraOptions() {
+        return extraOptions;
+    }
+
+    public UUID safeUUID(UUID uuid) {
         return uuid == null ? new UUID(0, 0) : uuid;
     }
 }

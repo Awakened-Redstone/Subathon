@@ -45,6 +45,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
@@ -79,13 +80,9 @@ public class SubathonClient implements ClientModInitializer {
 
     public static final Set<FetchCommunityPointsSettingsQuery.CustomReward> rewards = new LinkedHashSet<>();
     public static final RuntimeRewardTextures runtimeRewardTextures = new RuntimeRewardTextures();
-    public static final Map<String, Boolean> connectionStatus = new HashMap<>();
+    public static final Map<String, Twitch.ConnectionState> connectionStatus = new HashMap<>();
     public static boolean authenticated = false;
 
-    @Deprecated(forRemoval = true)
-    public static TriConsumer<String, Boolean, Boolean> twitchStatus = (a, b, c) -> {/**/};
-    @Deprecated(forRemoval = true)
-    public static Runnable accountName = () -> {/**/};
     public static final ClientConfigs CLIENT_CONFIGS;
 
     private static final KeyBinding connectKeybind = ClientUtils.addKeybind("connect", GLFW.GLFW_KEY_F4);
@@ -131,10 +128,6 @@ public class SubathonClient implements ClientModInitializer {
             runtimeRewardTextures.clear();
             rewards.clear();
             cache.clear();
-        });
-
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
-            Twitch.nuke();
         });
 
         Hud.add(Subathon.id("quick_notifications"), () -> {
@@ -228,59 +221,109 @@ public class SubathonClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(Subathon.id("twitch_status"), (client, handler, buf, responseSender) -> {
             String object = buf.readString();
-            boolean status = buf.readBoolean();
+            Twitch.ConnectionState status = buf.readEnumConstant(Twitch.ConnectionState.class);
+            Twitch.ConnectionType type = buf.readEnumConstant(Twitch.ConnectionType.class);
             boolean complete = buf.readBoolean();
-            client.execute(() -> twitchStatus.accept(object, status, complete));
+            client.execute(() -> {
+                if (object.isEmpty()) {
+                    SystemToast systemToast = SystemToast.create(client, SystemToast.Type.NARRATOR_TOGGLE,
+                            Text.translatable("toast.subathon.error.eventsub.unknown_connection.title"),
+                            Text.translatable("toast.subathon.error.eventsub.unknown_connection.description"));
+
+                    client.getToastManager().add(systemToast);
+                    return;
+                }
+
+                SubathonClient.connectionStatus.put(object, status);
+                if (client.currentScreen instanceof ConnectScreen screen) {
+                    FlowLayout rootComponent = screen.rootComponent();
+                    
+                    FlowLayout items = screen.getComponent(rootComponent, FlowLayout.class, "connect-items");
+                    ButtonComponent connectButton = screen.getComponent(rootComponent, ButtonComponent.class, "connect-button");
+
+                    FlowLayout extraOptions = screen.getExtraOptions();
+                    Asserts.notNull(extraOptions, "extraOptions");
+
+                    ButtonComponent disconnectButton = screen.getComponent(extraOptions, ButtonComponent.class, "disconnect");
+                    //ButtonComponent reconnectButton = screen.getComponent(extraOptions, ButtonComponent.class, "reconnect");
+
+
+                    if (type == Twitch.ConnectionType.CONNECT) {
+                        if (complete) {
+                            connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connected"));
+                            disconnectButton.active = true;
+                            //reconnectButton.active = true;
+                            SubathonClient.authenticated = true;
+
+                            if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
+                                UUID rewardId = SubathonClient.CLIENT_CONFIGS.rewardId();
+                                Twitch.toggleReward(SubathonClient.cache.get("token"), rewardId, true);
+                                ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(screen.safeUUID(rewardId)));
+                            }
+                        } else {
+                            connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.packets"));
+                            connectButton.active = false;
+                        }
+                    } else if (type == Twitch.ConnectionType.DISCONNECT) {
+                        connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connect"));
+                        disconnectButton.active = false;
+                        //reconnectButton.active = false;
+                    }
+                    FlowLayout item = screen.getComponent(items, FlowLayout.class, "connect." + object);
+                    LabelComponent statusComponent = screen.getComponent(item, LabelComponent.class, "status");
+                    statusComponent.text(Text.translatable("text.subathon.screen.connect." + status.name().toLowerCase()));
+                    SubathonClient.connectionStatus.put(object, status);
+                }
+            });
         });
 
         ClientPlayNetworking.registerGlobalReceiver(Subathon.id("account_name"), (client, handler, buf, responseSender) -> {
             String name = buf.readString();
             client.execute(() -> {
                 cache.put("accountName", name);
-                accountName.run();
+                if (client.currentScreen instanceof ConnectScreen screen) {
+                    var accountLabel = screen.getComponent(screen.rootComponent(), LabelComponent.class, "account");
+
+                    if (SubathonClient.cache.get("accountName") != null) {
+                        accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
+                                .putAny("%user%", SubathonClient.cache.get("accountName"))
+                                .build()));
+                    } else {
+                        accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
+                    }
+                }
             });
         });
 
         ClientPlayNetworking.registerGlobalReceiver(Subathon.id("connection_fail"), (client, handler, buf, responseSender) -> {
             client.execute(() -> {
-                //TODO: Use translations
                 client.getToastManager().add(new TwitchEventToast(spriteId("warning"),
-                        Text.literal("Connection failed!"),
-                        Text.literal("Failed to initiate a stable connection with Twitch!")));
+                        Text.translatable("toast.subathon.error.eventsub.connection.failed.title"),
+                        Text.translatable("toast.subathon.error.eventsub.connection.failed.description")));
 
                 authenticated = false;
 
-                if (client.currentScreen instanceof ConnectScreen connect) {
-                    ButtonComponent connectButton = connect.rootComponent().childById(ButtonComponent.class, "the-button");
+                if (client.currentScreen instanceof ConnectScreen screen) {
+                    FlowLayout rootComponent = screen.rootComponent();
+                    ButtonComponent connectButton = screen.getComponent(rootComponent, ButtonComponent.class, "connect-button");
                     Asserts.notNull(connectButton, "connectButton");
 
-                    var accountLabel = connect.rootComponent().childById(LabelComponent.class, "account");
-                    Asserts.notNull(accountLabel, "accountLabel");
-
+                    var accountLabel = screen.getComponent(rootComponent, LabelComponent.class, "account");
                     accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
 
-                    FlowLayout extraOptions = connect.extraOptions();
-                    Asserts.notNull(extraOptions, "extraOptions");
+                    FlowLayout extraOptions = screen.extraOptions();
 
-                    ButtonComponent disconnectButton = extraOptions.childById(ButtonComponent.class, "disconnect");
-                    Asserts.notNull(disconnectButton, "disconnectButton");
+                    ButtonComponent disconnectButton = screen.getComponent(extraOptions, ButtonComponent.class, "disconnect");
+                    ButtonComponent reconnectButton = screen.getComponent(extraOptions, ButtonComponent.class, "reconnect");
+                    ButtonComponent resetCacheButton = screen.getComponent(extraOptions, ButtonComponent.class, "reset-cache");
+                    ButtonComponent resetKeyButton = screen.getComponent(extraOptions, ButtonComponent.class, "reset-key");
 
-                    ButtonComponent reconnectButton = extraOptions.childById(ButtonComponent.class, "reconnect");
-                    Asserts.notNull(reconnectButton, "reconnectButton");
-
-                    ButtonComponent resetCacheButton = extraOptions.childById(ButtonComponent.class, "reset-cache");
-                    Asserts.notNull(resetCacheButton, "resetCacheButton");
-
-                    ButtonComponent resetKeyButton = extraOptions.childById(ButtonComponent.class, "reset-key");
-                    Asserts.notNull(resetKeyButton, "resetKeyButton");
-
-                    FlowLayout items = connect.rootComponent().childById(FlowLayout.class, "connect-items");
-                    Asserts.notNull(items, "items");
+                    FlowLayout items = screen.getComponent(rootComponent, FlowLayout.class, "connect-items");
 
                     SubathonClient.connectionStatus.forEach((object, status) -> {
                         FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
                         Asserts.notNull(item, "item");
-                        LabelComponent statusCompent = item.childById(LabelComponent.class, "status");
+                        LabelComponent statusCompent = screen.getComponent(item, LabelComponent.class, "status");
                         Asserts.notNull(statusCompent, "statusCompent");
                         statusCompent.text(Text.translatable("text.subathon.screen.connect.disconnected"));
                     });

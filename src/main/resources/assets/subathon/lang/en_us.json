@@ -18,8 +18,10 @@
 
   "toast.subathon.warning.eventsub.title": "Stability warning!",
   "toast.subathon.warning.eventsub.description": "Twitch WebSocket EventSub is still on beta, things might not behave properly, please proceed with caution!",
-  "toast.subathon.warning.sodium.title": "Sodium compat warning",
-  "toast.subathon.warning.sodium.description": "The \"Animate only visible textures\" option may cause problems with animated assets on the Subathon UIs",
+  "toast.subathon.error.eventsub.connection.failed.title": "Connection failed!",
+  "toast.subathon.error.eventsub.connection.failed.description": "Failed to initiate a stable connection with Twitch!",
+  "toast.subathon.error.eventsub.connection.unknown_sub.title": "Unknown sub type!",
+  "toast.subathon.error.eventsub.connection.unknown_sub.description": "An unknown sub type returned, this should NEVER happen, please report this issue!",
 
   "toast.subathon.warning.mismatch_version.title": "\u00a7c\u00a7nVersion mismatch!",
   "toast.subathon.warning.mismatch_version.description": "This server is running on a different version of Sub-a-thon, things might not work properly!",
@@ -61,12 +63,15 @@
     {
       "color": "red",
       "bold": false,
-      "text": "this issue on the Github mod page!"
+      "text": "this issue on the mod Github page!"
     }
   ],
 
-  "text.subathon.screen.connect.disconnected": "\u00a7c❌",
-  "text.subathon.screen.connect.connected": "\u00a7a✔",
+  "text.subathon.screen.connect.offline": "\u00a7c❌",
+  "text.subathon.screen.connect.success": "\u00a7a✔",
+  "text.subathon.screen.connect.failure": "\u00a7c⚠",
+  "text.subathon.screen.connect.unknown": "\u00a7e�",
+  "text.subathon.screen.connect.loading": "\u00a7e⇄",
   "text.subathon.screen.connect.account.disconnected": "<red>▶</red> <yellow>Not logged in</yellow>",
   "text.subathon.screen.connect.account": "<green>▶</green> Logged in as <yellow>%user%</yellow>",
   "text.subathon.screen.connect.button.tooltip": "Do not close this screen while connecting or disconnecting!",
@@ -88,7 +93,7 @@
     },
     " ",
     {
-      "text": "Resconnect",
+      "text": "Reconnect",
       "color": "white"
     }
   ],
@@ -176,11 +181,11 @@
     },
     " ",
     {
-      "text": "Connecting [Switching packets]",
+      "text": "Connecting [Exchanging packets]",
       "color": "white"
     }
   ],
-  "text.subathon.screen.connect.core": "Core system",
+  "text.subathon.screen.connect.core": "Main connection",
   "text.subathon.screen.connect.subs": "Subscriptions",
   "text.subathon.screen.connect.resubs": "Re-subscriptions*",
   "text.subathon.screen.connect.resubs.tooltip": "For a resub to count the subscriber must share it in chat!",

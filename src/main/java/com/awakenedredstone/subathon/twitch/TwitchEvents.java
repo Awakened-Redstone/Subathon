@@ -20,7 +20,7 @@ public class TwitchEvents {
 
     static void onSubscription(ChannelSubscribeEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             if (event.isGift()) return;
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
@@ -69,7 +69,7 @@ public class TwitchEvents {
 
     static void onSubscriptionMessage(ChannelSubscriptionMessageEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) {
@@ -119,7 +119,7 @@ public class TwitchEvents {
 
     static void onSubscriptionGift(ChannelSubscriptionGiftEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) {
@@ -168,7 +168,7 @@ public class TwitchEvents {
 
     static void onCheer(ChannelCheerEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) {
@@ -203,7 +203,7 @@ public class TwitchEvents {
 
     static void onRewardRedemption(CustomRewardRedemptionAddEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getFromId(event.getBroadcasterUserId()).ifPresentOrElse(pair -> {
+        Twitch.getPairFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(pair -> {
             UUID uuid = pair.getLeft();
             Twitch.Data data = pair.getRight();
             ServerPlayerEntity player = playerManager.getPlayer(uuid);

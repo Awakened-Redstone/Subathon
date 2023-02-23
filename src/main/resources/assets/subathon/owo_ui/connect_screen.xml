@@ -32,7 +32,7 @@
 
                 <flow-layout direction="horizontal">
                     <children>
-                        <button id="the-button">
+                        <button id="connect-button">
                             <text translate="true">text.subathon.screen.connect.button.connect</text>
                             <sizing>
                                 <horizontal method="fill">90</horizontal>
@@ -64,7 +64,7 @@
             <flow-layout direction="horizontal" id="connect.{{text}}">
                 <children>
                     <label id="status">
-                        <text translate="true">text.subathon.screen.connect.disconnected</text>
+                        <text translate="true">text.subathon.screen.connect.offline</text>
                         <sizing>
                             <horizontal method="fixed">9</horizontal>
                             <vertical method="fixed">9</vertical>
