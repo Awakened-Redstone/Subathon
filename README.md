@@ -1,19 +1,16 @@
-## Requires [Twitch4J](https://modrinth.com/mod/twitch4j)!
-[<img src="https://camo.githubusercontent.com/9296b230044bb4ef07851ff9baa2d04aeb210baee3467abafff1380fa081f08b/68747470733a2f2f692e696d6775722e636f6d2f4f6c31546366382e706e67" alt="Requires Fabric API" data-canonical-src="https://i.imgur.com/Ol1Tcf8.png" width="128">](https://modrinth.com/mod/fabric-api/)
+[<img alt="fabric-api" height="56" src="https://cdn.jsdelivr.net/npm/@intergrav/devins-badges@3/assets/cozy/requires/fabric-api_vector.svg">](https://modrinth.com/mod/fabric-api/)
+[<img alt="fabric-api" height="56" src="https://raw.githubusercontent.com/Awakened-Redstone/Awakened-Redstone/5bac299d772f99502ef9d03ed21e6cef2ad35edd/assets/badges/twitch4j/cozy_vector.svg">](https://modrinth.com/mod/twitch4j/)
 
-## **<ins>It is highly recommended to use [ModMenu](https://modrinth.com/mod/modmenu)</ins>**
-
-In order to connect (while in a world) press the connect keybind (F4 by default)
+In order to connect, while in a world, press the `Connect` keybind (`F4` by default)
 There you can press the `Connect` button, on the first time it will open a browser tab for you to
-authorize the mod, you must accept within 1 minute, else the authentication will fail. 
-Do not close the connect screen until it shows `Connected`
+authorize the mod, you must accept within 1 minute, else the authentication will fail.
+It is recommended to wait until the button shows `Connected` before closing the screen
 
-**Please note that the connection takes some time to establish, and subs during that period won't be counted!**
+**Please note that the connection takes some time to establish, and subs/bits/redemptions during that period won't be counted!**
 
-### This mod only works with Twitch streams, YouTube streams are NOT supported!
+### This mod only works with <ins>Twitch</ins> streams!
 <details>
 <summary>Documentation</summary>
-    <h4>The documentation is still being built!</h4>
     <ul>
         <li>Modifier internal value calculation: increment * multiplier</li>
         <li>Modifier display value calculation: internal value / multiplier</li>

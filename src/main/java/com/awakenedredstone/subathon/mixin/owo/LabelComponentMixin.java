@@ -42,8 +42,8 @@ public abstract class LabelComponentMixin extends BaseComponent implements Label
             int horizontalSizing = determineHorizontalContentSize(Sizing.content());
             int verticalSizing = determineVerticalContentSize(Sizing.content());
             int newWidth = (int) (horizontalSizing * scale) + (parentHorizontalSizing - horizontalSizing);
-            parent.sizing(Sizing.fixed(newWidth),
-                    Sizing.fixed((int) (verticalSizing * scale) + (parentVerticalSizing - verticalSizing)));
+            int newHeight = (int) (verticalSizing * scale) + (parentVerticalSizing - verticalSizing);
+            parent.sizing(Sizing.fixed(newWidth), Sizing.fixed(newHeight));
 
             int originalWidth = horizontalSizing + (parentHorizontalSizing - horizontalSizing);
 

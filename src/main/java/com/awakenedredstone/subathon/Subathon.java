@@ -51,7 +51,7 @@ public class Subathon implements ModInitializer {
     public static final String MOD_ID = "subathon";
     public static final Logger LOGGER = LoggerFactory.getLogger("Sub-a-thon");
     public static final Path CONFIG_DIR = FabricLoader.getInstance().getConfigDir().resolve(MOD_ID);
-    public static final CommonConfigs COMMON_CONFIGS;
+    public static CommonConfigs COMMON_CONFIGS;
     //public static final ServerConfigs SERVER_CONFIGS = ServerConfigs.createAndLoad();
     public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder().build();
     public static MinecraftServer server = null;
@@ -67,21 +67,51 @@ public class Subathon implements ModInitializer {
         FieldRegistrationHandler.register(EffectRegistry.class, MOD_ID, false);
         FieldRegistrationHandler.register(ChaosRegistry.class, MOD_ID, false);
 
-        Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
-        SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(SubathonRegistries.CHAOS.getId(chaos), 1));
+        RegistryFreezeCallback.EVENT.register(() -> {
+            COMMON_CONFIGS = CommonConfigs.createAndLoad(builder -> {
+                builder.registerSerializer(Effect.class, (effect, marshaller) -> {
+                    JsonObject json = new JsonObject();
+                    json.put("identifier", new JsonPrimitive(effect.getIdentifier().toString()));
+                    json.put("enabled", new JsonPrimitive(effect.enabled));
+                    json.put("scale", new JsonPrimitive(effect.scale));
+                    return json;
+                });
 
-        COMMON_CONFIGS.subscribeToPotionWeights(map -> {
-            potionsRandom = new WeightedRandom<>();
-            map.forEach((identifier, integer) -> {
-                potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier));
-            });
-        });
+                builder.registerDeserializer(JsonObject.class, Effect.class, (json, m) -> {
+                    try {
+                        Identifier identifier = new Identifier(((JsonPrimitive) json.get("identifier")).asString());
+                        boolean enabled = json.getBoolean("enabled", false);
+                        double scale = json.getDouble("scale", 1.0);
 
-        COMMON_CONFIGS.subscribeToChaosWeights(map -> {
-            chaosRandom = new WeightedRandom<>();
-            map.forEach((identifier, integer) -> {
-                chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier));
+                        var effect = SubathonRegistries.EFFECTS.get(identifier);
+                        if (effect == null) return null;
+                        effect.enabled = enabled;
+                        effect.scale = scale;
+                        return effect;
+                    } catch (Exception e) {
+                        return null;
+                    }
+                });
             });
+
+            COMMON_CONFIGS.subscribeToPotionWeights(map -> {
+                potionsRandom = new WeightedRandom<>();
+                map.forEach((identifier, integer) -> {
+                    potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier));
+                });
+            });
+
+            COMMON_CONFIGS.subscribeToChaosWeights(map -> {
+                chaosRandom = new WeightedRandom<>();
+                map.forEach((identifier, integer) -> {
+                    chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier));
+                });
+            });
+
+            Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
+            SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(SubathonRegistries.CHAOS.getId(chaos), 1));
+            SubathonRegistries.EFFECTS.forEach(effect -> COMMON_CONFIGS.effects().putIfAbsent(SubathonRegistries.EFFECTS.getId(effect), effect));
+            COMMON_CONFIGS.save();
         });
 
         registerPacketReceivers();
@@ -204,31 +234,5 @@ public class Subathon implements ModInitializer {
             effect.scale = scale;
             return effect;
         });
-        COMMON_CONFIGS = CommonConfigs.createAndLoad(builder -> {
-            builder.registerSerializer(Effect.class, (effect, marshaller) -> {
-                JsonObject json = new JsonObject();
-                json.put("identifier", new JsonPrimitive(effect.getIdentifier()));
-                json.put("enabled", new JsonPrimitive(effect.enabled));
-                json.put("scale", new JsonPrimitive(effect.scale));
-                return json;
-            });
-
-            builder.registerDeserializer(JsonObject.class, Effect.class, (json, m) -> {
-                try {
-                    Identifier identifier = new Identifier(((JsonPrimitive) json.get("identifier")).asString());
-                    boolean enabled = json.getBoolean("enabled", false);
-                    double scale = json.getDouble("scale", 1.0);
-
-                    var effect = SubathonRegistries.EFFECTS.get(identifier);
-                    if (effect == null) return null;
-                    effect.enabled = enabled;
-                    effect.scale = scale;
-                    return effect;
-                } catch (Exception e) {
-                    return null;
-                }
-            });
-        });
-
     }
 }
