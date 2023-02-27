@@ -2,7 +2,7 @@ package com.awakenedredstone.subathon.ui.configure;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.SubathonClient;
-import com.awakenedredstone.subathon.duck.ComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.ComponentDuck;
 import com.awakenedredstone.subathon.owo.SubathonTextBox;
 import com.awakenedredstone.subathon.twitch.Twitch;
 import com.awakenedredstone.subathon.ui.BaseScreen;
@@ -201,11 +201,11 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
     private void save() {
         textBox.text(parseSelected());
         if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
-            Twitch.toggleReward(SubathonClient.cache.get("token"), SubathonClient.CLIENT_CONFIGS.rewardId(), false);
+            Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), SubathonClient.CLIENT_CONFIGS.rewardId(), false);
         }
 
         SubathonClient.CLIENT_CONFIGS.rewardId(selected);
-        Twitch.toggleReward(SubathonClient.cache.get("token"), selected, true);
+        Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), selected, true);
         ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeSelectedUUID()));
     }
 

@@ -1,9 +1,5 @@
 package com.awakenedredstone.subathon.core.effect.chaos;
 
-import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.RegisterChaos;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LargeEntitySpawnHelper;
@@ -13,24 +9,16 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
-@RegisterChaos("subathon:random_enchant_compatible")
 public class RandomCompatibleEnchant extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("chaos"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();
         PlayerInventory inventory = player.getInventory();
         if (inventory.isEmpty()) return false;

@@ -22,6 +22,8 @@
   "toast.subathon.error.eventsub.connection.failed.description": "Failed to initiate a stable connection with Twitch!",
   "toast.subathon.error.eventsub.connection.unknown_sub.title": "Unknown sub type!",
   "toast.subathon.error.eventsub.connection.unknown_sub.description": "An unknown sub type returned, this should NEVER happen, please report this issue!",
+  "toast.subathon.error.eventsub.queue.title": "Queue contain items!",
+  "toast.subathon.error.eventsub.queue.description": "The action could not be performed as the queue contains items!",
 
   "toast.subathon.warning.mismatch_version.title": "\u00a7c\u00a7nVersion mismatch!",
   "toast.subathon.warning.mismatch_version.description": "This server is running on a different version of Sub-a-thon, things might not work properly!",
@@ -225,10 +227,20 @@
   "text.subathon.points": "%points%",
   "text.subathon.effects.subathon.test": "⚗ Test",
   "text.subathon.effects.subathon.test.tooltip": "This should never be visible",
-  "text.subathon.effects.subathon.jump": "⏏ Jump",
-  "text.subathon.effects.subathon.chaos": "\uD83D\uDD25 Chaos (Under development)",
-  "text.subathon.effects.subathon.chaos.tooltip": "\u00a7eThis effect is still under development, and might also not behave properly and may cause extreme destruction and pain\n\n\u00a7c\u00a7lWARNING!\n\u00a7cAny chaos with entities are subject to crash the game bc apparently the game does not like when I play with a lot of them at once",
-  "text.subathon.effects.subathon.rando_potions": "\uD83E\uDDEA Rando potions",
+  "text.subathon.effects.subathon.jump": "⏏ Jump \u00a77[2.0]",
+  "text.subathon.effects.subathon.chaos": "\uD83D\uDD25 Chaos \u00a77[Beta]",
+  "text.subathon.effects.subathon.chaos.tooltip": [
+    {
+      "text": "This effect is still under development/being balanced, and might also not behave properly or have extreme behaviors",
+      "color": "yellow"
+    },
+    "\n\n",
+    {
+      "text": "Extreme destruction and pain is almost guaranteed",
+      "color": "red"
+    }
+  ],
+  "text.subathon.effects.subathon.rando_potions": "\uD83E\uDDEA Rando potions \u00a77[1.1]",
 
   "text.subathon.toast.sub.tier1": "<white>%user% subscribed",
   "text.subathon.toast.sub.tier2": "<light_purple>%user% subscribed",
@@ -347,7 +359,7 @@
   "text.config.subathon/client.category.toasts.bits": "Cheers",
   "text.config.subathon/client.option.showValue": "Show points",
   "text.config.subathon/client.option.showTimer": "Show timer",
-  "text.config.subathon/client.option.pointsFontScale": "Points font scale (beta)",
+  "text.config.subathon/client.option.pointsFontScale": "Points font scale \u00a77[beta]",
   "text.config.subathon/client.option.pointsFontScale.tooltip": "Sets the scale of the points [This is on beta and might not scale or render properly]",
   "text.config.subathon/client.option.quickMessageStayTime": "Quick message stay time",
   "text.config.subathon/client.option.quickMessageStayTime.tooltip": "The time for quick message will stay on the screen (in milliseconds)",
@@ -369,9 +381,9 @@
 
   "text.subathon.chaos.subathon.arrows": "Arrows",
   "text.subathon.chaos.subathon.dimension_swap": "Dimension swap",
-  "text.subathon.chaos.subathon.drop_all_items": "Drop all items*",
-  "text.subathon.chaos.subathon.drop_all_items.tooltip": "Drops every single item in the inventory",
-  "text.subathon.chaos.subathon.drop_held": "Drop held item",
+  "text.subathon.chaos.subathon.drop_everything": "Drop all items*",
+  "text.subathon.chaos.subathon.drop_everything.tooltip": "Drops every single item in the inventory",
+  "text.subathon.chaos.subathon.drop_held_item": "Drop held item",
   "text.subathon.chaos.subathon.drop_hotbar": "Drop hotbar",
   "text.subathon.chaos.subathon.drop_inventory": "Drop inventory*",
   "text.subathon.chaos.subathon.drop_inventory.tooltip": "Drops all items in the main inventory, so armor and offhand are <red>NOT</red> dropped",
@@ -386,7 +398,7 @@
       "strikethrough": false
     }
   ],
-  "text.subathon.chaos.subathon.kaboom.tooltip": "A lot of explosions, may be way worse if the player isn't exposed to the sky\n\n<red><bold>WARNING!</bold>\n<red>This chaos have some issues to be fixed and can crash your game",
+  "text.subathon.chaos.subathon.kaboom.tooltip": "A lot of explosions, may be worse if the player isn't exposed to the sky",
   "text.subathon.chaos.subathon.kaboom.message.normal": "<red>Kaboom!</red>",
   "text.subathon.chaos.subathon.kaboom.message.special": "<red>Here be <strikethrough>dragons</strikethrough>fireballs",
   "text.subathon.chaos.subathon.mobs": "Spawn mobs",
@@ -399,9 +411,9 @@
   "text.subathon.chaos.subathon.random_item.message": "Some items seem to have appeared nearby!",
   "text.subathon.chaos.subathon.randomize_entities": "Randomize entities",
   "text.subathon.chaos.subathon.randomize_entities.message": "Someone messed with the DNA of the entities",
-  "text.subathon.chaos.subathon.return_to_spawn": "Return to spawnpoint",
-  "text.subathon.chaos.subathon.shuffle": "Shuffle inventory",
-  "text.subathon.chaos.subathon.snowball": "Snow ball",
+  "text.subathon.chaos.subathon.return_to_spawn": "Return to the spawnpoint",
+  "text.subathon.chaos.subathon.shuffle_inventory": "Shuffle inventory",
+  "text.subathon.chaos.subathon.snow_ball": "Snow ball",
   "text.subathon.chaos.subathon.tnt_sphere": "TNT Sphere",
   "text.subathon.chaos.subathon.yeet": "Yeet!"
 }

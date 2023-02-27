@@ -20,7 +20,6 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.registry.Registries;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.apache.http.util.Asserts;
 

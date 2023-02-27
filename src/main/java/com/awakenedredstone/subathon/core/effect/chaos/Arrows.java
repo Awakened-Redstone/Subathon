@@ -1,10 +1,7 @@
 package com.awakenedredstone.subathon.core.effect.chaos;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.RegisterChaos;
 import com.awakenedredstone.subathon.mixin.PersistentProjectileEntityAccessor;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import com.awakenedredstone.subathon.util.Utils;
 import com.awakenedredstone.subathon.util.VectorHelper;
 import net.minecraft.entity.player.PlayerEntity;
@@ -12,24 +9,16 @@ import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-@RegisterChaos("subathon:arrows")
 public class Arrows extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("chaos"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
             Vec3d playerPos = player.getPos();
             Random random = new Random();

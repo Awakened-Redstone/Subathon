@@ -1,30 +1,19 @@
 package com.awakenedredstone.subathon.entity;
 
-import com.awakenedredstone.subathon.EntityInitializer;
-import com.awakenedredstone.subathon.Subathon;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import com.awakenedredstone.subathon.registry.EntityRegistry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MovementType;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.AbstractFireballEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
-import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
-import net.minecraft.world.event.GameEvent;
 
 public class FireballEntity
 extends AbstractFireballEntity {
@@ -36,7 +25,7 @@ extends AbstractFireballEntity {
     }
 
     public FireballEntity(World world, LivingEntity owner, double velocityX, double velocityY, double velocityZ, int explosionPower, int targetY) {
-        super(EntityInitializer.FIREBALL, owner, velocityX, velocityY, velocityZ, world);
+        super(EntityRegistry.FIREBALL, owner, velocityX, velocityY, velocityZ, world);
         this.explosionPower = explosionPower;
         this.targetY = targetY;
     }

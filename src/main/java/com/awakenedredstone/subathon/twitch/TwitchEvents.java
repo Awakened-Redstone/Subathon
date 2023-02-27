@@ -20,7 +20,7 @@ public class TwitchEvents {
 
     static void onSubscription(ChannelSubscribeEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getInstance().getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             if (event.isGift()) return;
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
@@ -63,13 +63,13 @@ public class TwitchEvents {
             playerManager.broadcast(Texts.of("<red>Failed to find data associated with the channel \"%channel%\"! Please report this failure to the mod issues page!",
                     new MapBuilder.StringMap().put("%channel%", event.getBroadcasterUserName()).build()), false);
 
-            Twitch.data.values().forEach(Twitch.Data::printData);
+            Twitch.getInstance().getData().values().forEach(Twitch.Data::printData);
         });
     }
 
     static void onSubscriptionMessage(ChannelSubscriptionMessageEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getInstance().getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) {
@@ -113,13 +113,13 @@ public class TwitchEvents {
             playerManager.broadcast(Texts.of("<red>Failed to find data associated with the channel \"%channel%\"! Please report this failure to the mod issues page!",
                     new MapBuilder.StringMap().put("%channel%", event.getBroadcasterUserName()).build()), false);
 
-            Twitch.data.values().forEach(Twitch.Data::printData);
+            Twitch.getInstance().getData().values().forEach(Twitch.Data::printData);
         });
     }
 
     static void onSubscriptionGift(ChannelSubscriptionGiftEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getInstance().getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) {
@@ -162,13 +162,13 @@ public class TwitchEvents {
             playerManager.broadcast(Texts.of("<red>Failed to find data associated with the channel \"%channel%\"! Please report this failure to the mod issues page!",
                     new MapBuilder.StringMap().put("%channel%", event.getBroadcasterUserName()).build()), false);
 
-            Twitch.data.values().forEach(Twitch.Data::printData);
+            Twitch.getInstance().getData().values().forEach(Twitch.Data::printData);
         });
     }
 
     static void onCheer(ChannelCheerEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
+        Twitch.getInstance().getUuidFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(uuid -> {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) {
@@ -197,13 +197,13 @@ public class TwitchEvents {
             playerManager.broadcast(Texts.of("<red>Failed to find data associated with the channel \"%channel%\"! Please report this failure to the mod issues page!",
                     new MapBuilder.StringMap().put("%channel%", event.getBroadcasterUserName()).build()), false);
 
-            Twitch.data.values().forEach(Twitch.Data::printData);
+            Twitch.getInstance().getData().values().forEach(Twitch.Data::printData);
         });
     }
 
     static void onRewardRedemption(CustomRewardRedemptionAddEvent event) {
         PlayerManager playerManager = Subathon.server.getPlayerManager();
-        Twitch.getPairFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(pair -> {
+        Twitch.getInstance().getPairFromChannelId(event.getBroadcasterUserId()).ifPresentOrElse(pair -> {
             UUID uuid = pair.getLeft();
             Twitch.Data data = pair.getRight();
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
@@ -220,7 +220,7 @@ public class TwitchEvents {
             playerManager.broadcast(Texts.of("<red>Failed to find data associated with the channel \"%channel%\"! Please report this failure to the mod issues page!",
                     new MapBuilder.StringMap().put("%channel%", event.getBroadcasterUserName()).build()), false);
 
-            Twitch.data.values().forEach(Twitch.Data::printData);
+            Twitch.getInstance().getData().values().forEach(Twitch.Data::printData);
         });
     }
 

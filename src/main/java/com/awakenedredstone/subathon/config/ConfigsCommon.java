@@ -2,8 +2,8 @@ package com.awakenedredstone.subathon.config;
 
 import blue.endless.jankson.Comment;
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.ChaosRegistry;
-import com.awakenedredstone.subathon.core.effect.process.Effect;
+import com.awakenedredstone.subathon.core.effect.Effect;
+import com.awakenedredstone.subathon.registry.SubathonRegistries;
 import com.awakenedredstone.subathon.util.Utils;
 import io.wispforest.owo.config.Option;
 import io.wispforest.owo.config.annotation.*;
@@ -24,11 +24,6 @@ public class ConfigsCommon {
     @ExcludeFromScreen
     @Comment("Effects configurations, some parts of this is sensitive!")
     public Map<Identifier, Effect> effects = new HashMap<>();
-
-    /*@ExcludeFromScreen
-    @PredicateConstraint("potionsConstrain")
-    @Comment("Potions that are excluded from the random potions effect")
-    public List<String> excludedPotions = new ArrayList<>();*/
 
     @ExcludeFromScreen
     @PredicateConstraint("triesRange")
@@ -165,6 +160,6 @@ public class ConfigsCommon {
     }
 
     public static boolean chaosWeightConstrain(Map<Identifier, Integer> map) {
-        return map.entrySet().stream().allMatch(v -> v.getValue() >= 0 && ChaosRegistry.registry.containsKey(v.getKey()));
+        return map.entrySet().stream().allMatch(v -> v.getValue() >= 0 && SubathonRegistries.CHAOS.containsId(v.getKey()));
     }
 }

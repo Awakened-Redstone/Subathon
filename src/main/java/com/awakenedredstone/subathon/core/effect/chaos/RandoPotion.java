@@ -1,25 +1,16 @@
-package com.awakenedredstone.subathon.core.effect.chaos.process;
+package com.awakenedredstone.subathon.core.effect.chaos;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
 
 import java.util.Random;
 
-@RegisterChaos("subathon:rando_potion")
 public class RandoPotion extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("apply/rando_potions"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();
         double durationGaussian = Math.abs(random.nextGaussian(15, 20));
         if (durationGaussian < 5) durationGaussian += 5;

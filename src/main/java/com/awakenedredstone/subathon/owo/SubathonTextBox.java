@@ -1,6 +1,5 @@
 package com.awakenedredstone.subathon.owo;
 
-import com.awakenedredstone.subathon.util.Utils;
 import io.wispforest.owo.config.ui.component.ConfigTextBox;
 
 import java.util.UUID;

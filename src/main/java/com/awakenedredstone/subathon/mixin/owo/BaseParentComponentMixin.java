@@ -1,7 +1,7 @@
 package com.awakenedredstone.subathon.mixin.owo;
 
-import com.awakenedredstone.subathon.duck.BaseParentComponentDuck;
-import com.awakenedredstone.subathon.duck.ComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.BaseParentComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.ComponentDuck;
 import io.wispforest.owo.ui.base.BaseParentComponent;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

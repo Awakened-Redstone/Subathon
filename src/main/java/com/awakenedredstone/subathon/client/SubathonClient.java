@@ -2,17 +2,17 @@ package com.awakenedredstone.subathon.client;
 
 import blue.endless.jankson.JsonArray;
 import blue.endless.jankson.JsonPrimitive;
-import com.awakenedredstone.subathon.EntityInitializer;
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.toast.TwitchEventToast;
 import com.awakenedredstone.subathon.config.ClientConfigs;
 import com.awakenedredstone.subathon.config.ConfigsClient;
 import com.awakenedredstone.subathon.core.data.ComponentManager;
-import com.awakenedredstone.subathon.duck.BaseParentComponentDuck;
-import com.awakenedredstone.subathon.duck.ComponentDuck;
-import com.awakenedredstone.subathon.duck.LabelComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.BaseParentComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.ComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.LabelComponentDuck;
 import com.awakenedredstone.subathon.mixin.owo.LabelComponentAccessor;
 import com.awakenedredstone.subathon.owo.SubathonTextBox;
+import com.awakenedredstone.subathon.registry.EntityRegistry;
 import com.awakenedredstone.subathon.twitch.EventMessages;
 import com.awakenedredstone.subathon.twitch.Twitch;
 import com.awakenedredstone.subathon.ui.ConnectScreen;
@@ -20,8 +20,6 @@ import com.awakenedredstone.subathon.ui.NotificationsScreen;
 import com.awakenedredstone.subathon.util.ClientUtils;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
-import com.github.twitch4j.common.util.TypeConvert;
-import com.github.twitch4j.eventsub.events.ChannelSubscriptionMessageEvent;
 import com.github.twitch4j.graphql.internal.FetchCommunityPointsSettingsQuery;
 import io.github.xanthic.cache.api.Cache;
 import io.github.xanthic.cache.core.CacheApi;
@@ -40,7 +38,6 @@ import io.wispforest.owo.ui.parsing.UIParsing;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -55,10 +52,8 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.apache.http.util.Asserts;
-import org.apache.logging.log4j.util.TriConsumer;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.File;
 import java.util.*;
 
 import static com.awakenedredstone.subathon.Subathon.id;
@@ -103,7 +98,7 @@ public class SubathonClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        EntityRendererRegistry.register(EntityInitializer.FIREBALL, (context) -> new FlyingItemEntityRenderer<>(context, 3.0f, true));
+        EntityRendererRegistry.register(EntityRegistry.FIREBALL, (context) -> new FlyingItemEntityRenderer<>(context, 3.0f, true));
         registerPacketListeners();
 
         CLIENT_CONFIGS.subscribeToPointsFontScale(value -> {
@@ -234,10 +229,11 @@ public class SubathonClient implements ClientModInitializer {
                     return;
                 }
 
+                Subathon.LOGGER.info("{} packet says {}", object, status.name());
                 SubathonClient.connectionStatus.put(object, status);
                 if (client.currentScreen instanceof ConnectScreen screen) {
                     FlowLayout rootComponent = screen.rootComponent();
-                    
+
                     FlowLayout items = screen.getComponent(rootComponent, FlowLayout.class, "connect-items");
                     ButtonComponent connectButton = screen.getComponent(rootComponent, ButtonComponent.class, "connect-button");
 
@@ -246,7 +242,8 @@ public class SubathonClient implements ClientModInitializer {
 
                     ButtonComponent disconnectButton = screen.getComponent(extraOptions, ButtonComponent.class, "disconnect");
                     //ButtonComponent reconnectButton = screen.getComponent(extraOptions, ButtonComponent.class, "reconnect");
-
+                    ButtonComponent resetCacheButton = screen.getComponent(extraOptions, ButtonComponent.class, "reset-cache");
+                    ButtonComponent resetKeyButton = screen.getComponent(extraOptions, ButtonComponent.class, "reset-key");
 
                     if (type == Twitch.ConnectionType.CONNECT) {
                         if (complete) {
@@ -257,7 +254,7 @@ public class SubathonClient implements ClientModInitializer {
 
                             if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
                                 UUID rewardId = SubathonClient.CLIENT_CONFIGS.rewardId();
-                                Twitch.toggleReward(SubathonClient.cache.get("token"), rewardId, true);
+                                Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), rewardId, true);
                                 ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(screen.safeUUID(rewardId)));
                             }
                         } else {
@@ -265,14 +262,22 @@ public class SubathonClient implements ClientModInitializer {
                             connectButton.active = false;
                         }
                     } else if (type == Twitch.ConnectionType.DISCONNECT) {
-                        connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connect"));
-                        disconnectButton.active = false;
-                        //reconnectButton.active = false;
+                        if (complete) {
+                            connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connect"));
+                            connectButton.active = true;
+                            disconnectButton.active = false;
+                            //reconnectButton.active = false;
+                            resetCacheButton.active = true;
+                            resetKeyButton.active = Subathon.CONFIG_DIR.resolve("auth").toFile().exists();
+                            SubathonClient.authenticated = false;
+                        } else if (status != Twitch.ConnectionState.UNKNOWN) {
+                            connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.packets"));
+                            connectButton.active = false;
+                        }
                     }
                     FlowLayout item = screen.getComponent(items, FlowLayout.class, "connect." + object);
                     LabelComponent statusComponent = screen.getComponent(item, LabelComponent.class, "status");
                     statusComponent.text(Text.translatable("text.subathon.screen.connect." + status.name().toLowerCase()));
-                    SubathonClient.connectionStatus.put(object, status);
                 }
             });
         });
@@ -292,6 +297,15 @@ public class SubathonClient implements ClientModInitializer {
                         accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
                     }
                 }
+            });
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Subathon.id("error"), (client, handler, buf, responseSender) -> {
+            String message = buf.readString();
+            client.execute(() -> {
+                client.getToastManager().add(new TwitchEventToast(spriteId("warning"),
+                        Text.translatable("toast.subathon.error." + message + ".title"),
+                        Text.translatable("toast.subathon.error." + message + ".description")));
             });
         });
 
@@ -318,17 +332,6 @@ public class SubathonClient implements ClientModInitializer {
                     ButtonComponent resetCacheButton = screen.getComponent(extraOptions, ButtonComponent.class, "reset-cache");
                     ButtonComponent resetKeyButton = screen.getComponent(extraOptions, ButtonComponent.class, "reset-key");
 
-                    FlowLayout items = screen.getComponent(rootComponent, FlowLayout.class, "connect-items");
-
-                    SubathonClient.connectionStatus.forEach((object, status) -> {
-                        FlowLayout item = items.childById(FlowLayout.class, "connect." + object);
-                        Asserts.notNull(item, "item");
-                        LabelComponent statusCompent = screen.getComponent(item, LabelComponent.class, "status");
-                        Asserts.notNull(statusCompent, "statusCompent");
-                        statusCompent.text(Text.translatable("text.subathon.screen.connect.disconnected"));
-                    });
-
-                    connectionStatus.clear();
                     runtimeRewardTextures.clear();
                     rewards.clear();
 
@@ -422,7 +425,8 @@ public class SubathonClient implements ClientModInitializer {
         };
     }
 
-    public record Notification(EventMessages message, EventMessages quickMessage, Map<String, String> placeholders, String content, UUID uuid) {
+    public record Notification(EventMessages message, EventMessages quickMessage, Map<String, String> placeholders,
+                               String content, UUID uuid) {
         public String getToastTitle() {
             return quickMessage.translation.replace("quick_notification", "toast");
         }

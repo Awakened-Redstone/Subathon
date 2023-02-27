@@ -1,9 +1,5 @@
 package com.awakenedredstone.subathon.core.effect.chaos;
 
-import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.RegisterChaos;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -14,17 +10,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 
-@RegisterChaos("subathon:dimension_swap")
 public class DimensionSwap extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("chaos"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
             try {
                 ServerWorld world = serverPlayer.server.getWorld(player.world.getRegistryKey() == World.NETHER ? World.OVERWORLD : World.NETHER);

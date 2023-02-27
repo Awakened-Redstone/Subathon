@@ -1,25 +1,25 @@
 package com.awakenedredstone.subathon;
 
-import blue.endless.jankson.JsonArray;
 import blue.endless.jankson.JsonObject;
 import blue.endless.jankson.JsonPrimitive;
 import com.awakenedredstone.subathon.command.SubathonCommand;
 import com.awakenedredstone.subathon.config.CommonConfigs;
-import com.awakenedredstone.subathon.config.ConfigsClient;
-import com.awakenedredstone.subathon.core.DataManager;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.ChaosRegistry;
-import com.awakenedredstone.subathon.core.effect.process.Effect;
-import com.awakenedredstone.subathon.core.effect.process.EffectRegistry;
+import com.awakenedredstone.subathon.core.effect.Effect;
+import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
 import com.awakenedredstone.subathon.entity.FireballEntity;
 import com.awakenedredstone.subathon.event.RegistryFreezeCallback;
+import com.awakenedredstone.subathon.registry.ChaosRegistry;
+import com.awakenedredstone.subathon.registry.EffectRegistry;
+import com.awakenedredstone.subathon.registry.EntityRegistry;
+import com.awakenedredstone.subathon.registry.SubathonRegistries;
 import com.awakenedredstone.subathon.twitch.Twitch;
-import com.awakenedredstone.subathon.util.*;
-import io.wispforest.owo.config.ConfigWrapper;
+import com.awakenedredstone.subathon.util.ConversionUtils;
+import com.awakenedredstone.subathon.util.MessageUtils;
+import com.awakenedredstone.subathon.util.ScheduleUtils;
+import com.awakenedredstone.subathon.util.WeightedRandom;
 import io.wispforest.owo.network.serialization.PacketBufSerializer;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -30,7 +30,6 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.InfestedBlock;
-import net.minecraft.client.render.entity.FlyingItemEntityRenderer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
@@ -64,23 +63,24 @@ public class Subathon implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        Twitch.init();
-
-        FieldRegistrationHandler.register(EntityInitializer.class, MOD_ID, false);
-        EffectRegistry.registry.forEach((identifier, effect) -> {
-            COMMON_CONFIGS.effects().putIfAbsent(identifier, effect);
-        });
+        FieldRegistrationHandler.register(EntityRegistry.class, MOD_ID, false);
+        FieldRegistrationHandler.register(EffectRegistry.class, MOD_ID, false);
+        FieldRegistrationHandler.register(ChaosRegistry.class, MOD_ID, false);
 
         Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
-        ChaosRegistry.registry.forEach((identifier, chaos) -> COMMON_CONFIGS.chaosWeights().putIfAbsent(identifier, 1));
-
-        COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
-        COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> chaosRandom.add(integer, ChaosRegistry.registry.get(identifier)));
+        SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(SubathonRegistries.CHAOS.getId(chaos), 1));
 
         COMMON_CONFIGS.subscribeToPotionWeights(map -> {
             potionsRandom = new WeightedRandom<>();
             map.forEach((identifier, integer) -> {
                 potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier));
+            });
+        });
+
+        COMMON_CONFIGS.subscribeToChaosWeights(map -> {
+            chaosRandom = new WeightedRandom<>();
+            map.forEach((identifier, integer) -> {
+                chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier));
             });
         });
 
@@ -92,22 +92,22 @@ public class Subathon implements ModInitializer {
         ServerPlayNetworking.registerGlobalReceiver(Subathon.id("auth_key"), (server, player, handler, buf, responseSender) -> {
             String token = buf.readString();
             server.execute(() -> {
-                Twitch.data.put(player.getUuid(), new Twitch.Data(token));
-                Twitch.connect(token, player);
+                Twitch.getInstance().addData(player.getUuid(), new Twitch.Data(token));
+                Twitch.getInstance().connect(token, player);
             });
         });
         
         ServerPlayNetworking.registerGlobalReceiver(Subathon.id("disconnect"), (server, player, handler, buf, responseSender) -> {
             String token = buf.readString();
             server.execute(() -> {
-                Twitch.disconnect(token);
+                Twitch.getInstance().disconnect(token);
             });
         });
 
         ServerPlayNetworking.registerGlobalReceiver(Subathon.id("reward_id"), (server, player, handler, buf, responseSender) -> {
             UUID rewardId = buf.readUuid();
             server.execute(() -> {
-                Twitch.data.get(player.getUuid()).setRewardId(rewardId);
+                Twitch.getInstance().getData().get(player.getUuid()).setRewardId(rewardId);
             });
         });
     }
@@ -124,6 +124,12 @@ public class Subathon implements ModInitializer {
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Subathon.server = server;
             Subathon.scheduler = new ScheduleUtils();
+
+            Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
+            SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(SubathonRegistries.CHAOS.getId(chaos), 1));
+
+            COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
+            COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
         });
 
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
@@ -132,8 +138,7 @@ public class Subathon implements ModInitializer {
             }
 
             Subathon.server = null;
-            Twitch.data.clear();
-            Twitch.reset();
+            Twitch.getInstance().reset();
             Subathon.scheduler.destroy();
             Subathon.scheduler = null;
         });
@@ -145,7 +150,7 @@ public class Subathon implements ModInitializer {
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
-            Twitch.disconnect(Twitch.data.remove(handler.getPlayer().getUuid()).token);
+            Twitch.getInstance().removeConnection(handler.getPlayer().getUuid());
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -186,14 +191,15 @@ public class Subathon implements ModInitializer {
 
     static {
         PacketBufSerializer.register(Effect.class, (buf, effect) -> {
-            buf.writeIdentifier(effect.identifier);
+            buf.writeIdentifier(effect.getIdentifier());
             buf.writeDouble(effect.scale);
             buf.writeBoolean(effect.enabled);
         }, buf -> {
             Identifier identifier = buf.readIdentifier();
             double scale = buf.readDouble();
             boolean enabled = buf.readBoolean();
-            Effect effect = EffectRegistry.registry.get(identifier);
+            Effect effect = SubathonRegistries.EFFECTS.get(identifier);
+            if (effect == null) return null;
             effect.enabled = enabled;
             effect.scale = scale;
             return effect;
@@ -201,7 +207,7 @@ public class Subathon implements ModInitializer {
         COMMON_CONFIGS = CommonConfigs.createAndLoad(builder -> {
             builder.registerSerializer(Effect.class, (effect, marshaller) -> {
                 JsonObject json = new JsonObject();
-                json.put("identifier", new JsonPrimitive(effect.identifier));
+                json.put("identifier", new JsonPrimitive(effect.getIdentifier()));
                 json.put("enabled", new JsonPrimitive(effect.enabled));
                 json.put("scale", new JsonPrimitive(effect.scale));
                 return json;
@@ -213,7 +219,8 @@ public class Subathon implements ModInitializer {
                     boolean enabled = json.getBoolean("enabled", false);
                     double scale = json.getDouble("scale", 1.0);
 
-                    var effect = EffectRegistry.registry.get(identifier);
+                    var effect = SubathonRegistries.EFFECTS.get(identifier);
+                    if (effect == null) return null;
                     effect.enabled = enabled;
                     effect.scale = scale;
                     return effect;

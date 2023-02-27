@@ -4,7 +4,6 @@ import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.twitch.EventMessages;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
-import com.github.twitch4j.common.util.CollectionUtils;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.Surface;

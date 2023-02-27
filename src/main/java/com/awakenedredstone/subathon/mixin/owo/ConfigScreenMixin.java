@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.Map;
 import java.util.function.Predicate;
 
-@Mixin(ConfigScreen.class)
+@Mixin(value = ConfigScreen.class, remap = false)
 @Environment(EnvType.CLIENT)
 public interface ConfigScreenMixin {
     //@Invoker OptionComponentFactory callFactoryForOption(Option<?> option);
-    @Accessor static Map<Predicate<Option<?>>, OptionComponentFactory<?>> getDEFAULT_FACTORIES() { return null; };
+    @Accessor(remap = false) static Map<Predicate<Option<?>>, OptionComponentFactory<?>> getDEFAULT_FACTORIES() { return null; };
 }

@@ -1,12 +1,9 @@
 package com.awakenedredstone.subathon.core.effect.chaos;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.RegisterChaos;
 import com.awakenedredstone.subathon.mixin.EntityMixin;
 import com.awakenedredstone.subathon.mixin.ExperienceOrbEntityMixin;
 import com.awakenedredstone.subathon.mixin.ShulkerBulletEntityMixin;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.VectorHelper;
 import net.minecraft.entity.*;
@@ -17,29 +14,21 @@ import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.ShulkerBulletEntity;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.entity.vehicle.TntMinecartEntity;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.registry.Registries;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.Random;
 
-@RegisterChaos("subathon:mobs")
 public class Mobs extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("chaos"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         int successCount = 0;
         if (player instanceof ServerPlayerEntity serverPlayer) {
             for (int i = 0; i < 13; i++) {

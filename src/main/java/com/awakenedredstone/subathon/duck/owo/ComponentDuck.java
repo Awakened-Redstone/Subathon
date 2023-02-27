@@ -1,4 +1,4 @@
-package com.awakenedredstone.subathon.duck;
+package com.awakenedredstone.subathon.duck.owo;
 
 public interface ComponentDuck {
     void subathon$registerUpdateListener(Listener listener);

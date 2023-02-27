@@ -2,9 +2,7 @@ package com.awakenedredstone.subathon.core.effect;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.config.component.MobListOptionContainer;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.process.Effect;
-import com.awakenedredstone.subathon.core.effect.process.RegisterEffect;
+import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
 import com.awakenedredstone.subathon.ui.configure.ChaosWeightsScreen;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
@@ -18,16 +16,13 @@ import io.wispforest.owo.ui.parsing.UIModel;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
 import java.util.List;
 
-@RegisterEffect("subathon:chaos")
 public class ChaosEffect extends Effect {
 
-    public ChaosEffect(Identifier identified) {
-        super(identified);
+    public ChaosEffect() {
         scalable = false;
     }
 
@@ -37,7 +32,7 @@ public class ChaosEffect extends Effect {
         int remainingTries = Subathon.COMMON_CONFIGS.chaosTries();
         do {
             Chaos chaos = Subathon.chaosRandom.next();
-            success = chaos.trigger(player);
+            success = chaos.playerTrigger(player);
             //player.sendMessage(Text.literal(ChaosRegistry.classNameRegistry.get(chaos.getClass().getName()).toString() + " -> " + success), false);
             if (remainingTries-- <= 0) {
                 player.sendMessage(Texts.of("text.subathon.chaos.error", new MapBuilder.StringMap().putAny("%amount%", Subathon.COMMON_CONFIGS.chaosTries()).build()), false);
@@ -52,7 +47,7 @@ public class ChaosEffect extends Effect {
         int remainingTries = Subathon.COMMON_CONFIGS.chaosTries();
         do {
             Chaos chaos = Subathon.chaosRandom.next();
-            success = chaos.trigger(world);
+            success = chaos.globalTrigger(world);
             //Subathon.server.sendMessage(Text.literal(ChaosRegistry.classNameRegistry.get(chaos.getClass().getName()).toString() + " -> " + success));
             if (remainingTries-- <= 0) {
                 Subathon.server.sendMessage(Texts.of("text.subathon.chaos.error", new MapBuilder.StringMap().putAny("amount", Subathon.COMMON_CONFIGS.chaosTries()).build()));

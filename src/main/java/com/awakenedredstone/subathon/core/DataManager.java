@@ -1,12 +1,13 @@
 package com.awakenedredstone.subathon.core;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.process.Effect;
+import com.awakenedredstone.subathon.core.effect.Effect;
+import com.awakenedredstone.subathon.registry.SubathonRegistries;
 
 import java.util.List;
 
 public class DataManager {
     public static List<? extends Effect> getActiveEffects() {
-        return Subathon.COMMON_CONFIGS.effects().values().stream().filter(effect -> effect.enabled).toList();
+        return SubathonRegistries.EFFECTS.stream().filter(effect -> effect.enabled).toList();
     }
 }

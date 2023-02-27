@@ -1,8 +1,6 @@
 package com.awakenedredstone.subathon.core.effect;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.process.Effect;
-import com.awakenedredstone.subathon.core.effect.process.RegisterEffect;
 import com.awakenedredstone.subathon.ui.configure.PotionWeightsScreen;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import io.wispforest.owo.ui.component.Components;
@@ -14,16 +12,13 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 
 import java.util.Random;
 
-@RegisterEffect("subathon:rando_potions")
 public class RandoPotionsEffect extends Effect {
 
-    public RandoPotionsEffect(Identifier identified) {
-        super(identified);
+    public RandoPotionsEffect() {
         scalable = false;
     }
 

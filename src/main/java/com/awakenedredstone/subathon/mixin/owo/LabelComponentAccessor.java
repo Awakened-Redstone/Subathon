@@ -7,9 +7,9 @@ import net.fabricmc.api.Environment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(LabelComponent.class)
+@Mixin(value = LabelComponent.class, remap = false)
 @Environment(EnvType.CLIENT)
 public interface LabelComponentAccessor {
-    @Invoker int callDetermineVerticalContentSize(Sizing sizing);
-    @Invoker int callDetermineHorizontalContentSize(Sizing sizing);
+    @Invoker(remap = false) int callDetermineVerticalContentSize(Sizing sizing);
+    @Invoker(remap = false) int callDetermineHorizontalContentSize(Sizing sizing);
 }

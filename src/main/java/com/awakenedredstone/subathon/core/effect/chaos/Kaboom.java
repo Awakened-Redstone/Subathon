@@ -1,31 +1,20 @@
 package com.awakenedredstone.subathon.core.effect.chaos;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.RegisterChaos;
 import com.awakenedredstone.subathon.entity.FireballEntity;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.Utils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RegisterChaos("subathon:kaboom")
 public class Kaboom extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("chaos"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
             Random random = new Random();
             AtomicInteger diff = new AtomicInteger();

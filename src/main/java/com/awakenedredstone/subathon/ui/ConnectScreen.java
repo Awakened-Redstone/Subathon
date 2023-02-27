@@ -159,7 +159,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             });
 
             if (SubathonClient.rewards.isEmpty()) {
-                Twitch.getChannelCustomRewards(SubathonClient.cache.get("token")).whenCompleteAsync((customRewards, throwable) -> {
+                Twitch.getInstance().getChannelCustomRewards(SubathonClient.cache.get("token")).whenCompleteAsync((customRewards, throwable) -> {
                     SubathonClient.rewards.addAll(customRewards);
                     new Thread(getRewards).start();
                 });
@@ -174,14 +174,11 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
             disconnectButton.active = false;
             //reconnectButton.active = false;
-            resetCacheButton.active = true;
-            resetKeyButton.active = Subathon.CONFIG_DIR.resolve("auth").toFile().exists();
-            SubathonClient.authenticated = false;
             SubathonClient.runtimeRewardTextures.clear();
             SubathonClient.rewards.clear();
             if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
                 UUID rewardId = SubathonClient.CLIENT_CONFIGS.rewardId();
-                if (SubathonClient.cache.get("token") != null) Twitch.toggleReward(SubathonClient.cache.get("token"), rewardId, false);
+                if (SubathonClient.cache.get("token") != null) Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), rewardId, false);
                 ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeUUID(rewardId)));
             }
 
@@ -189,7 +186,6 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                 ClientPlayNetworking.send(Subathon.id("disconnect"), PacketByteBufs.create().writeString(SubathonClient.cache.get("token")));
                 SubathonClient.cache.remove("token");
             }
-            connectButton.active = true;
         };
 
         var ref = new Object() {

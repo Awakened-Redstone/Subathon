@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import java.util.Map;
 
-@Mixin(TwitchEventSocketPool.class)
+@Mixin(value = TwitchEventSocketPool.class, remap = false)
 public interface TwitchEventSocketPoolAccessor {
-    @Accessor Map<String, TwitchSingleUserEventSocketPool> getPoolByUserId();
+    @Accessor(remap = false) Map<String, TwitchSingleUserEventSocketPool> getPoolByUserId();
 }

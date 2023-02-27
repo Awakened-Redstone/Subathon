@@ -1,9 +1,8 @@
 package com.awakenedredstone.subathon.mixin.owo;
 
-import com.awakenedredstone.subathon.duck.LabelComponentDuck;
+import com.awakenedredstone.subathon.duck.owo.LabelComponentDuck;
 import io.wispforest.owo.ui.base.BaseComponent;
 import io.wispforest.owo.ui.component.LabelComponent;
-import io.wispforest.owo.ui.container.VerticalFlowLayout;
 import io.wispforest.owo.ui.core.*;
 import io.wispforest.owo.util.pond.OwoTextRendererExtension;
 import net.fabricmc.api.EnvType;
@@ -11,33 +10,31 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.OrderedText;
-import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(LabelComponent.class)
+@Mixin(value = LabelComponent.class, remap = false)
 @Environment(EnvType.CLIENT)
 public abstract class LabelComponentMixin extends BaseComponent implements LabelComponentDuck {
-    @Shadow protected VerticalAlignment verticalTextAlignment;
-    @Shadow protected List<OrderedText> wrappedText;
-    @Shadow @Final protected TextRenderer textRenderer;
-    @Shadow protected HorizontalAlignment horizontalTextAlignment;
+    @Shadow(remap = false) protected VerticalAlignment verticalTextAlignment;
+    @Shadow(remap = false) protected List<OrderedText> wrappedText;
+    @Shadow(remap = false) @Final protected TextRenderer textRenderer;
+    @Shadow(remap = false) protected HorizontalAlignment horizontalTextAlignment;
 
-    @Shadow protected abstract int determineHorizontalContentSize(Sizing sizing);
+    @Shadow(remap = false) protected abstract int determineHorizontalContentSize(Sizing sizing);
 
-    @Shadow protected boolean shadow;
-    @Shadow @Final protected AnimatableProperty<Color> color;
+    @Shadow(remap = false) protected boolean shadow;
+    @Shadow(remap = false) @Final protected AnimatableProperty<Color> color;
     private boolean isScaled = false;
     private float scale = 1;
 
-    @Inject(method = "draw", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "draw", at = @At("HEAD"), cancellable = true, remap = false)
     private void subathon$addScaling(MatrixStack matrices, int mouseX, int mouseY, float partialTicks, float delta, CallbackInfo ci) {
         if (isScaled) {
             int parentHorizontalSizing = ((FlowLayoutAccessor) parent).callDetermineHorizontalContentSize(Sizing.content());

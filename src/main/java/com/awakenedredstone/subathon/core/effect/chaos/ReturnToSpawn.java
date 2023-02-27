@@ -1,29 +1,18 @@
 package com.awakenedredstone.subathon.core.effect.chaos;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.RegisterChaos;
-import com.awakenedredstone.subathon.util.MessageUtils;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 import java.util.Optional;
 
-@RegisterChaos("subathon:return_to_spawn")
 public class ReturnToSpawn extends Chaos {
 
     @Override
-    public boolean trigger(World world) {
-        MessageUtils.broadcast(this::trigger, Subathon.id("chaos"));
-        return true;
-    }
-
-    @Override
-    public boolean trigger(PlayerEntity player) {
+    public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
             float spawnAngle = serverPlayer.getSpawnAngle();
             ServerWorld world = Subathon.server.getWorld(serverPlayer.getSpawnPointDimension());

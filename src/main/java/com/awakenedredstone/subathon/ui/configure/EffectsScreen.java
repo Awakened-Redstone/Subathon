@@ -1,9 +1,10 @@
 package com.awakenedredstone.subathon.ui.configure;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.process.Effect;
-import com.awakenedredstone.subathon.duck.ComponentDuck;
+import com.awakenedredstone.subathon.core.effect.Effect;
+import com.awakenedredstone.subathon.duck.owo.ComponentDuck;
 import com.awakenedredstone.subathon.mixin.owo.BaseComponentMixin;
+import com.awakenedredstone.subathon.registry.SubathonRegistries;
 import com.awakenedredstone.subathon.ui.BaseScreen;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
@@ -70,7 +71,8 @@ public class EffectsScreen extends BaseScreen<FlowLayout> {
             return false;
         });
 
-        Subathon.COMMON_CONFIGS.effects().forEach((identifier, effect) -> {
+        SubathonRegistries.EFFECTS.forEach(effect -> {
+            Identifier identifier = effect.getIdentifier();
             var template = model.expandTemplate(FlowLayout.class, "mode", new MapBuilder<String, String>()
                     .put("id", identifier.toTranslationKey())
                     .build());
@@ -143,7 +145,7 @@ public class EffectsScreen extends BaseScreen<FlowLayout> {
 
             String translationKey = "text.subathon.effects." + identifier.toTranslationKey();
             if (I18n.hasTranslation(translationKey + ".tooltip")) {
-                List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Texts.of(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
+                List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Text.translatable(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
                         .stream().map(TooltipComponent::of).toList());
                 template.tooltip(tooltip);
             }

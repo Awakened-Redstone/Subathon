@@ -1,8 +1,8 @@
 package com.awakenedredstone.subathon.ui.configure;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.core.effect.chaos.process.Chaos;
-import com.awakenedredstone.subathon.core.effect.chaos.process.ChaosRegistry;
+import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
+import com.awakenedredstone.subathon.registry.SubathonRegistries;
 import com.awakenedredstone.subathon.ui.BaseScreen;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
@@ -42,7 +42,7 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
         Utils.load(ConfigScreen.class);
 
         Subathon.chaosRandom = new WeightedRandom<>();
-        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, ChaosRegistry.registry.get(identifier)));
+        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
 
         FlowLayout items = rootComponent.childById(FlowLayout.class, "effects");
         Objects.requireNonNull(items, "Effects block is required!");
@@ -56,11 +56,11 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
         Asserts.notNull(refreshButton, "refreshButton");
         refreshButton.onPress(button -> {
             Subathon.chaosRandom = new WeightedRandom<>();
-            Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, ChaosRegistry.registry.get(identifier)));
+            Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
             
             items.children().stream().filter(v -> v.id() != null).forEach(component -> {
                 Identifier identifier = new Identifier(component.id());
-                Chaos chaos = ChaosRegistry.registry.get(identifier);
+                Chaos chaos = SubathonRegistries.CHAOS.get(identifier);
                 String translationKey = "text.subathon.chaos." + identifier.toTranslationKey();
                 String percentageString = String.format("%.5g", Subathon.chaosRandom.percentage(chaos)) + "%";
                 String weightString = Subathon.chaosRandom.getWeight(chaos) + "/" + Subathon.chaosRandom.getTotal();
@@ -80,8 +80,8 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
             });
         });
 
-        ChaosRegistry.registry.entrySet().stream().forEach(entry -> {
-            Identifier identifier = entry.getKey();
+        SubathonRegistries.CHAOS.stream().forEach(chaos -> {
+            Identifier identifier = chaos.getIdentifier();
             String translationKey = "text.subathon.chaos." + identifier.toTranslationKey();
             var template = model.expandTemplate(FlowLayout.class, "effect", new MapBuilder.StringMap()
                     .put("translation", translationKey)
@@ -102,8 +102,8 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
 
             container.child(createTextBox(model, identifier, textBox -> textBox.configureForNumber(Integer.class)).optionProvider());
 
-            String percentageString = String.format("%.5g", Subathon.chaosRandom.percentage(entry.getValue())) + "%";
-            String weightString = Subathon.chaosRandom.getWeight(entry.getValue()) + "/" + Subathon.chaosRandom.getTotal();
+            String percentageString = String.format("%.5g", Subathon.chaosRandom.percentage(chaos)) + "%";
+            String weightString = Subathon.chaosRandom.getWeight(chaos) + "/" + Subathon.chaosRandom.getTotal();
             if (I18n.hasTranslation(translationKey + ".tooltip")) {
                 List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Texts.of(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
                         .stream().map(TooltipComponent::of).toList());
@@ -128,7 +128,7 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
     public void close() {
         Subathon.COMMON_CONFIGS.save();
         Subathon.chaosRandom = new WeightedRandom<>();
-        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, ChaosRegistry.registry.get(identifier)));
+        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
         super.close();
     }
 

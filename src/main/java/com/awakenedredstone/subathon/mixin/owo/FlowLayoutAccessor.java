@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Environment(EnvType.CLIENT)
-@Mixin(FlowLayout.class)
+@Mixin(value = FlowLayout.class, remap = false)
 public interface FlowLayoutAccessor {
     @Invoker int callDetermineVerticalContentSize(Sizing sizing);
     @Invoker int callDetermineHorizontalContentSize(Sizing sizing);

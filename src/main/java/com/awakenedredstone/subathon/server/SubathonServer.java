@@ -12,7 +12,7 @@ public class SubathonServer implements DedicatedServerModInitializer {
     @Override
     public void onInitializeServer() {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            Twitch.nuke();
+            Twitch.getInstance().close();
         });
     }
 }

@@ -1,9 +1,12 @@
 import com.modrinth.minotaur.dependencies.ModDependency
 import net.fabricmc.loom.task.RemapJarTask
 
+import java.text.SimpleDateFormat
+
 plugins {
-    id 'fabric-loom' version '1.0-SNAPSHOT'
-    id "com.modrinth.minotaur" version "2.+"
+    id 'fabric-loom' version '1.1-SNAPSHOT'
+    id 'com.modrinth.minotaur' version '2.+'
+    id 'io.freefair.lombok' version '6.6.2'
     id 'maven-publish'
 }
 
@@ -12,8 +15,12 @@ loom {
 }
 
 def ENV = System.getenv()
+def date = new Date()
+def sdf = new SimpleDateFormat("yyMMdd-HHmm")
 
-version = project.mod_version
+def CHANGELOG = new File('CHANGELOG.md').exists() ? new File('CHANGELOG.md').text : "No changelog provided"
+
+version = project.mod_version + (project.mod_version.contains("dev") ? ".${sdf.format(date)}" : "")
 group = project.maven_group
 
 repositories {
@@ -46,6 +53,7 @@ dependencies {
     annotationProcessor modImplementation("io.wispforest:owo-lib:${project.owo_version}")
     include "io.wispforest:owo-sentinel:${project.owo_version}"
 
+    compileOnly "blue.endless:jankson:1.2.1"
     modImplementation "dev.onyxstudios.cardinal-components-api:cardinal-components-api:${project.cardinal_version}"
     include "dev.onyxstudios.cardinal-components-api:cardinal-components-base:${project.cardinal_version}"
     include "dev.onyxstudios.cardinal-components-api:cardinal-components-world:${project.cardinal_version}"
@@ -59,6 +67,11 @@ dependencies {
     implementation include("com.github.LlamaLad7:MixinExtras:${project.mixin_extra}")
     annotationProcessor("com.github.LlamaLad7:MixinExtras:${project.mixin_extra}")
 }
+
+/*project.extensions.getByType(LombokExtension::class).apply {
+    version.set("1.18.26")
+    disableConfig.set(true)
+}*/
 
 processResources {
     inputs.property "version", project.version
@@ -110,18 +123,31 @@ build.dependsOn remapMavenJar
 tasks.modrinth.dependsOn(tasks.remapMavenJar)
 
 modrinth {
+    String projectVersion = project.version.toString()
+    List<String> projectVersionNumber = projectVersion.split("-", 2)
+    String projectVersionName = "Release ${projectVersionNumber[0]}"
+    if (projectVersionNumber.size() == 2) {
+        List<String> typeNumber = projectVersionNumber[1].split("\\.", 2)
+        if (projectVersionNumber[1].startsWith("rc")) {
+            projectVersionName = "${projectVersionNumber[0]} - Release Candidate ${typeNumber[1]}"
+            versionType = "beta" //Modrinth doesn't have RC so I use beta
+        } else if (projectVersionNumber[1].startsWith("beta")) {
+            projectVersionName = "${projectVersionNumber[0]} - Beta ${typeNumber[1]}"
+            versionType = "beta"
+        } else if (projectVersionNumber[1].startsWith("alpha")) {
+            projectVersionName = "${projectVersionNumber[0]} - Alpha ${typeNumber[1]}"
+            versionType = "alpha"
+        }
+    }
+
     token = ENV.MODRINTH_TOKEN
     projectId = "amLXPXxi"
-    versionNumber = version
-    versionName = "[$project.minecraft_version] Subathon - $project.version"
-    versionType = "release"
-    changelog = ENV.CHANGELOG ?: "No changelog provided"
-    gameVersions = [project.minecraft_version]
-    loaders = ["fabric"]
+    versionName = projectVersionName
+    changelog = CHANGELOG
     uploadFile = remapJar
     dependencies = [
-            new ModDependency("P7dR8mSH", "required"), //FabricAPI
-            new ModDependency("CmHD69Pj", "required"), //Twitch4J
-            new ModDependency("mOgUt4GM", "optional") //ModMenu
+            new ModDependency("fabric-api", "required"), //FabricAPI
+            new ModDependency("twitch4j", "required"), //Twitch4J
+            new ModDependency("modmenu", "optional") //ModMenu
     ]
 }

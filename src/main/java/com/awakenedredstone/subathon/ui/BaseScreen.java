@@ -2,7 +2,6 @@ package com.awakenedredstone.subathon.ui;
 
 import com.awakenedredstone.subathon.Subathon;
 import io.wispforest.owo.ui.base.BaseUIModelScreen;
-import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.ParentComponent;
