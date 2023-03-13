@@ -6,29 +6,23 @@ There you can press the `Connect` button, on the first time it will open a brows
 authorize the mod, you must accept within 1 minute, else the authentication will fail.
 It is recommended to wait until the button shows `Connected` before closing the screen
 
-**Please note that the connection takes some time to establish, and subs/bits/redemptions during that period won't be counted!**
+**Please note that the connection takes some time to establish, and subs/bits/redemptions during that period won't be
+counted!**
 
-### This mod only works with <ins>Twitch</ins> streams!
 <details>
 <summary>Documentation</summary>
-    <ul>
-        <li>Modifier internal value calculation: increment * multiplier</li>
-        <li>Modifier display value calculation: internal value / multiplier</li>
-        <ul>
-            <li>Effect increment: Used to control the modifier and the displayed value</li>
-            <li>Effect multiplier: Used to control only the modifier</li>
-        </ul>
-        <br/>
-        <li>Current supported Modes:</li>
-        <ul>
-            <li>Jump</li>
-            <li>Super Jump (Supper: affects all living entities)</li>
-            <li>Speed</li>
-            <li>Slowness</li>
-            <li>Health</li>
-            <li>Super Health (Supper: affects all living entities)</li>
-        </ul>
-    </ul>
+<h4>Connect screen icons:</h4>
+<ul>
+    <li>❌ Offline</li>
+    <li>✔ Connected</li>
+    <li>⚠ Error/Warning</li>
+    <li>⚑ Unknown</li>
+    <li>⏳ Loading</li>
+    <li>⏼ Not supported</li>
+    <li>⇄ Talking with server/Reconnect</li>
+    <li>⏻ Connection status</li>
+    <li>⚡ Reset cache</li>
+</ul>
 </details>
 
 ![No froge](https://i.ibb.co/yphNcXz/fabric-only-banner.png)

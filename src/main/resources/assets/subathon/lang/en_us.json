@@ -1,419 +1,481 @@
 {
-  "category.subathon.keybinds": "Sub-a-thon",
-  "key.subathon.connect": "Connect to Twitch",
-  "key.subathon.notifications": "Notifications",
-  "key.subathon.dev": "Developer keybind",
+    "argument.username.invalid": [
+        "Invalid ",
+        {
+            "text": "Twitch",
+            "color": "#9146ff"
+        },
+        " username"
+    ],
+    "category.subathon.keybinds": "Sub-a-thon",
+    "key.subathon.connect": [
+        "Connect to ",
+        {
+            "text": "Twitch",
+            "color": "#9146ff"
+        }
+    ],
+    "key.subathon.notifications": "Notifications",
+    "key.subathon.dev": "Developer keybind\u229b",
 
-  "command.subathon.get.points": "Current points value: %value%",
-  "command.subathon.get.pointStorage": "Current pointStorage value: %value%",
-  "command.subathon.get.subPoints": "Current subPoints value: %value%",
-  "command.subathon.get.bitStorage": "Current bitStorage value: %value%",
-  "command.subathon.get.redemptionPoints": "Current redemptionPoints value: %value%",
+    "command.subathon.get.points": "Current points value: %value%",
+    "command.subathon.get.pointStorage": "Current pointStorage value: %value%",
+    "command.subathon.get.subPoints": "Current subPoints value: %value%",
+    "command.subathon.get.bitStorage": "Current bitStorage value: %value%",
+    "command.subathon.get.redemptionPoints": "Current redemptionPoints value: %value%",
+    "command.subathon.set.points": "Set points value to %value%",
+    "command.subathon.set.pointStorage": "Set pointStorage value to %value%",
+    "command.subathon.set.subPoints": "Set subPoints value to %value%",
+    "command.subathon.set.bitStorage": "Set bitStorage value to %value%",
+    "command.subathon.set.redemptionPoints": "Set redemptionPoints value to %value%",
 
-  "command.subathon.set.points": "Set points value to %value%",
-  "command.subathon.set.pointStorage": "Set pointStorage value to %value%",
-  "command.subathon.set.subPoints": "Set subPoints value to %value%",
-  "command.subathon.set.bitStorage": "Set bitStorage value to %value%",
-  "command.subathon.set.redemptionPoints": "Set redemptionPoints value to %value%",
+    "toast.subathon.warning.eventsub.title": "Stability warning!",
+    "toast.subathon.warning.eventsub.description": [
+        {
+            "text": "Twitch",
+            "color": "#9146ff"
+        },
+        {
+            "text": " WebSocket EventSub is still on beta, things might not behave properly, please proceed with caution!",
+            "color": "white"
+        }
+    ],
+    "toast.subathon.error.eventsub.connection.failed.title": "Connection failed!",
+    "toast.subathon.error.eventsub.connection.failed.description": [
+        "Failed to initiate a stable connection with ",
+        {
+            "text": "Twitch",
+            "color": "#9146ff"
+        },
+        {
+            "text": "!",
+            "color": "white"
+        }
+    ],
+    "toast.subathon.error.eventsub.connection.unknown_sub.title": "Unknown sub type!",
+    "toast.subathon.error.eventsub.connection.unknown_sub.description": "An unknown sub type returned, this should NEVER happen, please report this issue!",
+    "toast.subathon.error.eventsub.queue.title": "Queue contain items!",
+    "toast.subathon.error.eventsub.queue.description": "The action could not be performed as the queue contains items!",
+    "toast.subathon.error.irc.connected.title": "Already connected!",
+    "toast.subathon.error.irc.connected.description": "This channel already has a connection!",
+    "toast.subathon.warning.mismatch_version.title": "\u00a7c\u00a7nVersion mismatch!",
+    "toast.subathon.warning.mismatch_version.description": "This server is running on a different version of Sub-a-thon, things might not work properly!",
 
-  "toast.subathon.warning.eventsub.title": "Stability warning!",
-  "toast.subathon.warning.eventsub.description": "Twitch WebSocket EventSub is still on beta, things might not behave properly, please proceed with caution!",
-  "toast.subathon.error.eventsub.connection.failed.title": "Connection failed!",
-  "toast.subathon.error.eventsub.connection.failed.description": "Failed to initiate a stable connection with Twitch!",
-  "toast.subathon.error.eventsub.connection.unknown_sub.title": "Unknown sub type!",
-  "toast.subathon.error.eventsub.connection.unknown_sub.description": "An unknown sub type returned, this should NEVER happen, please report this issue!",
-  "toast.subathon.error.eventsub.queue.title": "Queue contain items!",
-  "toast.subathon.error.eventsub.queue.description": "The action could not be performed as the queue contains items!",
+    "text.subathon.warning": [
+        {
+            "color": "yellow",
+            "bold": true,
+            "text": " Warning! "
+        }
+    ],
+    "text.subathon.warning.unsafe_auth": [
+        {
+            "color": "red",
+            "bold": true,
+            "text": "Your auth is not secure!\n\n"
+        },
+        {
+            "color": "red",
+            "bold": false,
+            "text": "The returned details don't match the onses sent!\nIt is highly recommended to"
+        },
+        {
+            "color": "yellow",
+            "bold": true,
+            "text": " revoke "
+        },
+        {
+            "color": "red",
+            "bold": false,
+            "text": "the permissions you just granted and"
+        },
+        {
+            "color": "yellow",
+            "bold": true,
+            "text": " report "
+        },
+        {
+            "color": "red",
+            "bold": false,
+            "text": "this issue on the mod Github page!"
+        }
+    ],
 
-  "toast.subathon.warning.mismatch_version.title": "\u00a7c\u00a7nVersion mismatch!",
-  "toast.subathon.warning.mismatch_version.description": "This server is running on a different version of Sub-a-thon, things might not work properly!",
+    "text.subathon.screen.connect.offline": "\u00a7c❌",
+    "text.subathon.screen.connect.success": "\u00a7a✔",
+    "text.subathon.screen.connect.failure": "\u00a7c⚠",
+    "text.subathon.screen.connect.unknown": "\u00a7e⚑",
+    "text.subathon.screen.connect.loading": "\u00a7e⏳",
+    "text.subathon.screen.connect.unsupported": "\u00a78⏼",
+    "text.subathon.screen.connect.account.disconnected": "<red>▶</red> <yellow>Not logged in</yellow>",
+    "text.subathon.screen.connect.account": "<green>▶</green> Logged in as <yellow>%user%</yellow>",
+    "text.subathon.screen.connect.account.authless": "<yellow>▶</yellow> Connected to <green>%user%</green>",
+    "text.subathon.screen.connect.button.tooltip": "Do not close this screen while connecting or disconnecting!",
+    "text.subathon.screen.connect.button.disconnect": [
+        {
+            "text": "❌",
+            "color": "red"
+        },
+        " ",
+        {
+            "text": "Disconnect",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.reconnect": [
+        {
+            "text": "⇄",
+            "color": "red"
+        },
+        " ",
+        {
+            "text": "Reconnect",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.reset_cache": [
+        {
+            "text": "⚡",
+            "color": "yellow"
+        },
+        " ",
+        {
+            "text": "Reset cache",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.reset_key": [
+        {
+            "text": "⚠",
+            "color": "red"
+        },
+        " ",
+        {
+            "text": "Reset key",
+            "color": "yellow"
+        }
+    ],
+    "text.subathon.screen.connect.button.connect": [
+        {
+            "text": "⏻",
+            "color": "red"
+        },
+        " ",
+        {
+            "text": "Connect",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.reconnecting": [
+        {
+            "text": "⏻",
+            "color": "yellow"
+        },
+        " ",
+        {
+            "text": "Reconnecting",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.connected": [
+        {
+            "text": "⏻",
+            "color": "green"
+        },
+        " ",
+        {
+            "text": "Connected",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.authenticated": [
+        {
+            "text": "✔",
+            "color": "green"
+        },
+        " ",
+        {
+            "text": "Authenticated",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.failed": [
+        {
+            "text": "⚠",
+            "color": "red"
+        },
+        " ",
+        {
+            "text": "Connection failed!",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.button.packets": [
+        {
+            "text": "⇄",
+            "color": "yellow"
+        },
+        " ",
+        {
+            "text": "Connecting [Exchanging packets]",
+            "color": "white"
+        }
+    ],
+    "text.subathon.screen.connect.core": "Main connection",
+    "text.subathon.screen.connect.subs": "Subscriptions",
+    "text.subathon.screen.connect.resubs": "Re-subscriptions*",
+    "text.subathon.screen.connect.resubs.tooltip": "For a resub to count the subscriber must share it in chat!",
+    "text.subathon.screen.connect.gifts": "Gifted subscriptions",
+    "text.subathon.screen.connect.bits": "Bits",
+    "text.subathon.screen.connect.channel_points": "Channel points",
 
-  "text.subathon.warning": [
-    {
-      "color": "yellow",
-      "bold": true,
-      "text": " Warning! "
-    }
-  ],
+    "text.subathon.screen.rewards.title": "◆ Set channel reward",
+    "text.subathon.screen.rewards.button.set": "Save",
+    "text.subathon.screen.rewards.button.set.tooltip": "Saves the selected reward without closing the UI",
+    "text.subathon.screen.rewards.button.done": "Save & Close",
+    "text.subathon.screen.rewards.button.done.tooltip": "Saves the selected reward and closes the UI",
+    "text.subathon.screen.rewards.button.edit": "✎",
+    "text.subathon.screen.rewards.button.edit.tooltip": "Edit the reward UUID",
+    "text.subathon.screen.rewards.cost": "<yellow>Cost: %cost%</yellow>",
+    "text.subathon.screen.rewards.more": "<dark_gray><Hold shift for more></dark_gray>",
+    "text.subathon.screen.rewards.subOnly": "<yellow>Sub only: <gray>%boolean%",
+    "text.subathon.screen.rewards.paused": "<red>Paused: <gray>%boolean%",
+    "text.subathon.screen.rewards.enabled": "<red>Enabled: <gray>%boolean%",
+    "text.subathon.screen.rewards.skip_queue.warning": "<red>Rewards with \"Skip reward queue\" are untested and it is unknown if they work</red>",
+    "text.subathon.screen.rewards.tip": [
+        {
+            "text": "Left click to select\nRight click to unselect",
+            "color": "gray"
+        }
+    ],
 
-  "text.subathon.warning.unsafe_auth": [
-    {
-      "color": "red",
-      "bold": true,
-      "text": "Your auth is not secure!\n\n"
-    },
-    {
-      "color": "red",
-      "bold": false,
-      "text": "The returned details don't match the onses sent!\nIt is highly recommended to"
-    },
-    {
-      "color": "yellow",
-      "bold": true,
-      "text": " revoke "
-    },
-    {
-      "color": "red",
-      "bold": false,
-      "text": "the permissions you just granted and"
-    },
-    {
-      "color": "yellow",
-      "bold": true,
-      "text": " report "
-    },
-    {
-      "color": "red",
-      "bold": false,
-      "text": "this issue on the mod Github page!"
-    }
-  ],
+    "text.subathon.screen.effects.title": "◆ Set effects",
+    "text.subathon.screen.effects.tip": [
+        {
+            "text": "Left click to toggle the effect\nRight click to change the effect settings",
+            "color": "gray"
+        }
+    ],
+    "text.subathon.screen.effects.disabled": "\u00a7c❌",
+    "text.subathon.screen.effects.enabled": "\u00a7a✔",
 
-  "text.subathon.screen.connect.offline": "\u00a7c❌",
-  "text.subathon.screen.connect.success": "\u00a7a✔",
-  "text.subathon.screen.connect.failure": "\u00a7c⚠",
-  "text.subathon.screen.connect.unknown": "\u00a7e�",
-  "text.subathon.screen.connect.loading": "\u00a7e⇄",
-  "text.subathon.screen.connect.account.disconnected": "<red>▶</red> <yellow>Not logged in</yellow>",
-  "text.subathon.screen.connect.account": "<green>▶</green> Logged in as <yellow>%user%</yellow>",
-  "text.subathon.screen.connect.button.tooltip": "Do not close this screen while connecting or disconnecting!",
-  "text.subathon.screen.connect.button.disconnect": [
-    {
-      "text": "❌",
-      "color": "red"
-    },
-    " ",
-    {
-      "text": "Disconnect",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.reconnect": [
-    {
-      "text": "⇄",
-      "color": "red"
-    },
-    " ",
-    {
-      "text": "Reconnect",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.reset_cache": [
-    {
-      "text": "⚡",
-      "color": "yellow"
-    },
-    " ",
-    {
-      "text": "Reset cache",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.reset_key": [
-    {
-      "text": "⚠",
-      "color": "red"
-    },
-    " ",
-    {
-      "text": "Reset key",
-      "color": "yellow"
-    }
-  ],
-  "text.subathon.screen.connect.button.connect": [
-    {
-      "text": "⏻",
-      "color": "red"
-    },
-    " ",
-    {
-      "text": "Connect",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.reconnecting": [
-    {
-      "text": "⏻",
-      "color": "yellow"
-    },
-    " ",
-    {
-      "text": "Reconnecting",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.connected": [
-    {
-      "text": "⏻",
-      "color": "green"
-    },
-    " ",
-    {
-      "text": "Connected",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.authenticated": [
-    {
-      "text": "✔",
-      "color": "green"
-    },
-    " ",
-    {
-      "text": "Authenticated",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.failed": [
-    {
-      "text": "❌",
-      "color": "red"
-    },
-    " ",
-    {
-      "text": "Connection failed!",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.button.packets": [
-    {
-      "text": "⇄",
-      "color": "yellow"
-    },
-    " ",
-    {
-      "text": "Connecting [Exchanging packets]",
-      "color": "white"
-    }
-  ],
-  "text.subathon.screen.connect.core": "Main connection",
-  "text.subathon.screen.connect.subs": "Subscriptions",
-  "text.subathon.screen.connect.resubs": "Re-subscriptions*",
-  "text.subathon.screen.connect.resubs.tooltip": "For a resub to count the subscriber must share it in chat!",
-  "text.subathon.screen.connect.gifts": "Gifted subscriptions",
-  "text.subathon.screen.connect.bits": "Bits",
-  "text.subathon.screen.connect.channel_points": "Channel points",
+    "text.subathon.points": "%points%",
 
-  "text.subathon.screen.rewards.title": "◆ Set channel reward",
-  "text.subathon.screen.rewards.button.set": "Save",
-  "text.subathon.screen.rewards.button.set.tooltip": "Saves the selected reward without closing the UI",
-  "text.subathon.screen.rewards.button.done": "Save & Close",
-  "text.subathon.screen.rewards.button.done.tooltip": "Saves the selected reward and closes the UI",
-  "text.subathon.screen.rewards.button.edit": "✎",
-  "text.subathon.screen.rewards.button.edit.tooltip": "Edit the reward UUID",
-  "text.subathon.screen.rewards.cost": "<yellow>Cost: %cost%</yellow>",
-  "text.subathon.screen.rewards.more": "<dark_gray><Hold shift for more></dark_gray>",
-  "text.subathon.screen.rewards.subOnly": "<yellow>Sub only: <gray>%boolean%",
-  "text.subathon.screen.rewards.paused": "<red>Paused: <gray>%boolean%",
-  "text.subathon.screen.rewards.enabled": "<red>Enabled: <gray>%boolean%",
-  "text.subathon.screen.rewards.skip_queue.warning": "<red>Rewards with \"Skip reward queue\" are untested and it is unknown if they work</red>",
-  "text.subathon.screen.rewards.tip": [
-    {
-      "text": "Left click to select\nRight click to unselect",
-      "color": "gray"
-    }
-  ],
+    "text.subathon.effects.subathon.test": "⚗ Test",
+    "text.subathon.effects.subathon.test.tooltip": "This should never be visible",
+    "text.subathon.effects.subathon.jump": "⏏ Jump \u00a77[1.1]",
+    "text.subathon.effects.subathon.chaos": "\uD83D\uDD25 Chaos \u00a77[Beta]",
+    "text.subathon.effects.subathon.chaos.tooltip": [
+        {
+            "text": "This effect is still under development/being balanced, and might also not behave properly or have extreme behaviors",
+            "color": "yellow"
+        },
+        "\n\n",
+        {
+            "text": "Extreme destruction and pain is almost guaranteed",
+            "color": "red"
+        }
+    ],
+    "text.subathon.effects.subathon.rando_potions": "\uD83E\uDDEA Rando potions \u00a77[1.1]",
 
-  "text.subathon.screen.effects.title": "◆ Set effects",
-  "text.subathon.screen.effects.tip": [
-    {
-      "text": "Left click to toggle the effect\nRight click to change the effect settings",
-      "color": "gray"
-    }
-  ],
-  "text.subathon.screen.effects.disabled": "\u00a7c❌",
-  "text.subathon.screen.effects.enabled": "\u00a7a✔",
-  "text.subathon.points": "%points%",
-  "text.subathon.effects.subathon.test": "⚗ Test",
-  "text.subathon.effects.subathon.test.tooltip": "This should never be visible",
-  "text.subathon.effects.subathon.jump": "⏏ Jump \u00a77[2.0]",
-  "text.subathon.effects.subathon.chaos": "\uD83D\uDD25 Chaos \u00a77[Beta]",
-  "text.subathon.effects.subathon.chaos.tooltip": [
-    {
-      "text": "This effect is still under development/being balanced, and might also not behave properly or have extreme behaviors",
-      "color": "yellow"
-    },
-    "\n\n",
-    {
-      "text": "Extreme destruction and pain is almost guaranteed",
-      "color": "red"
-    }
-  ],
-  "text.subathon.effects.subathon.rando_potions": "\uD83E\uDDEA Rando potions \u00a77[1.1]",
+    "text.subathon.toast.sub.tier1": "<white>%user% subscribed",
+    "text.subathon.toast.sub.tier2": "<light_purple>%user% subscribed",
+    "text.subathon.toast.sub.tier3": "<green>%user% subscribed",
+    "text.subathon.toast.gift.tier1": "<gray>%user% gifted %amount% subs",
+    "text.subathon.toast.gift.tier2": "<light_purple>%user% gifted %amount% subs",
+    "text.subathon.toast.gift.tier3": "<green>%user% gifted %amount% subs",
+    "text.subathon.toast.cheer": "%user% cheered x%amount%",
 
-  "text.subathon.toast.sub.tier1": "<white>%user% subscribed",
-  "text.subathon.toast.sub.tier2": "<light_purple>%user% subscribed",
-  "text.subathon.toast.sub.tier3": "<green>%user% subscribed",
-  "text.subathon.toast.gift.tier1": "<gray>%user% gifted %amount% subs",
-  "text.subathon.toast.gift.tier2": "<light_purple>%user% gifted %amount% subs",
-  "text.subathon.toast.gift.tier3": "<green>%user% gifted %amount% subs",
-  "text.subathon.toast.cheer": "%user% cheered x%amount%",
+    "text.subathon.quick_notification.sub.tier1": "<white>%user% subscribed with Tier 1",
+    "text.subathon.quick_notification.sub.tier2": "<light_purple>%user% subscribed with Tier 2",
+    "text.subathon.quick_notification.sub.tier3": "<green>%user% subscribed with Tier 3",
+    "text.subathon.quick_notification.gift.tier1": "<gray>%user% gifted %amount% Tier 1 subs",
+    "text.subathon.quick_notification.gift.tier2": "<light_purple>%user% gifted %amount% Tier 2 subs",
+    "text.subathon.quick_notification.gift.tier3": "<green>%user% gifted %amount% Tier 3 subs",
+    "text.subathon.quick_notification.cheer": "<white>%user% cheered x%amount%",
 
-  "text.subathon.quick_notification.sub.tier1": "<white>%user% subscribed with Tier 1",
-  "text.subathon.quick_notification.sub.tier2": "<light_purple>%user% subscribed with Tier 2",
-  "text.subathon.quick_notification.sub.tier3": "<green>%user% subscribed with Tier 3",
-  "text.subathon.quick_notification.gift.tier1": "<gray>%user% gifted %amount% Tier 1 subs",
-  "text.subathon.quick_notification.gift.tier2": "<light_purple>%user% gifted %amount% Tier 2 subs",
-  "text.subathon.quick_notification.gift.tier3": "<green>%user% gifted %amount% Tier 3 subs",
-  "text.subathon.quick_notification.cheer": "<white>%user% cheered x%amount%",
+    "text.subathon.screen.notifications.tip": [
+        {
+            "text": "Left click to open a dedicated screen for the messages\nHover to quickly see the message",
+            "color": "gray"
+        }
+    ],
+    "text.subathon.screen.notification.previous_page": "See previous notification",
+    "text.subathon.screen.notification.next_page": "See next notification",
+    "text.subathon.screen.chaos_effects.open": "Set chaos weights",
+    "text.subathon.screen.potion_effects.open": "Set potion weights",
+    "text.subathon.screen.potion_effects.refresh.tooltip": "Update percentages",
+    "text.subathon.screen.potion_effects.tip": [
+        {
+            "text": "Set the weight to a given potion effect on the text field\nSet to 0 to disable the effect from rando potions",
+            "color": "gray"
+        }
+    ],
 
-  "text.subathon.screen.notifications.tip": [
-    {
-      "text": "Left click to open a dedicated screen for the messages\nHover to quickly see the message",
-      "color": "gray"
-    }
-  ],
-  "text.subathon.screen.notification.previous_page": "See previous notification",
-  "text.subathon.screen.notification.next_page": "See next notification",
+    "text.subathon.configs.soon.edit": "Editing server configurations withing the client coming soon™",
+    "text.subathon.configs.soon.server": "Server configurations coming soon™",
 
-  "text.subathon.screen.chaos_effects.open": "Set chaos weights",
-  "text.subathon.screen.potion_effects.open": "Set potion weights",
-  "text.subathon.screen.potion_effects.refresh.tooltip": "Refresh percentages",
-  "text.subathon.screen.potion_effects.tip": [
-    {
-      "text": "Set the weight to a given potion effect on the text field\nSet to 0 to disable the effect from rando potions",
-      "color": "gray"
-    }
-  ],
+    "text.subathon.notification.sub": "%user% subscribed with Tier %tier%",
+    "text.subathon.notification.sub_multimonth": "%user% subscribed with Tier %tier% for %duration% months in advance",
+    "text.subathon.notification.resub": "%user% subscribed with Tier %tier% for %time% months",
+    "text.subathon.notification.resub_multimonth": "%user% subscribed with Tier %tier% for %duration% months in advance, completing %time% months",
+    "text.subathon.notification.gift": "%user% gifted %amount% tier %tier% subs",
+    "text.subathon.notification.cheer": "%user% cheered x%amount%",
 
-  "text.subathon.configs.soon.edit": "Editing server configurations withing the client coming soon™",
-  "text.subathon.configs.soon.server": "Server configurations coming soon™",
+    "text.subathon.chaos.error": "Failed to trigger a chaos within %amount% tries",
 
-  "text.subathon.notification.sub": "%user% subscribed with Tier %tier%",
-  "text.subathon.notification.sub_multimonth": "%user% subscribed with Tier %tier% for %duration% months in advance",
-  "text.subathon.notification.resub": "%user% subscribed with Tier %tier% for %time% months",
-  "text.subathon.notification.resub_multimonth": "%user% subscribed with Tier %tier% for %duration% months in advance, completing %time% months",
-  "text.subathon.notification.gift": "%user% gifted %amount% tier %tier% subs",
-  "text.subathon.notification.cheer": "%user% cheered x%amount%",
+    "text.config.subathon/mode.error.empty": "\u00a7cNo configurations",
+    "text.config.subathon/mode.option.scale": "⇵ Scale",
+    "text.config.subathon/server.title": "✎ Server configs",
+    "text.config.subathon/common.title": "✎ Common configs",
+    "text.config.subathon/common.section.subs": "Subs integration",
+    "text.config.subathon/common.section.bits": "Bits integration",
+    "text.config.subathon/common.section.rewards": "Rewards integration",
+    "text.config.subathon/common.option.sharedEffects": "Shared effects",
+    "text.config.subathon/common.option.sharedEffects.tooltip": "Points and triggers are shared between all players",
+    "text.config.subathon/common.option.excludedPotions": "⚗ Excluded effects",
+    "text.config.subathon/common.option.updateCooldown": "Update cooldown*",
+    "text.config.subathon/common.option.updateCooldown.tooltip": [
+        "The time between updates, setting this to 0 disables it\n",
+        "Format: HH:mm:ss.tt\n",
+        "H = Hour | m = Minute | s = Second | t = Tick\n",
+        "To insert the value in ticks just insert the number and a ",
+        {
+            "text": "t",
+            "color": "yellow"
+        },
+        {
+            "text": " on the end\n",
+            "color": "white"
+        },
+        "To insert in seconds just insert the number"
+    ],
+    "text.config.subathon/common.option.chaosTries": "Chaos tries",
+    "text.config.subathon/common.option.chaosTries.tooltip": "Defines how many times the chaos effect can try to trigger a chaos before failing",
+    "text.config.subathon/common.option.excludedMobs": "Excluded mobs",
+    "text.config.subathon/common.option.excludedMobs.tooltip": "Mobs that are excluded from the chaos effect",
+    "text.config.subathon/common.option.threshold": "Threshold",
+    "text.config.subathon/common.category.subs": "Subscriptions",
+    "text.config.subathon/common.option.subs.enabled": "Enable subs integration",
+    "text.config.subathon/common.option.subs.threshold": "Threshold",
+    "text.config.subathon/common.option.subs.points": "Points worth",
+    "text.config.subathon/common.option.subs.points.tooltip": "The amount of points to add per subscription (multiplies with the scale of the tiers)",
+    "text.config.subathon/common.category.subs.tier1": "Tier 1",
+    "text.config.subathon/common.option.subs.tier1.enabled": "Enable Tier 1 subs",
+    "text.config.subathon/common.option.subs.tier1.points": "Points scale",
+    "text.config.subathon/common.category.subs.tier2": "Tier 2",
+    "text.config.subathon/common.option.subs.tier2.enabled": "Enable Tier 2 subs",
+    "text.config.subathon/common.option.subs.tier2.points": "Points scale",
+    "text.config.subathon/common.category.subs.tier3": "Tier 3",
+    "text.config.subathon/common.option.subs.tier3.enabled": "Enable Tier 3 subs",
+    "text.config.subathon/common.option.subs.tier3.points": "Points scale",
+    "text.config.subathon/common.category.bits": "Cheers",
+    "text.config.subathon/common.option.bits.enabled": "Enable bits integration",
+    "text.config.subathon/common.option.bits.points": "Points worth",
+    "text.config.subathon/common.option.bits.points.tooltip": "The amount of points to add per cheer \nThe formula is: \u00a77cheer_points \u00a7e* \u00a77points_to_add_from_bit_amount",
+    "text.config.subathon/common.option.bits.minimum": "Minimum bits",
+    "text.config.subathon/common.option.bits.cumulative": "Cumulative mode",
+    "text.config.subathon/common.option.bits.cumulative.tooltip": "When someone donates it will store the bits on a buffer and use it instead of bits directly",
+    "text.config.subathon/common.option.bits.requiresMinimumToAccumulate": "Requires minimum to accumulate",
+    "text.config.subathon/common.option.bits.requiresMinimumToAccumulate.tooltip": "Only accumulates if the cheer is equals or bigger than the minimum amount. \nOnly works with \"cumulative\" enabled",
+    "text.config.subathon/common.category.rewards": "Channel point rewards",
+    "text.config.subathon/common.option.rewards.enabled": "Enable rewards integration",
+    "text.config.subathon/common.option.rewards.points": "Points worth",
+    "text.config.subathon/common.option.rewards.points.tooltip": "The amount of points to add per reward redemption",
+    "text.config.subathon/common.option.rewards.threshold": "Threshold",
 
-  "text.subathon.chaos.error": "Failed to trigger a chaos within %amount% tries",
+    "text.config.subathon/client.title": "✎ Client configs",
+    "text.config.subathon/client.category.toasts": "Toasts",
+    "text.config.subathon/client.category.toasts.subs": "Subscriptions",
+    "text.config.subathon/client.category.toasts.gifts": "Sub gifts",
+    "text.config.subathon/client.category.toasts.gifts.tier1": "Tier 1",
+    "text.config.subathon/client.category.toasts.gifts.tier2": "Tier 2",
+    "text.config.subathon/client.category.toasts.gifts.tier3": "Tier 3",
+    "text.config.subathon/client.category.toasts.bits": "Cheers",
+    "text.config.subathon/client.option.connectionType": "Connection type",
+    "text.config.subathon/client.option.connectionType.tooltip": [
+        "The method used to receive events\n",
+        "\u00a7eIRC: \u00a77Unofficial system, doesn't support channel point rewards, \u00a7ndoesn't require auth\n",
+        "\u00a7eEventSub: \u00a77Officially supported by ",
+        {
+            "text": "Twitch",
+            "color": "#9146ff"
+        },
+        {
+            "text": " and supports all features, \u00a7nrequires auth",
+            "color": "gray"
+        }
+    ],
+    "text.config.subathon/client.option.twitchUsername": [
+        {
+            "text": "Twitch",
+            "color": "#9146ff"
+        },
+        {
+            "text": " username",
+            "color": "white"
+        }
+    ],
+    "text.config.subathon/client.option.twitchUsername.tooltip": "This is only visible for convenience, set the value at the connect screen",
+    "text.config.subathon/client.option.showValue": "Show points",
+    "text.config.subathon/client.option.showTimer": "Show timer",
+    "text.config.subathon/client.option.pointsFontScale": "Points font scale \u00a77[Beta]",
+    "text.config.subathon/client.option.pointsFontScale.tooltip": "Sets the scale of the points \n\u00a77[This is on beta and might not scale or render properly]",
+    "text.config.subathon/client.option.quickMessageStayTime": "Quick message stay time",
+    "text.config.subathon/client.option.quickMessageStayTime.tooltip": "The time for quick message will stay on the screen (in milliseconds)",
+    "text.config.subathon/client.option.toasts.enabled": "Enable toasts",
+    "text.config.subathon/client.option.toasts.subs.enabled": "Enable sub toasts",
+    "text.config.subathon/client.option.toasts.subs.minimumTier": "Minimum tier",
+    "text.config.subathon/client.option.toasts.gifts.enabled": "Enable gift toasts",
+    "text.config.subathon/client.option.toasts.gifts.tier1.enabled": "Enable",
+    "text.config.subathon/client.option.toasts.gifts.tier1.minimum": "Gift bomb minimum size",
+    "text.config.subathon/client.option.toasts.gifts.tier2.enabled": "Enable",
+    "text.config.subathon/client.option.toasts.gifts.tier2.minimum": "Gift bomb minimum size",
+    "text.config.subathon/client.option.toasts.gifts.tier3.enabled": "Enable",
+    "text.config.subathon/client.option.toasts.gifts.tier3.minimum": "Gift bomb minimum size",
+    "text.config.subathon/client.option.toasts.bits.enabled": "Enable bits toasts",
+    "text.config.subathon/client.option.toasts.bits.minimum": "Cheer minimum bits",
+    "text.config.subathon/client.enum.connectionType.eventsub": "EventSub",
+    "text.config.subathon/client.enum.connectionType.irc": "IRC \u00a77[Beta]",
+    "text.config.subathon/client.enum.tier.tier1": "Tier 1",
+    "text.config.subathon/client.enum.tier.tier2": "Tier 2",
+    "text.config.subathon/client.enum.tier.tier3": "Tier 3",
 
-  "text.config.subathon/mode.error.empty": "\u00a7cNo configurations",
-  "text.config.subathon/mode.option.scale": "⇵ Scale",
-  "text.config.subathon/server.title": "✎ Server configs",
-  "text.config.subathon/common.title": "✎ Common configs",
-  "text.config.subathon/common.section.subs": "Subs integration",
-  "text.config.subathon/common.section.bits": "Bits integration",
-  "text.config.subathon/common.section.rewards": "Rewards integration",
-  "text.config.subathon/common.option.sharedEffects": "Shared effects",
-  "text.config.subathon/common.option.sharedEffects.tooltip": "Points and triggers are shared between all players",
-  "text.config.subathon/common.option.excludedPotions": "⚗ Excluded effects",
-  "text.config.subathon/common.option.updateCooldown": "Update cooldown*",
-  "text.config.subathon/common.option.updateCooldown.tooltip": [
-    "The time between updates, setting this to 0 disables it\n",
-    "Format: HH:mm:ss.tt\n",
-    "H = Hour | m = Minute | s = Second | t = Tick\n",
-    "To insert the value in ticks just insert the number and a ",
-    {
-      "text": "t",
-      "color": "yellow"
-    },
-    {
-      "text": " on the end\n",
-      "color": "white"
-    },
-    "To insert in seconds just insert the number"
-  ],
-  "text.config.subathon/common.option.chaosTries": "Chaos tries",
-  "text.config.subathon/common.option.chaosTries.tooltip": "Defines how many times the chaos effect can try to trigger a chaos before failing",
-  "text.config.subathon/common.option.excludedMobs": "Excluded mobs",
-  "text.config.subathon/common.option.excludedMobs.tooltip": "Mobs that are excluded from the chaos effect",
-  "text.config.subathon/common.option.threshold": "Threshold",
-  "text.config.subathon/common.category.subs": "Subscriptions",
-  "text.config.subathon/common.option.subs.enabled": "Enable subs integration",
-  "text.config.subathon/common.option.subs.threshold": "Threshold",
-  "text.config.subathon/common.option.subs.points": "Points worth",
-  "text.config.subathon/common.option.subs.points.tooltip": "The amount of points to add per subscription (multiplies with the scale of the tiers)",
-  "text.config.subathon/common.category.subs.tier1": "Tier 1",
-  "text.config.subathon/common.option.subs.tier1.enabled": "Enable Tier 1 subs",
-  "text.config.subathon/common.option.subs.tier1.points": "Points scale",
-  "text.config.subathon/common.category.subs.tier2": "Tier 2",
-  "text.config.subathon/common.option.subs.tier2.enabled": "Enable Tier 2 subs",
-  "text.config.subathon/common.option.subs.tier2.points": "Points scale",
-  "text.config.subathon/common.category.subs.tier3": "Tier 3",
-  "text.config.subathon/common.option.subs.tier3.enabled": "Enable Tier 3 subs",
-  "text.config.subathon/common.option.subs.tier3.points": "Points scale",
-  "text.config.subathon/common.category.bits": "Cheers",
-  "text.config.subathon/common.option.bits.enabled": "Enable bits integration",
-  "text.config.subathon/common.option.bits.points": "Points worth",
-  "text.config.subathon/common.option.bits.points.tooltip": "The amount of points to add per cheer \nThe formula is: \u00a77cheer_points \u00a7e* \u00a77points_to_add_from_bit_amount",
-  "text.config.subathon/common.option.bits.minimum": "Minimum bits",
-  "text.config.subathon/common.option.bits.cumulative": "Cumulative mode",
-  "text.config.subathon/common.option.bits.cumulative.tooltip": "When someone donates it will store the bits on a buffer and use it instead of bits directly",
-  "text.config.subathon/common.option.bits.requiresMinimumToAccumulate": "Requires minimum to accumulate",
-  "text.config.subathon/common.option.bits.requiresMinimumToAccumulate.tooltip": "Only accumulates if the cheer is equals or bigger than the minimum amount. \nOnly works with \"cumulative\" enabled",
-  "text.config.subathon/common.category.rewards": "Channel point rewards",
-  "text.config.subathon/common.option.rewards.enabled": "Enable rewards integration",
-  "text.config.subathon/common.option.rewards.points": "Points worth",
-  "text.config.subathon/common.option.rewards.points.tooltip": "The amount of points to add per reward redemption",
-  "text.config.subathon/common.option.rewards.threshold": "Threshold",
-
-  "text.config.subathon/client.title": "✎ Client configs",
-  "text.config.subathon/client.category.toasts": "Toasts",
-  "text.config.subathon/client.category.toasts.subs": "Subscriptions",
-  "text.config.subathon/client.category.toasts.gifts": "Sub gifts",
-  "text.config.subathon/client.category.toasts.gifts.tier1": "Tier 1",
-  "text.config.subathon/client.category.toasts.gifts.tier2": "Tier 2",
-  "text.config.subathon/client.category.toasts.gifts.tier3": "Tier 3",
-  "text.config.subathon/client.category.toasts.bits": "Cheers",
-  "text.config.subathon/client.option.showValue": "Show points",
-  "text.config.subathon/client.option.showTimer": "Show timer",
-  "text.config.subathon/client.option.pointsFontScale": "Points font scale \u00a77[beta]",
-  "text.config.subathon/client.option.pointsFontScale.tooltip": "Sets the scale of the points [This is on beta and might not scale or render properly]",
-  "text.config.subathon/client.option.quickMessageStayTime": "Quick message stay time",
-  "text.config.subathon/client.option.quickMessageStayTime.tooltip": "The time for quick message will stay on the screen (in milliseconds)",
-  "text.config.subathon/client.option.toasts.enabled": "Enable toasts",
-  "text.config.subathon/client.option.toasts.subs.enabled": "Enable sub toasts",
-  "text.config.subathon/client.option.toasts.subs.minimumTier": "Minimum tier",
-  "text.config.subathon/client.option.toasts.gifts.enabled": "Enable gift toasts",
-  "text.config.subathon/client.option.toasts.gifts.tier1.enabled": "Enable",
-  "text.config.subathon/client.option.toasts.gifts.tier1.minimum": "Gift bomb minimum size",
-  "text.config.subathon/client.option.toasts.gifts.tier2.enabled": "Enable",
-  "text.config.subathon/client.option.toasts.gifts.tier2.minimum": "Gift bomb minimum size",
-  "text.config.subathon/client.option.toasts.gifts.tier3.enabled": "Enable",
-  "text.config.subathon/client.option.toasts.gifts.tier3.minimum": "Gift bomb minimum size",
-  "text.config.subathon/client.option.toasts.bits.enabled": "Enable bits toasts",
-  "text.config.subathon/client.option.toasts.bits.minimum": "Cheer minimum bits",
-  "text.config.subathon/client.enum.tier.tier1": "Tier 1",
-  "text.config.subathon/client.enum.tier.tier2": "Tier 2",
-  "text.config.subathon/client.enum.tier.tier3": "Tier 3",
-
-  "text.subathon.chaos.subathon.arrows": "Arrows",
-  "text.subathon.chaos.subathon.dimension_swap": "Dimension swap",
-  "text.subathon.chaos.subathon.drop_everything": "Drop all items*",
-  "text.subathon.chaos.subathon.drop_everything.tooltip": "Drops every single item in the inventory",
-  "text.subathon.chaos.subathon.drop_held_item": "Drop held item",
-  "text.subathon.chaos.subathon.drop_hotbar": "Drop hotbar",
-  "text.subathon.chaos.subathon.drop_inventory": "Drop inventory*",
-  "text.subathon.chaos.subathon.drop_inventory.tooltip": "Drops all items in the main inventory, so armor and offhand are <red>NOT</red> dropped",
-  "text.subathon.chaos.subathon.infested_sphere": "Infested sphere",
-  "text.subathon.chaos.subathon.kaboom": [
-    {
-      "text": "Draconic",
-      "strikethrough": true
-    },
-    {
-      "text": " kaboom",
-      "strikethrough": false
-    }
-  ],
-  "text.subathon.chaos.subathon.kaboom.tooltip": "A lot of explosions, may be worse if the player isn't exposed to the sky",
-  "text.subathon.chaos.subathon.kaboom.message.normal": "<red>Kaboom!</red>",
-  "text.subathon.chaos.subathon.kaboom.message.special": "<red>Here be <strikethrough>dragons</strikethrough>fireballs",
-  "text.subathon.chaos.subathon.mobs": "Spawn mobs",
-  "text.subathon.chaos.subathon.mobs.message": "Some mobs seem to have appeared nearby!",
-  "text.subathon.chaos.subathon.rando_potion": "Random potion effect",
-  "text.subathon.chaos.subathon.random_enchant": "Random enchantment",
-  "text.subathon.chaos.subathon.random_enchant_compatible": "Random compatible enchantment",
-  "text.subathon.chaos.subathon.random_enchant_incompatible": "Random incompatible enchantment",
-  "text.subathon.chaos.subathon.random_item": "Random item",
-  "text.subathon.chaos.subathon.random_item.message": "Some items seem to have appeared nearby!",
-  "text.subathon.chaos.subathon.randomize_entities": "Randomize entities",
-  "text.subathon.chaos.subathon.randomize_entities.message": "Someone messed with the DNA of the entities",
-  "text.subathon.chaos.subathon.return_to_spawn": "Return to the spawnpoint",
-  "text.subathon.chaos.subathon.shuffle_inventory": "Shuffle inventory",
-  "text.subathon.chaos.subathon.snow_ball": "Snow ball",
-  "text.subathon.chaos.subathon.tnt_sphere": "TNT Sphere",
-  "text.subathon.chaos.subathon.yeet": "Yeet!"
+    "text.subathon.chaos.subathon.arrows": "Arrows",
+    "text.subathon.chaos.subathon.dimension_swap": "Dimension swap",
+    "text.subathon.chaos.subathon.drop_everything": "Drop all items*",
+    "text.subathon.chaos.subathon.drop_everything.tooltip": "Drops every single item in the inventory",
+    "text.subathon.chaos.subathon.drop_held_item": "Drop held item",
+    "text.subathon.chaos.subathon.drop_hotbar": "Drop hotbar",
+    "text.subathon.chaos.subathon.drop_inventory": "Drop inventory*",
+    "text.subathon.chaos.subathon.drop_inventory.tooltip": "Drops all items in the main inventory, so armor and offhand are <red>NOT</red> dropped",
+    "text.subathon.chaos.subathon.infested_sphere": "Infested sphere",
+    "text.subathon.chaos.subathon.kaboom": [
+        {
+            "text": "Draconic",
+            "strikethrough": true
+        },
+        {
+            "text": " kaboom",
+            "strikethrough": false
+        }
+    ],
+    "text.subathon.chaos.subathon.kaboom.tooltip": "A lot of explosions, may be worse if the player isn't exposed to the sky",
+    "text.subathon.chaos.subathon.kaboom.message.normal": "<red>Kaboom!</red>",
+    "text.subathon.chaos.subathon.kaboom.message.special": "<red>Here be <strikethrough>dragons</strikethrough>fireballs",
+    "text.subathon.chaos.subathon.mobs": "Spawn mobs",
+    "text.subathon.chaos.subathon.mobs.message": "Some mobs seem to have appeared nearby!",
+    "text.subathon.chaos.subathon.rando_potion": "Random potion effect",
+    "text.subathon.chaos.subathon.random_enchant": "Random enchantment",
+    "text.subathon.chaos.subathon.random_enchant_compatible": "Random compatible enchantment",
+    "text.subathon.chaos.subathon.random_enchant_incompatible": "Random incompatible enchantment",
+    "text.subathon.chaos.subathon.random_item": "Random item",
+    "text.subathon.chaos.subathon.random_item.message": "Some items seem to have appeared nearby!",
+    "text.subathon.chaos.subathon.randomize_entities": "Randomize entities",
+    "text.subathon.chaos.subathon.randomize_entities.message": "Someone messed with the DNA of the entities",
+    "text.subathon.chaos.subathon.return_to_spawn": "Return to the spawnpoint",
+    "text.subathon.chaos.subathon.shuffle_inventory": "Shuffle inventory",
+    "text.subathon.chaos.subathon.snow_ball": "Snow ball",
+    "text.subathon.chaos.subathon.tnt_sphere": "TNT Sphere",
+    "text.subathon.chaos.subathon.yeet": "Yeet!"
 }

@@ -1,16 +1,21 @@
 package com.awakenedredstone.subathon.command;
 
+import com.awakenedredstone.subathon.command.argument.TwitchUsernameArgumentType;
 import com.awakenedredstone.subathon.core.DataManager;
 import com.awakenedredstone.subathon.core.data.Components;
 import com.awakenedredstone.subathon.core.data.PlayerComponent;
 import com.awakenedredstone.subathon.core.data.WorldComponent;
+import com.awakenedredstone.subathon.twitch.Twitch;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -191,6 +196,29 @@ public class SubathonCommand {
                                                     int amount = IntegerArgumentType.getInteger(context, "amount");
                                                     data.setRedemptionPoints(amount);
                                                     context.getSource().sendFeedback(Texts.of("command.subathon.set.redemptionPoints", new MapBuilder.StringMap().putAny("%value%", amount).build()), false);
+                                                    return 1;
+                                                })
+                                        )
+                                )
+                        )
+                ).then(literal("test")
+                        .then(literal("irc")
+                                .then(literal("joinChannel")
+                                        .then(argument("channel", TwitchUsernameArgumentType.create())
+                                                .executes(context -> {
+                                                    String channel = TwitchUsernameArgumentType.getUsername(context, "channel");
+                                                    Twitch.getInstance().getChatPool().joinChannel(channel);
+                                                    context.getSource().sendFeedback(Text.literal("Joined channel " + channel), true);
+                                                    return 1;
+                                                })
+                                        )
+                                ).then(literal("leaveChannel")
+                                        .then(argument("channel", TwitchUsernameArgumentType.create())
+                                                .suggests((context, builder) -> CommandSource.suggestMatching(Twitch.getInstance().getChatPool().getChannels(), builder))
+                                                .executes(context -> {
+                                                    String channel = TwitchUsernameArgumentType.getUsername(context, "channel");
+                                                    Twitch.getInstance().getChatPool().leaveChannel(channel);
+                                                    context.getSource().sendFeedback(Text.literal("Left channel " + channel), true);
                                                     return 1;
                                                 })
                                         )

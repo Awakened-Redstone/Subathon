@@ -31,7 +31,7 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
         Objects.requireNonNull(items, "Notifications block is required!");
 
         for (SubathonClient.Notification notification : SubathonClient.messages) {
-            var template = model.expandTemplate(FlowLayout.class, "reward", new MapBuilder<String, String>()
+            var template = model.expandTemplate(FlowLayout.class, "notification", new MapBuilder<String, String>()
                     .put("id", UUID.randomUUID().toString())
                     .put("type", getType(notification.message(), notification.placeholders()))
                     .put("message", Texts.of(notification.message().translation, map -> map.putAll(notification.placeholders())).getString())
@@ -71,6 +71,7 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
 
     @Override
     public void tick() {
+        if (client == null || client.currentScreen != this) return;
         if (!new HashSet<>(notifications).containsAll(SubathonClient.messages)) {
             HashSet<SubathonClient.Notification> messagesCopy = new HashSet<>(SubathonClient.messages);
             notifications.forEach(messagesCopy::remove);
@@ -80,7 +81,7 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
             Objects.requireNonNull(items, "Notifications block is required!");
 
             for (SubathonClient.Notification notification : messagesCopy) {
-                var template = model.expandTemplate(FlowLayout.class, "reward", new MapBuilder<String, String>()
+                var template = model.expandTemplate(FlowLayout.class, "notification", new MapBuilder<String, String>()
                         .put("id", UUID.randomUUID().toString())
                         .put("type", getType(notification.message(), notification.placeholders()))
                         .put("message", Texts.of(notification.message().translation, map -> map.putAll(notification.placeholders())).getString())

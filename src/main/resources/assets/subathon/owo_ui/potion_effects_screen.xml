@@ -36,7 +36,7 @@
                             </sizing>
                         </button>
                         <button id="refresh">
-                            <text>⇄</text>
+                            <text>±</text>
                             <tooltip-text translate="true">text.subathon.screen.potion_effects.refresh.tooltip</tooltip-text>
                             <margins>
                                 <left>2</left>
@@ -91,6 +91,7 @@
                 </padding>
                 <margins>
                     <top>2</top>
+                    <right>3</right>
                 </margins>
             </flow-layout>
         </effect>

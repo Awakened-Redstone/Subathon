@@ -82,6 +82,7 @@
                 </padding>
                 <margins>
                     <top>2</top>
+                    <right>3</right>
                 </margins>
             </flow-layout>
         </connection>
@@ -135,5 +136,92 @@
                 <positioning type="relative">100,100</positioning>
             </flow-layout>
         </extra-options>
+        <twitch-username>
+            <flow-layout direction="horizontal" id="twitch-username">
+                <children>
+                    <button id="confirm">
+                        <text>✔</text>
+                        <sizing>
+                            <horizontal method="fixed">20</horizontal>
+                        </sizing>
+                        <margins>
+                            <top>1</top>
+                            <left>2</left>
+                        </margins>
+                    </button>
+                    <button id="cancel">
+                        <text>❌</text>
+                        <sizing>
+                            <horizontal method="fixed">20</horizontal>
+                        </sizing>
+                        <margins>
+                            <top>1</top>
+                            <left>2</left>
+                        </margins>
+                    </button>
+                </children>
+                <padding>
+                    <all>6</all>
+                </padding>
+                <margins>
+                    <right>8</right>
+                    <bottom>28</bottom>
+                </margins>
+                <surface>
+                    <panel dark="true"/>
+                </surface>
+                <positioning type="relative">50,50</positioning>
+            </flow-layout>
+        </twitch-username>
+        <text-box-config-option>
+            <template name="config-option">
+                <child id="value-container">
+                    <subathon-text-box id="value-box">
+                        <text>{{config-option-value}}</text>
+                    </subathon-text-box>
+                </child>
+            </template>
+        </text-box-config-option>
+        <config-option>
+            <flow-layout direction="horizontal">
+                <children>
+                    <label id="option-name">
+                        <text translate="true">{{config-option-name}}</text>
+                        <positioning type="relative">0,50</positioning>
+                        <shadow>true</shadow>
+                    </label>
+
+                    <flow-layout direction="horizontal">
+                        <children>
+                            <template-child id="value-container">
+                                <sizing>
+                                    <horizontal method="fixed">120</horizontal>
+                                </sizing>
+                            </template-child>
+
+                            <button id="reset-button">
+                                <text>⇄</text>
+                                <margins>
+                                    <horizontal>5</horizontal>
+                                </margins>
+                            </button>
+                        </children>
+
+                        <positioning type="relative">100,50</positioning>
+                        <vertical-alignment>center</vertical-alignment>
+                    </flow-layout>
+                </children>
+
+                <sizing>
+                    <horizontal method="fixed">240</horizontal>
+                    <vertical method="fixed">32</vertical>
+                </sizing>
+
+                <padding>
+                    <all>5</all>
+                </padding>
+
+            </flow-layout>
+        </config-option>
     </templates>
 </owo-ui>

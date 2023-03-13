@@ -3,7 +3,9 @@ package com.awakenedredstone.subathon;
 import blue.endless.jankson.JsonObject;
 import blue.endless.jankson.JsonPrimitive;
 import com.awakenedredstone.subathon.command.SubathonCommand;
+import com.awakenedredstone.subathon.command.argument.TwitchUsernameArgumentType;
 import com.awakenedredstone.subathon.config.CommonConfigs;
+import com.awakenedredstone.subathon.config.ConfigsClient;
 import com.awakenedredstone.subathon.core.effect.Effect;
 import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
 import com.awakenedredstone.subathon.entity.FireballEntity;
@@ -17,9 +19,11 @@ import com.awakenedredstone.subathon.util.ConversionUtils;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import com.awakenedredstone.subathon.util.ScheduleUtils;
 import com.awakenedredstone.subathon.util.WeightedRandom;
+import com.mojang.brigadier.arguments.ArgumentType;
 import io.wispforest.owo.network.serialization.PacketBufSerializer;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -30,11 +34,17 @@ import net.fabricmc.fabric.api.object.builder.v1.entity.FabricEntityTypeBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.Block;
 import net.minecraft.block.InfestedBlock;
+import net.minecraft.command.argument.ArgumentTypes;
+import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.RegistryEntryArgumentType;
+import net.minecraft.command.argument.serialize.ArgumentSerializer;
+import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Identifier;
 import okhttp3.OkHttpClient;
@@ -63,6 +73,7 @@ public class Subathon implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        ArgumentTypeRegistry.registerArgumentType(id("twitch_username"), TwitchUsernameArgumentType.class, ConstantArgumentSerializer.of(TwitchUsernameArgumentType::create));
         FieldRegistrationHandler.register(EntityRegistry.class, MOD_ID, false);
         FieldRegistrationHandler.register(EffectRegistry.class, MOD_ID, false);
         FieldRegistrationHandler.register(ChaosRegistry.class, MOD_ID, false);
@@ -123,14 +134,26 @@ public class Subathon implements ModInitializer {
             String token = buf.readString();
             server.execute(() -> {
                 Twitch.getInstance().addData(player.getUuid(), new Twitch.Data(token));
-                Twitch.getInstance().connect(token, player);
+                Twitch.getInstance().connectEventSub(token, player);
+            });
+        });
+
+        ServerPlayNetworking.registerGlobalReceiver(Subathon.id("channel"), (server, player, handler, buf, responseSender) -> {
+            String channel = buf.readString();
+            server.execute(() -> {
+                Twitch.getInstance().addData(player.getUuid(), new Twitch.Data(""));
+                Twitch.getInstance().connectIRC(channel, player);
             });
         });
         
         ServerPlayNetworking.registerGlobalReceiver(Subathon.id("disconnect"), (server, player, handler, buf, responseSender) -> {
-            String token = buf.readString();
+            ConfigsClient.ConnectionType type = buf.readEnumConstant(ConfigsClient.ConnectionType.class);
+            String key = buf.readString();
             server.execute(() -> {
-                Twitch.getInstance().disconnect(token);
+                switch (type) {
+                    case IRC -> Twitch.getInstance().disconnectIRC(player.getUuid());
+                    case EVENTSUB -> Twitch.getInstance().disconnectEventSub(key);
+                }
             });
         });
 
@@ -218,6 +241,7 @@ public class Subathon implements ModInitializer {
     public static <T extends FireballEntity> FabricEntityTypeBuilder<T> createEntity(SpawnGroup spawnGroup, EntityType.EntityFactory<T> factory) {
         return FabricEntityTypeBuilder.create(spawnGroup, factory);
     }
+
 
     static {
         PacketBufSerializer.register(Effect.class, (buf, effect) -> {

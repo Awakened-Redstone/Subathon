@@ -76,6 +76,7 @@ public class SubathonClient implements ClientModInitializer {
     public static final Set<FetchCommunityPointsSettingsQuery.CustomReward> rewards = new LinkedHashSet<>();
     public static final RuntimeRewardTextures runtimeRewardTextures = new RuntimeRewardTextures();
     public static final Map<String, Twitch.ConnectionState> connectionStatus = new HashMap<>();
+    public static ConfigsClient.ConnectionType connectionType = null;
     public static boolean authenticated = false;
 
     public static final ClientConfigs CLIENT_CONFIGS;
@@ -229,7 +230,6 @@ public class SubathonClient implements ClientModInitializer {
                     return;
                 }
 
-                Subathon.LOGGER.info("{} packet says {}", object, status.name());
                 SubathonClient.connectionStatus.put(object, status);
                 if (client.currentScreen instanceof ConnectScreen screen) {
                     FlowLayout rootComponent = screen.rootComponent();
@@ -270,6 +270,7 @@ public class SubathonClient implements ClientModInitializer {
                             resetCacheButton.active = true;
                             resetKeyButton.active = Subathon.CONFIG_DIR.resolve("auth").toFile().exists();
                             SubathonClient.authenticated = false;
+                            SubathonClient.connectionType = null;
                         } else if (status != Twitch.ConnectionState.UNKNOWN) {
                             connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.packets"));
                             connectButton.active = false;
@@ -290,9 +291,15 @@ public class SubathonClient implements ClientModInitializer {
                     var accountLabel = screen.getComponent(screen.rootComponent(), LabelComponent.class, "account");
 
                     if (SubathonClient.cache.get("accountName") != null) {
-                        accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
-                                .putAny("%user%", SubathonClient.cache.get("accountName"))
-                                .build()));
+                        if (SubathonClient.connectionType.requiresAuth()) {
+                            accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
+                                    .putAny("%user%", SubathonClient.cache.get("accountName"))
+                                    .build()));
+                        } else {
+                            accountLabel.text(Texts.of("text.subathon.screen.connect.account.authless", new MapBuilder.StringMap()
+                                    .putAny("%user%", SubathonClient.cache.get("accountName"))
+                                    .build()));
+                        }
                     } else {
                         accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
                     }

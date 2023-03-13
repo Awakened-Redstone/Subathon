@@ -49,24 +49,22 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
     protected void build(FlowLayout rootComponent) {
         Utils.load(ConfigScreen.class);
         FlowLayout items = rootComponent.childById(FlowLayout.class, "reward-items");
+        Objects.requireNonNull(items, "Configs block is required!");
 
-        ButtonComponent doneButton = rootComponent.childById(ButtonComponent.class, "done");
-        Asserts.notNull(doneButton, "doneButton");
+        ButtonComponent doneButton = getComponent(rootComponent, ButtonComponent.class, "done");
         doneButton.tooltip(Texts.of("text.subathon.screen.rewards.button.done.tooltip"));
         doneButton.onPress(button -> this.close());
 
         {
             var template = model.expandTemplate(FlowLayout.class, "set-id", new MapBuilder.StringMap().build());
 
-            FlowLayout container = template.childById(FlowLayout.class, "config-field");
-            Objects.requireNonNull(items, "Configs block is required!");
+            FlowLayout container = getComponent(template, FlowLayout.class, "config-field");
 
             textBox = createTextBox(model, SubathonTextBox::configureForUuid).optionProvider();
             textBox.text(parseSelected());
             container.child(textBox);
 
-            ButtonComponent editButton = rootComponent.childById(ButtonComponent.class, "edit");
-            Asserts.notNull(editButton, "doneButton");
+            ButtonComponent editButton = getComponent(rootComponent, ButtonComponent.class, "edit");
             editButton.tooltip(Texts.of("text.subathon.screen.rewards.button.edit.tooltip"));
             editButton.onPress(button -> {
                 if (setMenuOpen) rootComponent.removeChild(template);

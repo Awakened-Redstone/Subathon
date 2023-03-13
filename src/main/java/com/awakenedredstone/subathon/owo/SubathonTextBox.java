@@ -28,4 +28,18 @@ public class SubathonTextBox extends ConfigTextBox {
 
         return this;
     }
+
+    public ConfigTextBox configureForTwitchUsername() {
+        this.setMaxLength(24);
+        Pattern pattern = Pattern.compile("^[a-zA-Z\\d]\\w{0,24}$");
+        this.valueParser = s -> pattern.matcher(s).matches() ? s : "";
+
+        this.inputPredicate(s -> {
+            Matcher matcher = pattern.matcher(s);
+            return matcher.matches() || matcher.hitEnd() || s.isEmpty();
+        });
+        this.applyPredicate(s -> pattern.matcher(s).matches() || s.isEmpty());
+
+        return this;
+    }
 }

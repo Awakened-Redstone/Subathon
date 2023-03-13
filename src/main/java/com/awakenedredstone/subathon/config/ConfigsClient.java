@@ -3,10 +3,12 @@ package com.awakenedredstone.subathon.config;
 import blue.endless.jankson.Comment;
 import com.awakenedredstone.subathon.Subathon;
 import io.wispforest.owo.config.annotation.*;
+import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("unused")
 @Environment(EnvType.CLIENT)
@@ -15,6 +17,12 @@ public class ConfigsClient {
     @ExcludeFromScreen
     @Comment("The reward ID used, set to null (without \"s) to disable *****DO NOT TOUCH IF YOU DON'T KNOW WHAT YOU ARE DOING*****")
     public UUID rewardId = null;
+
+    @Comment("The connection type, IRC is authless")
+    public ConnectionType connectionType = ConnectionType.EVENTSUB;
+    @Comment("The username used for the IRC connection type")
+    @PredicateConstraint("validTwitchUsername")
+    public String twitchUsername = "";
 
     @Comment("Toggles showing the points on the screen")
     public boolean showValue = true;
@@ -96,13 +104,28 @@ public class ConfigsClient {
                 return value > 0;
             }
         }
-
-        public static boolean aboveZero(int value) {
-            return value > 0;
-        }
     }
 
     public static boolean aboveZero(int value) {
         return value > 0;
+    }
+
+    public static boolean validTwitchUsername(String username) {
+        return Pattern.compile("^[a-zA-Z\\d]\\w{0,24}$").matcher(username).matches();
+    }
+
+    public enum ConnectionType {
+        EVENTSUB(true),
+        IRC(false);
+
+        private final boolean requiresAuth;
+
+        ConnectionType(boolean requiresAuth) {
+            this.requiresAuth = requiresAuth;
+        }
+
+        public boolean requiresAuth() {
+            return requiresAuth;
+        }
     }
 }

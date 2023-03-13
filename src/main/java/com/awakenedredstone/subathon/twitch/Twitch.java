@@ -5,6 +5,10 @@ import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.twitch4j.TwitchClientPool;
 import com.github.twitch4j.TwitchClientPoolBuilder;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
+import com.github.twitch4j.chat.TwitchChatConnectionPool;
+import com.github.twitch4j.chat.events.channel.CheerEvent;
+import com.github.twitch4j.chat.events.channel.GiftSubscriptionsEvent;
+import com.github.twitch4j.chat.events.channel.SubscriptionEvent;
 import com.github.twitch4j.eventsub.EventSubSubscription;
 import com.github.twitch4j.eventsub.EventSubTransport;
 import com.github.twitch4j.eventsub.EventSubTransportMethod;
@@ -40,13 +44,17 @@ public final class Twitch {
     @Getter
     private static final Twitch instance = new Twitch();
 
+    @Getter
     private final TwitchClientPool clientPool;
-    //private static final TwitchChatConnectionPool chatPool;
+    @Getter
+    private final TwitchChatConnectionPool chatPool;
     //public static final TwitchEventSocketPool eventSub;
-    public final TwitchEventSocketPoolPatch eventSub;
+    @Getter
+    private final TwitchEventSocketPoolPatch eventSub;
     private final Map<String, List<EventSubSubscription>> subscriptions = new HashMap<>();
     private final Map<UUID, LinkedList<String>> subscriptionQueue = new HashMap<>();
     private final Map<UUID, Data> data = new HashMap<>();
+    private final Map<UUID, String> ircConnections = new HashMap<>();
 
     public Map<UUID, Data> getData() {
         return Collections.unmodifiableMap(data);
@@ -64,20 +72,28 @@ public final class Twitch {
                 .withEnableGraphQL(true)
                 .build();
 
-        /*chatPool = TwitchChatConnectionPool.builder()
+        chatPool = TwitchChatConnectionPool.builder()
                 .maxSubscriptionsPerConnection(20)
-                .build();*/
+                .build();
 
         var eventSubBuilder = /*TwitchEventSocketPool*/TwitchEventSocketPoolPatch.builder().helix(clientPool.getHelix());
         TwitchHelix helix = null;
         if (isDev) helix = TwitchHelixBuilder.builder().withBaseUrl("http://0.0.0.0:3000").build();
         eventSub = isDev ? eventSubBuilder.baseUrl("ws://0.0.0.0:3000").helix(helix).build() : eventSubBuilder.build();
 
-        eventSub.getEventManager().onEvent(ChannelSubscribeEvent.class, TwitchEvents::onSubscription);
-        eventSub.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class, TwitchEvents::onSubscriptionMessage);
-        eventSub.getEventManager().onEvent(ChannelSubscriptionGiftEvent.class, TwitchEvents::onSubscriptionGift);
-        eventSub.getEventManager().onEvent(ChannelCheerEvent.class, TwitchEvents::onCheer);
-        eventSub.getEventManager().onEvent(CustomRewardRedemptionAddEvent.class, TwitchEvents::onRewardRedemption);
+        eventSub.getEventManager().onEvent(ChannelSubscribeEvent.class, TwitchEvents.EventSub::onSubscription);
+        eventSub.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class, TwitchEvents.EventSub::onSubscriptionMessage);
+        eventSub.getEventManager().onEvent(ChannelSubscriptionGiftEvent.class, TwitchEvents.EventSub::onSubscriptionGift);
+        eventSub.getEventManager().onEvent(ChannelCheerEvent.class, TwitchEvents.EventSub::onCheer);
+        eventSub.getEventManager().onEvent(CustomRewardRedemptionAddEvent.class, TwitchEvents.EventSub::onRewardRedemption);
+
+        chatPool.getEventManager().onEvent(SubscriptionEvent.class, ProcessSubGift::onSubscription);
+        chatPool.getEventManager().onEvent(GiftSubscriptionsEvent.class, ProcessSubGift::onGift);
+
+        chatPool.getEventManager().onEvent(SubscriptionEvent.class, TwitchEvents.IRC::onSubscription);
+        chatPool.getEventManager().onEvent(GiftSubscriptionsEvent.class, TwitchEvents.IRC::onSubscriptionGift);
+        chatPool.getEventManager().onEvent(SpecificSubGiftEvent.class, TwitchEvents.IRC::onSpecificGift);
+        chatPool.getEventManager().onEvent(CheerEvent.class, TwitchEvents.IRC::onCheer);
 
         eventSub.getEventManager().onEvent(EventSocketSubscriptionSuccessEvent.class, this::subscriptionSuccess);
         eventSub.getEventManager().onEvent(EventSocketSubscriptionFailureEvent.class, this::subscriptionFailure);
@@ -85,7 +101,28 @@ public final class Twitch {
         eventSub.getEventManager().onEvent(EventSocketDeleteSubscriptionFailureEvent.class, this::subscriptionDeleteFailure);
     }
 
-    public void connect(String token, ServerPlayerEntity player) {
+    public void connectIRC(String channel, ServerPlayerEntity player) {
+        if (chatPool.isChannelJoined(channel) || ircConnections.putIfAbsent(player.getUuid(), channel) != null) {
+            ServerPlayNetworking.send(player, Subathon.id("error"), PacketByteBufs.create().writeString("irc.connected"));
+            return;
+        }
+
+        data.get(player.getUuid()).channelName = channel.toLowerCase();
+
+        sendStatusPacket("core", ConnectionState.LOADING, ConnectionType.CONNECT, player);
+
+        chatPool.joinChannel(channel);
+
+        sendStatusPacket("subs", ConnectionState.SUCCESS, ConnectionType.CONNECT, player);
+        sendStatusPacket("resubs", ConnectionState.SUCCESS, ConnectionType.CONNECT, player);
+        sendStatusPacket("gifts", ConnectionState.SUCCESS, ConnectionType.CONNECT, player);
+        sendStatusPacket("bits", ConnectionState.SUCCESS, ConnectionType.CONNECT, player);
+        sendStatusPacket("channel_points", ConnectionState.UNSUPPORTED, ConnectionType.CONNECT, player);
+        sendStatusPacket("core", ConnectionState.SUCCESS, ConnectionType.CONNECT, player, true);
+        ServerPlayNetworking.send(player, Subathon.id("account_name"), PacketByteBufs.create().writeString(channel));
+    }
+
+    public void connectEventSub(String token, ServerPlayerEntity player) {
         if (!subscriptionQueue.computeIfAbsent(player.getUuid(), k -> new LinkedList<>()).isEmpty()) {
             ServerPlayNetworking.send(player, Subathon.id("error"), PacketByteBufs.create().writeString("eventsub.queue"));
             return;
@@ -134,9 +171,20 @@ public final class Twitch {
         addSubscription(pool, queue, redemption, eventSub.register(auth, redemption), player);
     }
 
-    public void disconnect(String token) {
+    public void disconnectIRC(UUID uuid) {
+        if (ircConnections.containsKey(uuid)) chatPool.leaveChannel(ircConnections.remove(uuid));
+
+        ServerPlayerEntity player = Subathon.server.getPlayerManager().getPlayer(uuid);
+        sendStatusPacket("subs", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player);
+        sendStatusPacket("resubs", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player);
+        sendStatusPacket("gifts", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player);
+        sendStatusPacket("bits", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player);
+        sendStatusPacket("channel_points", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player);
+        sendStatusPacket("core", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player, true);
+    }
+
+    public void disconnectEventSub(String token) {
         new Thread(() -> {
-            Subathon.LOGGER.info("Starting disconnect");
             if (token != null && subscriptions.containsKey(token)) {
                 Optional<UUID> uuidOptional = getUuidFromToken(token);
                 ServerPlayerEntity player = Subathon.server.getPlayerManager().getPlayer(uuidOptional.orElse(null));
@@ -162,9 +210,7 @@ public final class Twitch {
                 });
 
                 if (uuidOptional.isPresent() && subscriptionQueue.get(uuidOptional.get()).isEmpty() && player != null) {
-                    PacketByteBuf buf = PacketByteBufs.create();
-                    buf.writeString("core").writeEnumConstant(ConnectionState.UNKNOWN).writeEnumConstant(ConnectionType.DISCONNECT).writeBoolean(true);
-                    ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
+                    sendStatusPacket("core", ConnectionState.UNKNOWN, ConnectionType.DISCONNECT, player, true);
                 }
 
                 subscriptions.remove(token);
@@ -173,13 +219,16 @@ public final class Twitch {
     }
 
     public void removeConnection(UUID uuid) {
-        disconnect(data.remove(uuid).token);
+        if (data.remove(uuid) != null) disconnectEventSub(data.remove(uuid).token);
+        disconnectIRC(uuid);
     }
 
     public void reset() {
         eventSub.getSubscriptions().forEach(eventSub::unregister);
+        chatPool.getChannels().forEach(chatPool::leaveChannel);
         subscriptions.clear();
         subscriptionQueue.clear();
+        ircConnections.clear();
         data.clear();
     }
 
@@ -187,7 +236,7 @@ public final class Twitch {
     public void close() {
         subscriptions.clear();
         clientPool.close();
-        //chatPool.close();
+        chatPool.close();
         eventSub.close();
     }
 
@@ -241,9 +290,13 @@ public final class Twitch {
     }
 
     private void sendStatusPacket(String conn, ConnectionState state, ConnectionType type, ServerPlayerEntity player) {
+        sendStatusPacket(conn, state, type, player, false);
+    }
+
+    private void sendStatusPacket(String conn, ConnectionState state, ConnectionType type, ServerPlayerEntity player, boolean complete) {
         if (player == null) return;
         PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeString(conn).writeEnumConstant(state).writeEnumConstant(type).writeBoolean(false);
+        buf.writeString(conn).writeEnumConstant(state).writeEnumConstant(type).writeBoolean(complete);
         ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
     }
 
@@ -286,9 +339,7 @@ public final class Twitch {
         Optional<Data> data;
         if (queue.isEmpty() && (data = getDataFromUuid(uuid)).isPresent()) {
             boolean isUserConnected = (/*(TwitchEventSocketPoolAccessor) (Object)*/ eventSub).getPoolByUserId().containsKey(data.get().channelId);
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeString("core").writeEnumConstant(isUserConnected ? ConnectionState.SUCCESS : ConnectionState.FAILURE).writeEnumConstant(ConnectionType.CONNECT).writeBoolean(true);
-            ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
+            sendStatusPacket("core", isUserConnected ? ConnectionState.SUCCESS : ConnectionState.FAILURE, ConnectionType.CONNECT, player, true);
 
             if (!isUserConnected) {
                 Subathon.LOGGER.warn("Twitch connection of {} failed, final connection check failed!", player.getDisplayName().getString());
@@ -329,9 +380,7 @@ public final class Twitch {
         informConnection(subscription, state, ConnectionType.DISCONNECT, player);
 
         if (queue.isEmpty()) {
-            PacketByteBuf buf = PacketByteBufs.create();
-            buf.writeString("core").writeEnumConstant(ConnectionState.OFFLINE).writeEnumConstant(ConnectionType.DISCONNECT).writeBoolean(true);
-            ServerPlayNetworking.send(player, Subathon.id("twitch_status"), buf);
+            sendStatusPacket("core", ConnectionState.OFFLINE, ConnectionType.DISCONNECT, player, true);
         }
     }
 
@@ -360,6 +409,10 @@ public final class Twitch {
         return data.entrySet().stream().filter(v -> v.getValue().channelId.equals(id)).map(Map.Entry::getKey).findFirst();
     }
 
+    Optional<UUID> getUuidFromChannelName(String id) {
+        return data.entrySet().stream().filter(v -> v.getValue().channelName.equals(id.toLowerCase())).map(Map.Entry::getKey).findFirst();
+    }
+
     Optional<UUID> getUuidFromToken(String id) {
         return data.entrySet().stream().filter(v -> v.getValue().token.equals(id)).map(Map.Entry::getKey).findFirst();
     }
@@ -377,7 +430,8 @@ public final class Twitch {
         SUCCESS,
         FAILURE,
         UNKNOWN,
-        LOADING
+        LOADING,
+        UNSUPPORTED
     }
 
     public enum ConnectionType {
@@ -396,7 +450,7 @@ public final class Twitch {
         }
 
         public void printData() {
-            Subathon.LOGGER.error("Twitch$Data info:\nReward ID: {}\nChannel ID:{}\nChannel name:{}", rewardId, channelId, channelName);
+            Subathon.LOGGER.error("Twitch$Data info:\nReward ID: {}\nChannel ID: {}\nChannel name: {}", rewardId, channelId, channelName);
         }
 
         public Optional<UUID> getRewardId() {

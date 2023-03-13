@@ -2,16 +2,23 @@ package com.awakenedredstone.subathon.ui;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.SubathonClient;
+import com.awakenedredstone.subathon.config.ConfigsClient;
+import com.awakenedredstone.subathon.owo.SubathonTextBox;
 import com.awakenedredstone.subathon.twitch.AuthUtils;
 import com.awakenedredstone.subathon.twitch.Twitch;
 import com.awakenedredstone.subathon.util.FileUtil;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
+import com.awakenedredstone.subathon.util.Utils;
+import io.wispforest.owo.config.ui.ConfigScreen;
+import io.wispforest.owo.config.ui.OptionComponentFactory;
+import io.wispforest.owo.config.ui.component.ConfigTextBox;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.Surface;
+import io.wispforest.owo.ui.parsing.UIModel;
 import io.wispforest.owo.ui.util.Drawer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -20,8 +27,11 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import okhttp3.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.Asserts;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,14 +53,21 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
     @Override
     @SuppressWarnings({"SpellCheckingInspection", "DuplicatedCode"})
     protected void build(FlowLayout rootComponent) {
+        Utils.load(ConfigScreen.class);
         Asserts.notNull(client, "client");
 
         var accountLabel = getComponent(rootComponent, LabelComponent.class, "account");
 
         if (SubathonClient.authenticated) {
-            accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
-                    .putAny("%user%", SubathonClient.cache.get("accountName"))
-                    .build()));
+            if (SubathonClient.connectionType.requiresAuth()) {
+                accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
+                        .putAny("%user%", SubathonClient.cache.get("accountName"))
+                        .build()));
+            } else {
+                accountLabel.text(Texts.of("text.subathon.screen.connect.account.authless", new MapBuilder.StringMap()
+                        .putAny("%user%", SubathonClient.cache.get("accountName"))
+                        .build()));
+            }
         } else {
             accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
         }
@@ -83,36 +100,75 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         reconnectButton.active = false;
         reconnectButton.tooltip(Text.literal("Please use disconnect and connect for now"));
 
+        FlowLayout twitchUsername = model.expandTemplate(FlowLayout.class, "twitch-username", new HashMap<>());
+        ButtonComponent confirmButton = getComponent(twitchUsername, ButtonComponent.class, "confirm");
+        ButtonComponent cancelButton = getComponent(twitchUsername, ButtonComponent.class, "cancel");
+        SubathonTextBox usernameTextBox = createTextBox(model, SubathonTextBox::configureForTwitchUsername).optionProvider();
+        usernameTextBox.text(SubathonClient.CLIENT_CONFIGS.twitchUsername());
+        twitchUsername.child(0, usernameTextBox);
+
+        confirmButton.onPress(button -> {
+            rootComponent.removeChild(twitchUsername);
+            String channel = usernameTextBox.getText();
+            SubathonClient.CLIENT_CONFIGS.twitchUsername(channel);
+            button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
+            ClientPlayNetworking.send(Subathon.id("channel"), PacketByteBufs.create().writeString(channel));
+            SubathonClient.connectionType = ConfigsClient.ConnectionType.IRC;
+        });
+
+        cancelButton.onPress(button -> {
+            rootComponent.removeChild(twitchUsername);
+            button.active = true;
+            resetKeyButton.active = true;
+            resetCacheButton.active = true;
+        });
+
         Consumer<ButtonComponent> connect = button -> {
             button.active = false;
-            resetCacheButton.active = false;
             resetKeyButton.active = false;
+            resetCacheButton.active = false;
             if (this.client == null || this.client.player == null) return;
 
-            //region AUTHENTICATION
+            //region CONNECTION
             if (SubathonClient.authenticated) return;
 
-            Optional<String> cachedKey = FileUtil.readFile(Subathon.CONFIG_DIR.resolve("auth").toFile());
+            switch (SubathonClient.CLIENT_CONFIGS.connectionType()) {
+                case EVENTSUB -> {
+                    Optional<String> cachedKey = FileUtil.readFile(Subathon.CONFIG_DIR.resolve("auth").toFile());
 
-            if (cachedKey.isEmpty()) {
-                AuthUtils.requestAuth().whenCompleteAsync((authResult, throwable) -> {
-                    if (authResult.error() != AuthUtils.AuthResult.ErrorType.NONE || authResult.result().isEmpty()) {
-                        if (authResult.error() == AuthUtils.AuthResult.ErrorType.INVALID) return;
-                        button.setMessage(Text.translatable("text.subathon.screen.connect.button.failed"));
-                        //TODO: finish this
+                    if (cachedKey.isEmpty()) {
+                        AuthUtils.requestAuth().whenCompleteAsync((authResult, throwable) -> {
+                            if (authResult.error() != AuthUtils.AuthResult.ErrorType.NONE || authResult.result().isEmpty()) {
+                                if (authResult.error() == AuthUtils.AuthResult.ErrorType.INVALID) return;
+                                button.setMessage(Text.translatable("text.subathon.screen.connect.button.failed"));
+                                //TODO: finish this
+                            } else {
+                                String authKey = authResult.result().get();
+                                FileUtil.writeFile(Subathon.CONFIG_DIR.resolve("auth").toFile(), authKey);
+                                button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
+                                ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(authKey));
+                                SubathonClient.cache.put("token", authKey);
+                                SubathonClient.connectionType = ConfigsClient.ConnectionType.EVENTSUB;
+                            }
+                        });
                     } else {
-                        String authKey = authResult.result().get();
-                        FileUtil.writeFile(Subathon.CONFIG_DIR.resolve("auth").toFile(), authKey);
+                        SubathonClient.cache.put("token", cachedKey.get());
                         button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
-                        ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(authKey));
-                        SubathonClient.cache.put("token", authKey);
+                        ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(cachedKey.get()));
                     }
-                });
-            } else {
-                SubathonClient.cache.put("token", cachedKey.get());
-                ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(cachedKey.get()));
-                button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
+                }
+                case IRC -> {
+                    String channel = SubathonClient.CLIENT_CONFIGS.twitchUsername();
+                    if (StringUtils.isBlank(channel)) {
+                        rootComponent.child(twitchUsername);
+                    } else {
+                        button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
+                        ClientPlayNetworking.send(Subathon.id("channel"), PacketByteBufs.create().writeString(channel));
+                        SubathonClient.connectionType = ConfigsClient.ConnectionType.IRC;
+                    }
+                }
             }
+
             //endregion
 
             //region GET REWARDS
@@ -158,14 +214,16 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                 });
             });
 
-            if (SubathonClient.rewards.isEmpty()) {
-                Twitch.getInstance().getChannelCustomRewards(SubathonClient.cache.get("token")).whenCompleteAsync((customRewards, throwable) -> {
-                    SubathonClient.rewards.addAll(customRewards);
+            if (SubathonClient.CLIENT_CONFIGS.connectionType().requiresAuth()) {
+                if (SubathonClient.rewards.isEmpty()) {
+                    Twitch.getInstance().getChannelCustomRewards(SubathonClient.cache.get("token")).whenCompleteAsync((customRewards, throwable) -> {
+                        SubathonClient.rewards.addAll(customRewards);
+                        new Thread(getRewards).start();
+                    });
+                } else {
+                    SubathonClient.runtimeRewardTextures.clear();
                     new Thread(getRewards).start();
-                });
-            } else {
-                SubathonClient.runtimeRewardTextures.clear();
-                new Thread(getRewards).start();
+                }
             }
             //endregion
         };
@@ -182,9 +240,17 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                 ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeUUID(rewardId)));
             }
 
-            if (SubathonClient.cache.get("token") != null) {
-                ClientPlayNetworking.send(Subathon.id("disconnect"), PacketByteBufs.create().writeString(SubathonClient.cache.get("token")));
-                SubathonClient.cache.remove("token");
+            if (SubathonClient.connectionType != null) {
+                PacketByteBuf buf = PacketByteBufs.create().writeEnumConstant(SubathonClient.connectionType);
+                if (SubathonClient.connectionType.requiresAuth()) {
+                    if (SubathonClient.cache.get("token") != null) {
+                        buf.writeString(SubathonClient.cache.get("token"));
+                        SubathonClient.cache.remove("token");
+                    }
+                } else {
+                    buf.writeString("");
+                }
+                ClientPlayNetworking.send(Subathon.id("disconnect"), buf);
             }
         };
 
@@ -216,6 +282,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             disconnect.run();
             FileUtil.delete(Subathon.CONFIG_DIR.resolve("cache"));
             SubathonClient.CLIENT_CONFIGS.rewardId(null);
+            SubathonClient.CLIENT_CONFIGS.twitchUsername("");
             SubathonClient.runtimeRewardTextures.clear();
             SubathonClient.rewards.clear();
             SubathonClient.cache.clear();
@@ -245,20 +312,20 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         }
         //endregion
 
+        SubathonClient.connectionStatus.forEach((object, status) -> {
+            FlowLayout item = getComponent(items, FlowLayout.class, "connect." + object);
+            assert item != null;
+            LabelComponent statusCompent = getComponent(item, LabelComponent.class, "status");
+            assert statusCompent != null;
+            statusCompent.text(Text.translatable("text.subathon.screen.connect." + status.name().toLowerCase()));
+        });
+
         //region UPDATE GUI IF CONNECTED
         if (SubathonClient.authenticated) {
             resetCacheButton.active = false;
             resetKeyButton.active = false;
             connectButton.active = false;
             connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.connected"));
-
-            SubathonClient.connectionStatus.forEach((object, status) -> {
-                FlowLayout item = getComponent(items, FlowLayout.class, "connect." + object);
-                assert item != null;
-                LabelComponent statusCompent = getComponent(item, LabelComponent.class, "status");
-                assert statusCompent != null;
-                statusCompent.text(Text.translatable("text.subathon.screen.connect." + status.name().toLowerCase()));
-            });
         }
         //endregion
 
@@ -295,5 +362,21 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
 
     public UUID safeUUID(UUID uuid) {
         return uuid == null ? new UUID(0, 0) : uuid;
+    }
+
+    public OptionComponentFactory.Result<FlowLayout, SubathonTextBox> createTextBox(UIModel model, Consumer<SubathonTextBox> processor) {
+        var optionComponent = model.expandTemplate(FlowLayout.class, "text-box-config-option",
+                new MapBuilder.StringMap()
+                        .put("config-option-name", "text.config.subathon/client.option.twitchUsername")
+                        .putAny("config-option-value", SubathonClient.CLIENT_CONFIGS.twitchUsername())
+                        .build());
+
+        var valueBox = getComponent(optionComponent, SubathonTextBox.class, "value-box");
+
+        processor.accept(valueBox);
+
+        optionComponent.removeChild(valueBox);
+
+        return new OptionComponentFactory.Result<>(optionComponent, valueBox);
     }
 }

@@ -48,7 +48,7 @@
         </flow-layout>
     </components>
     <templates>
-        <reward>
+        <notification>
             <flow-layout direction="horizontal" id="notification.{{id}}">
                 <children>
                     <sprite atlas="minecraft:textures/atlas/blocks.png" sprite="subathon:subathon/{{type}}">
@@ -77,8 +77,9 @@
                 </padding>
                 <margins>
                     <top>0</top>
+                    <right>3</right>
                 </margins>
             </flow-layout>
-        </reward>
+        </notification>
     </templates>
 </owo-ui>
