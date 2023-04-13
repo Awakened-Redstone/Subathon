@@ -1,6 +1,5 @@
 package com.awakenedredstone.subathon.core;
 
-import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.core.effect.Effect;
 import com.awakenedredstone.subathon.registry.SubathonRegistries;
 

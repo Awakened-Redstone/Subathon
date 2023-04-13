@@ -78,8 +78,8 @@ public final class Twitch {
 
         var eventSubBuilder = /*TwitchEventSocketPool*/TwitchEventSocketPoolPatch.builder().helix(clientPool.getHelix());
         TwitchHelix helix = null;
-        if (isDev) helix = TwitchHelixBuilder.builder().withBaseUrl("http://0.0.0.0:3000").build();
-        eventSub = isDev ? eventSubBuilder.baseUrl("ws://0.0.0.0:3000").helix(helix).build() : eventSubBuilder.build();
+        if (isDev) helix = TwitchHelixBuilder.builder().withBaseUrl("http://localhost:3000").build();
+        eventSub = isDev ? eventSubBuilder.baseUrl("ws://localhost:3000").helix(helix).build() : eventSubBuilder.baseUrl("wss://eventsub.wss.twitch.tv/ws").build();
 
         eventSub.getEventManager().onEvent(ChannelSubscribeEvent.class, TwitchEvents.EventSub::onSubscription);
         eventSub.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class, TwitchEvents.EventSub::onSubscriptionMessage);

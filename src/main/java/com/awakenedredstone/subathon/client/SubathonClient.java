@@ -15,8 +15,8 @@ import com.awakenedredstone.subathon.owo.SubathonTextBox;
 import com.awakenedredstone.subathon.registry.EntityRegistry;
 import com.awakenedredstone.subathon.twitch.EventMessages;
 import com.awakenedredstone.subathon.twitch.Twitch;
-import com.awakenedredstone.subathon.ui.ConnectScreen;
-import com.awakenedredstone.subathon.ui.NotificationsScreen;
+import com.awakenedredstone.subathon.client.ui.ConnectScreen;
+import com.awakenedredstone.subathon.client.ui.NotificationsScreen;
 import com.awakenedredstone.subathon.util.ClientUtils;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
@@ -61,7 +61,7 @@ import static com.awakenedredstone.subathon.Subathon.spriteId;
 
 @Environment(EnvType.CLIENT)
 public class SubathonClient implements ClientModInitializer {
-    private boolean showData = false;
+    private boolean compatibleServer = false;
 
     public static final List<Notification> messages = new ArrayList<>();
     public static final Queue<Notification> quickMessages = new LinkedList<>();
@@ -107,12 +107,14 @@ public class SubathonClient implements ClientModInitializer {
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (connectKeybind.wasPressed()) {
-                client.setScreen(new ConnectScreen());
-            }
+            if (compatibleServer) {
+                while (connectKeybind.wasPressed()) {
+                    client.setScreen(new ConnectScreen());
+                }
 
-            while (notificationsKeybind.wasPressed()) {
-                client.setScreen(new NotificationsScreen());
+                while (notificationsKeybind.wasPressed()) {
+                    client.setScreen(new NotificationsScreen());
+                }
             }
 
             //while (devKeybind.wasPressed()) {}
@@ -142,26 +144,26 @@ public class SubathonClient implements ClientModInitializer {
         });
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            if (showData && client.world != null) {
+            if (client.world != null) {
                 if (model == null) model = UIModelLoader.getPreloaded(id("notifications"));
 
                 FlowLayout parent = hudRenderCache.get("subathon-notifications-parent");
                 FlowLayout pointsParent = hudRenderCache.get("subathon-points-parent");
 
-                if (pointsParent != null && client.player != null && CLIENT_CONFIGS.showValue()) {
+                if (pointsParent != null && client.player != null && CLIENT_CONFIGS.showValue() && compatibleServer) {
                     BaseParentComponentDuck parentDuck = (BaseParentComponentDuck) pointsParent;
                     if (!parentDuck.subathon$render()) parentDuck.subathon$render(true);
                     pointsParent.childById(LabelComponent.class, "subathon.points")
                             .text(Texts.of("text.subathon.points", new MapBuilder.StringMap()
                                     .putAny("%points%", ComponentManager.getComponent(client.world, client.player).getPoints())
                                     .build()));
-                } else if (pointsParent != null && !CLIENT_CONFIGS.showValue()) {
+                } else if (pointsParent != null && (!CLIENT_CONFIGS.showValue() || !compatibleServer)) {
                     BaseParentComponentDuck parentDuck = (BaseParentComponentDuck) pointsParent;
                     if (parentDuck.subathon$render()) parentDuck.subathon$render(false);
                     pointsParent.childById(LabelComponent.class, "subathon.points").text(Text.empty());
                 }
 
-                if (parent == null) return;
+                if (parent == null || !compatibleServer) return;
 
                 quickMessageTimers.removeIf(timer -> !parent.children().contains(timer.component) || timer.timer < -20);
 
@@ -191,10 +193,10 @@ public class SubathonClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(Subathon.id("mod_version"), (client, handler, buf, responseSender) -> {
             String serverVersion = buf.readString();
             client.execute(() -> {
-                showData = true;
+                compatibleServer = true;
                 @SuppressWarnings("OptionalGetWithoutIsPresent")
                 String version = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().getMetadata().getVersion().getFriendlyString();
-                if (serverVersion.equals(version)) this.showData = true;
+                if (serverVersion.equals(version)) this.compatibleServer = true;
                 else {
                     SystemToast systemToast = SystemToast.create(client, SystemToast.Type.NARRATOR_TOGGLE,
                             Text.translatable("toast.subathon.warning.mismatch_version.title"),

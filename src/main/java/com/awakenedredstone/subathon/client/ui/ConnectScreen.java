@@ -1,4 +1,4 @@
-package com.awakenedredstone.subathon.ui;
+package com.awakenedredstone.subathon.client.ui;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.SubathonClient;
@@ -12,7 +12,6 @@ import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.Utils;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import io.wispforest.owo.config.ui.OptionComponentFactory;
-import io.wispforest.owo.config.ui.component.ConfigTextBox;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
@@ -29,7 +28,6 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.Asserts;
@@ -51,7 +49,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
     }
 
     @Override
-    @SuppressWarnings({"SpellCheckingInspection", "DuplicatedCode"})
+    @SuppressWarnings({"DuplicatedCode"})
     protected void build(FlowLayout rootComponent) {
         Utils.load(ConfigScreen.class);
         Asserts.notNull(client, "client");

@@ -1,6 +1,6 @@
-package com.awakenedredstone.subathon.ui.configure;
+package com.awakenedredstone.subathon.client.ui.configure;
 
-import com.awakenedredstone.subathon.ui.BaseScreen;
+import com.awakenedredstone.subathon.client.ui.BaseScreen;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
@@ -19,7 +19,7 @@ import static com.awakenedredstone.subathon.client.SubathonClient.CLIENT_CONFIGS
 @Environment(EnvType.CLIENT)
 public class MainConfigScreen extends BaseScreen<FlowLayout> {
 
-    public MainConfigScreen(Screen parent) {
+    public MainConfigScreen() {
         super(FlowLayout.class, "config_screen");
     }
 

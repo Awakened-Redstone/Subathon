@@ -1,4 +1,4 @@
-package com.awakenedredstone.subathon.ui;
+package com.awakenedredstone.subathon.client.ui;
 
 import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.twitch.EventMessages;

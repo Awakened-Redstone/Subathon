@@ -27,10 +27,10 @@ repositories {
     mavenLocal()
     maven { url "https://maven.terraformersmc.com/releases/" } //ModMenu
     maven { url "https://maven.wispforest.io" } //owo-lib
-    maven { url "https://maven.awakenedredstone.com"} //Twitch4J (Fabric)
+    maven { url "https://maven.awakenedredstone.com" } //Twitch4J (Fabric)
     maven { url "https://maven.nucleoid.xyz/" } //stimuli && placeholder api
     maven { url "https://ladysnake.jfrog.io/artifactory/mods" } //cardinal-components
-    maven { url 'https://jitpack.io' } //Mixin extras
+    maven { url "https://jitpack.io" } //Mixin extras
     maven {
         name = "Modrinth"
         url = "https://api.modrinth.com/maven"

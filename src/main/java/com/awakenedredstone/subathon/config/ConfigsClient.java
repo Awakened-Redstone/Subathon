@@ -3,7 +3,6 @@ package com.awakenedredstone.subathon.config;
 import blue.endless.jankson.Comment;
 import com.awakenedredstone.subathon.Subathon;
 import io.wispforest.owo.config.annotation.*;
-import lombok.Getter;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 

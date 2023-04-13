@@ -1,13 +1,12 @@
-package com.awakenedredstone.subathon.ui.configure;
+package com.awakenedredstone.subathon.client.ui.configure;
 
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.client.ui.BaseScreen;
 import com.awakenedredstone.subathon.core.effect.Effect;
 import com.awakenedredstone.subathon.duck.owo.ComponentDuck;
 import com.awakenedredstone.subathon.mixin.owo.BaseComponentMixin;
 import com.awakenedredstone.subathon.registry.SubathonRegistries;
-import com.awakenedredstone.subathon.ui.BaseScreen;
 import com.awakenedredstone.subathon.util.MapBuilder;
-import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.Utils;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import io.wispforest.owo.config.ui.OptionComponentFactory;

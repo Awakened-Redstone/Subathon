@@ -1,4 +1,4 @@
-package com.awakenedredstone.subathon.ui;
+package com.awakenedredstone.subathon.client.ui;
 
 import com.awakenedredstone.subathon.Subathon;
 import io.wispforest.owo.ui.base.BaseUIModelScreen;

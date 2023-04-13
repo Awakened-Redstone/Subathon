@@ -1,7 +1,7 @@
 package com.awakenedredstone.subathon.core.effect;
 
 import com.awakenedredstone.subathon.Subathon;
-import com.awakenedredstone.subathon.ui.configure.PotionWeightsScreen;
+import com.awakenedredstone.subathon.client.ui.configure.PotionWeightsScreen;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.container.FlowLayout;

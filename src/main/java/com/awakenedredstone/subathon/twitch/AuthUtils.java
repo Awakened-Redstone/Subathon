@@ -1,6 +1,6 @@
 package com.awakenedredstone.subathon.twitch;
 
-import com.awakenedredstone.subathon.ui.WarningScreen;
+import com.awakenedredstone.subathon.client.ui.WarningScreen;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import net.fabricmc.api.EnvType;

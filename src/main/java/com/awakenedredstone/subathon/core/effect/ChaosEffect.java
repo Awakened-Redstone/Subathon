@@ -3,7 +3,7 @@ package com.awakenedredstone.subathon.core.effect;
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.config.component.MobListOptionContainer;
 import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
-import com.awakenedredstone.subathon.ui.configure.ChaosWeightsScreen;
+import com.awakenedredstone.subathon.client.ui.configure.ChaosWeightsScreen;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
 import io.wispforest.owo.config.Option;

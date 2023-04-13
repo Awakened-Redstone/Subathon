@@ -1,4 +1,4 @@
-package com.awakenedredstone.subathon.ui;
+package com.awakenedredstone.subathon.client.ui;
 
 import io.wispforest.owo.ui.container.FlowLayout;
 import net.fabricmc.api.EnvType;

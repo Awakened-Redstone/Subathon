@@ -18,21 +18,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class TwitchEventSocketMixin {
     @Shadow(remap = false) @Final private @NotNull EventManager eventManager;
 
+    @SuppressWarnings("InvalidInjectorMethodSignature")
     @Inject(method = "lambda$close$3", at = @At(value = "INVOKE", target = "Lcom/github/twitch4j/helix/TwitchHelix;deleteEventSubSubscription(Ljava/lang/String;Ljava/lang/String;)Lcom/netflix/hystrix/HystrixCommand;", shift = At.Shift.AFTER), remap = false)
     private void subathon$addDeleteSubSuccessEvent0(@Coerce EventSubSubscription sub, CallbackInfo ci) {
         eventManager.publish(new EventSocketDeleteSubscriptionSuccessEvent(sub, (TwitchEventSocket) (Object) this));
-        Subathon.LOGGER.info("Triggering event of {} from close", sub.getRawType());
+        Subathon.LOGGER.debug("Triggering event of {} from close", sub.getRawType());
     }
 
     @Inject(method = "lambda$unregister$5", at = @At(value = "INVOKE", target = "Lcom/github/twitch4j/helix/TwitchHelix;deleteEventSubSubscription(Ljava/lang/String;Ljava/lang/String;)Lcom/netflix/hystrix/HystrixCommand;", shift = At.Shift.AFTER), remap = false)
     private void subathon$addDeleteSubSuccessEvent1(EventSubSubscription sub, CallbackInfo ci) {
         eventManager.publish(new EventSocketDeleteSubscriptionSuccessEvent(sub, (TwitchEventSocket) (Object) this));
-        Subathon.LOGGER.info("Triggering event of {} from unregister", sub.getRawType());
+        Subathon.LOGGER.debug("Triggering event of {} from unregister", sub.getRawType());
     }
 
     @Inject(method = "lambda$onInitialConnection$6", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;trace(Ljava/lang/String;Ljava/lang/Object;)V", shift = At.Shift.AFTER), remap = false)
     private void subathon$addDeleteSubSuccessEvent2(EventSubSubscription old, String websocketId, CallbackInfo ci) {
         eventManager.publish(new EventSocketDeleteSubscriptionSuccessEvent(old, (TwitchEventSocket) (Object) this));
-        Subathon.LOGGER.info("Triggering event of {} from onInitialConnection", old.getRawType());
+        Subathon.LOGGER.debug("Triggering event of {} from onInitialConnection", old.getRawType());
     }
 }
