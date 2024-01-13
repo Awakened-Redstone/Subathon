@@ -20,6 +20,10 @@ import java.util.UUID;
 
 public class RandomIncompatibleEnchant extends Chaos {
 
+    public RandomIncompatibleEnchant() {
+        super(30);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();
@@ -37,7 +41,7 @@ public class RandomIncompatibleEnchant extends Chaos {
             tries = 12;
             do {
                 if (tries-- <= 0) return false;
-                Optional<RegistryEntry.Reference<Enchantment>> optional = Registries.ENCHANTMENT.getRandom(player.world.random);
+                Optional<RegistryEntry.Reference<Enchantment>> optional = Registries.ENCHANTMENT.getRandom(player.getWorld().getRandom());
                 if (optional.isEmpty()) return false;
                 enchant = optional.get().value();
             } while (enchant.isAcceptableItem(stack));

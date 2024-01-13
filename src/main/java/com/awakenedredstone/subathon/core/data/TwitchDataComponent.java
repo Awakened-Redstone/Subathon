@@ -2,6 +2,7 @@ package com.awakenedredstone.subathon.core.data;
 
 import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.core.DataManager;
+import com.awakenedredstone.subathon.registry.SubathonCriteria;
 import dev.onyxstudios.cca.api.v3.component.ComponentKey;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;

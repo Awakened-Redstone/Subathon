@@ -7,16 +7,13 @@ import com.awakenedredstone.subathon.registry.SubathonRegistries;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.Utils;
-import com.awakenedredstone.subathon.util.WeightedRandom;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import io.wispforest.owo.config.ui.OptionComponentFactory;
 import io.wispforest.owo.config.ui.component.ConfigTextBox;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.Surface;
 import io.wispforest.owo.ui.parsing.UIModel;
-import io.wispforest.owo.ui.util.Drawer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
@@ -41,8 +38,9 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
     protected void build(FlowLayout rootComponent) {
         Utils.load(ConfigScreen.class);
 
-        Subathon.chaosRandom = new WeightedRandom<>();
-        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
+        Subathon.getInstance().chaosRandom.reset();
+        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.getInstance().chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
+
 
         FlowLayout items = rootComponent.childById(FlowLayout.class, "effects");
         Objects.requireNonNull(items, "Effects block is required!");
@@ -54,45 +52,21 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
 
         ButtonComponent refreshButton = rootComponent.childById(ButtonComponent.class, "refresh");
         Asserts.notNull(refreshButton, "refreshButton");
-        refreshButton.onPress(button -> {
-            Subathon.chaosRandom = new WeightedRandom<>();
-            Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
-            
-            items.children().stream().filter(v -> v.id() != null).forEach(component -> {
-                Identifier identifier = new Identifier(component.id());
-                Chaos chaos = SubathonRegistries.CHAOS.get(identifier);
-                String translationKey = "text.subathon.chaos." + identifier.toTranslationKey();
-                String percentageString = String.format("%.5g", Subathon.chaosRandom.percentage(chaos)) + "%";
-                String weightString = Subathon.chaosRandom.getWeight(chaos) + "/" + Subathon.chaosRandom.getTotal();
-                if (I18n.hasTranslation(translationKey + ".tooltip")) {
-                    List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Texts.of(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
-                            .stream().map(TooltipComponent::of).toList());
-                    tooltip.add(TooltipComponent.of(Text.empty().asOrderedText()));
-                    tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
-                    tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
-                    component.tooltip(tooltip);
-                } else {
-                    List<TooltipComponent> tooltip = new ArrayList<>();
-                    tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
-                    tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
-                    component.tooltip(tooltip);
-                }
-            });
-        });
+        refreshButton.onPress(button -> refreshWeights(items));
 
         SubathonRegistries.CHAOS.stream().forEach(chaos -> {
             Identifier identifier = chaos.getIdentifier();
             String translationKey = "text.subathon.chaos." + identifier.toTranslationKey();
             var template = model.expandTemplate(FlowLayout.class, "effect", new MapBuilder.StringMap()
-                    .put("translation", translationKey)
-                    .put("namespace", identifier.getNamespace())
-                    .put("path", identifier.getPath())
-                    .putAny("identifier", identifier)
-                    .build());
+                .put("translation", translationKey)
+                .put("namespace", identifier.getNamespace())
+                .put("path", identifier.getPath())
+                .putAny("identifier", identifier)
+                .build());
 
-            template.mouseEnter().subscribe(() -> template.surface((matrices, component1) -> Drawer.drawGradientRect(matrices,
-                    component1.x(), component1.y(), component1.width(), component1.height(),
-                    0xC0101010, 0x00101010, 0x00101010, 0xC0101010
+            template.mouseEnter().subscribe(() -> template.surface((context, component1) -> context.drawGradientRect(
+                component1.x(), component1.y(), component1.width(), component1.height(),
+                0xC0101010, 0x00101010, 0x00101010, 0xC0101010
             )));
 
             template.mouseLeave().subscribe(() -> template.surface(Surface.BLANK));
@@ -100,13 +74,13 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
             FlowLayout container = template.childById(FlowLayout.class, "config-field");
             Objects.requireNonNull(items, "Configs block is required!");
 
-            container.child(createTextBox(model, identifier, textBox -> textBox.configureForNumber(Integer.class)).optionProvider());
+            container.child(createTextBox(model, identifier, textBox -> textBox.configureForNumber(Integer.class)).baseComponent());
 
-            String percentageString = String.format("%.5g", Subathon.chaosRandom.percentage(chaos)) + "%";
-            String weightString = Subathon.chaosRandom.getWeight(chaos) + "/" + Subathon.chaosRandom.getTotal();
+            String percentageString = String.format("%.5g", Subathon.getInstance().chaosRandom.percentage(chaos)) + "%";
+            String weightString = Subathon.getInstance().chaosRandom.getWeight(chaos) + "/" + Subathon.getInstance().chaosRandom.getTotal();
             if (I18n.hasTranslation(translationKey + ".tooltip")) {
                 List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Texts.of(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
-                        .stream().map(TooltipComponent::of).toList());
+                    .stream().map(TooltipComponent::of).toList());
                 tooltip.add(TooltipComponent.of(Text.empty().asOrderedText()));
                 tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
                 tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
@@ -127,32 +101,35 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
     @Override
     public void close() {
         Subathon.COMMON_CONFIGS.save();
-        Subathon.chaosRandom = new WeightedRandom<>();
-        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
+        Subathon.getInstance().chaosRandom.reset();
+        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.getInstance().chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
         super.close();
     }
 
-    public static OptionComponentFactory.Result<FlowLayout, ConfigTextBox> createTextBox(UIModel model, Identifier identifier, Consumer<ConfigTextBox> processor) {
+    public OptionComponentFactory.Result<FlowLayout, ConfigTextBox> createTextBox(UIModel model, Identifier identifier, Consumer<ConfigTextBox> processor) {
+        Chaos chaos = SubathonRegistries.CHAOS.get(identifier);
+
         var optionComponent = model.expandTemplate(FlowLayout.class, "text-box-config-option",
-                new MapBuilder.StringMap()
-                        .put("config-option-name", "text.config.subathon/mode.option.weight")
-                        .putAny("config-option-value", Subathon.COMMON_CONFIGS.chaosWeights().getOrDefault(identifier, 1))
-                        .build());
+            new MapBuilder.StringMap()
+                .putAny("config-option-value", Subathon.COMMON_CONFIGS.chaosWeights().getOrDefault(identifier, chaos.getDefaultWeight()))
+                .build());
 
         var valueBox = optionComponent.childById(ConfigTextBox.class, "value-box");
         var resetButton = optionComponent.childById(ButtonComponent.class, "reset-button");
 
-        resetButton.active = !valueBox.getText().equals("1");
+        resetButton.active = !valueBox.getText().equals(String.valueOf(chaos.getDefaultWeight()));
         resetButton.onPress(button -> {
-            valueBox.setText("1");
+            valueBox.setText(String.valueOf(chaos.getDefaultWeight()));
             button.active = false;
         });
 
         valueBox.onChanged().subscribe(s -> {
-            resetButton.active = !s.equals("1");
+            resetButton.active = !s.equals(String.valueOf(chaos.getDefaultWeight()));
             try {
                 Subathon.COMMON_CONFIGS.chaosWeights().put(identifier, Integer.parseInt(s));
-            } catch (Exception ignored) {}
+                refreshWeights(getComponent(FlowLayout.class, "effects"));
+            } catch (Exception ignored) {
+            }
         });
 
         processor.accept(valueBox);
@@ -161,10 +138,30 @@ public class ChaosWeightsScreen extends BaseScreen<FlowLayout> {
 
         return new OptionComponentFactory.Result<>(optionComponent, valueBox);
     }
-    
-    private boolean isOver(Component component) {
-        double clientMouseX = client.mouse.getX() / client.getWindow().getScaleFactor();
-        double clientMouseY = client.mouse.getY() / client.getWindow().getScaleFactor();
-        return component.isInBoundingBox(clientMouseX, clientMouseY);
+
+    private void refreshWeights(FlowLayout items) {
+        Subathon.getInstance().chaosRandom.reset();
+        Subathon.COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> Subathon.getInstance().chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
+
+        items.children().stream().filter(v -> v.id() != null).forEach(component -> {
+            Identifier identifier = new Identifier(component.id());
+            Chaos chaos = SubathonRegistries.CHAOS.get(identifier);
+            String translationKey = "text.subathon.chaos." + identifier.toTranslationKey();
+            String percentageString = String.format("%.5g", Subathon.getInstance().chaosRandom.percentage(chaos)) + "%";
+            String weightString = Subathon.getInstance().chaosRandom.getWeight(chaos) + "/" + Subathon.getInstance().chaosRandom.getTotal();
+            if (I18n.hasTranslation(translationKey + ".tooltip")) {
+                List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Texts.of(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
+                    .stream().map(TooltipComponent::of).toList());
+                tooltip.add(TooltipComponent.of(Text.empty().asOrderedText()));
+                tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
+                tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
+                component.tooltip(tooltip);
+            } else {
+                List<TooltipComponent> tooltip = new ArrayList<>();
+                tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
+                tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
+                component.tooltip(tooltip);
+            }
+        });
     }
 }

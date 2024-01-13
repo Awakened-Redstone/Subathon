@@ -20,7 +20,7 @@ extends AbstractFireballEntity {
     private int explosionPower = 1;
     private int targetY = Integer.MAX_VALUE;
 
-    public FireballEntity(EntityType<? extends FireballEntity> entityType, World world) {
+    public FireballEntity(EntityType<? extends AbstractFireballEntity> entityType, World world) {
         super(entityType, world);
     }
 
@@ -33,11 +33,11 @@ extends AbstractFireballEntity {
     @Override
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
-        if (!this.world.isClient) {
+        if (!this.getWorld().isClient()) {
             if (hitResult.getType() == HitResult.Type.ENTITY && !(((EntityHitResult)hitResult).getEntity() instanceof PlayerEntity)) return;
             if (hitResult.getType() == HitResult.Type.BLOCK && getY() <= targetY) {
-                boolean bl = this.world.getGameRules().getBoolean(GameRules.DO_MOB_GRIEFING);
-                this.world.createExplosion(this, this.getX(), this.getY(), this.getZ(), (float) this.explosionPower, bl, World.ExplosionSourceType.MOB);
+                boolean bl = this.getWorld().getGameRules().getBoolean(GameRules.DO_MOB_GRIEFING);
+                this.getWorld().createExplosion(this, this.getX(), this.getY(), this.getZ(), (float) this.explosionPower, bl, World.ExplosionSourceType.MOB);
                 this.discard();
             }
         }
@@ -46,12 +46,12 @@ extends AbstractFireballEntity {
     @Override
     protected void onEntityHit(EntityHitResult entityHitResult) {
         super.onEntityHit(entityHitResult);
-        if (this.world.isClient) {
+        if (this.getWorld().isClient) {
             return;
         }
         Entity entity = entityHitResult.getEntity();
         Entity entity2 = this.getOwner();
-        entity.damage(DamageSource.fireball(this, entity2), 6.0f);
+        entity.damage(this.getWorld().getDamageSources().fireball(this, entity2), 6.0f);
         if (entity2 instanceof LivingEntity) {
             this.applyDamageEffects((LivingEntity)entity2, entity);
         }

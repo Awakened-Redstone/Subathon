@@ -17,8 +17,8 @@ import java.util.function.Consumer;
 public class MessageUtils {
 
     public static void broadcast(Consumer<ServerPlayerEntity> consumer, Identifier identifier) {
-        if (Subathon.server != null) {
-            broadcast(Subathon.server.getPlayerManager().getPlayerList(), consumer, identifier);
+        if (Subathon.getServer() != null) {
+            broadcast(Subathon.getServer().getPlayerManager().getPlayerList(), consumer, identifier);
         }
     }
 
@@ -30,24 +30,24 @@ public class MessageUtils {
         try {
             players.forEach(consumer);
         } catch (Exception e) {
-            if (Subathon.server != null) Subathon.server.getCommandSource().sendFeedback(broadcastError(identifier), true);
+            if (Subathon.getServer() != null) Subathon.getServer().getCommandSource().sendFeedback(() -> broadcastError(identifier), true);
             Subathon.LOGGER.error("Error at broadcast " + identifier, e);
         }
     }
 
     public static void broadcastToOps(Consumer<ServerPlayerEntity> consumer, Identifier identifier) {
-        if (Subathon.server != null) {
-            if (Subathon.server.isDedicated()) {
+        if (Subathon.getServer() != null) {
+            if (Subathon.getServer().isDedicated()) {
                 try {
-                    if (Subathon.server.getPlayerManager().getOpList() instanceof ExtendedOperatorList ops) {
+                    if (Subathon.getServer().getPlayerManager().getOpList() instanceof ExtendedOperatorList ops) {
                         List<UUID> uuids = Arrays.stream(ops.getUUIDs()).toList();
-                        Subathon.server.getPlayerManager().getPlayerList().stream().filter(player -> uuids.contains(player.getUuid())).forEach(consumer);
+                        Subathon.getServer().getPlayerManager().getPlayerList().stream().filter(player -> uuids.contains(player.getUuid())).forEach(consumer);
                     } else {
-                        List<String> names = Arrays.stream(Subathon.server.getPlayerManager().getOpList().getNames()).toList();
-                        Subathon.server.getPlayerManager().getPlayerList().stream().filter(player -> names.contains(player.getGameProfile().getName())).forEach(consumer);
+                        List<String> names = Arrays.stream(Subathon.getServer().getPlayerManager().getOpList().getNames()).toList();
+                        Subathon.getServer().getPlayerManager().getPlayerList().stream().filter(player -> names.contains(player.getGameProfile().getName())).forEach(consumer);
                     }
                 } catch (Exception e) {
-                    Subathon.server.getCommandSource().sendFeedback(broadcastError(identifier), true);
+                    Subathon.getServer().getCommandSource().sendFeedback(() -> broadcastError(identifier), true);
                     Subathon.LOGGER.error("Error at broadcast " + identifier, e);
                 }
             } else {

@@ -27,6 +27,10 @@ import java.util.Random;
 
 public class Mobs extends Chaos {
 
+    public Mobs() {
+        super(7);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         int successCount = 0;
@@ -37,14 +41,14 @@ public class Mobs extends Chaos {
                 while (!success && tryLimit-- > 0) {
                     try {
                         Random random = new Random();
-                        var minecraftRandom = player.world.random;
+                        var minecraftRandom = player.getWorld().random;
                         EntityType<?> entityType = Registries.ENTITY_TYPE.getRandom(minecraftRandom).get().value();
                         Identifier identifier = Registries.ENTITY_TYPE.getId(entityType);
                         Entity entity = entityType.create(player.getWorld());
                         if (entity == null) continue;
                         entity.setPos(player.getX() + random.nextInt(20) - 10, player.getY() + 1, player.getZ() + random.nextInt(20) - 10);
 
-                        if (Subathon.COMMON_CONFIGS.excludedMobs().contains(identifier.toString())) {
+                        if (Subathon.COMMON_CONFIGS.excludedEntities().contains(identifier.toString())) {
                             continue;
                         } else if (entity instanceof CreeperEntity creeper) {
                             creeper.setFuseSpeed(random.nextInt(4) == 0 ? (short) 15 : (short) 30);
@@ -58,7 +62,7 @@ public class Mobs extends Chaos {
                             success = true;
                             continue;
                         }*/ else if (entity instanceof VexEntity) {
-                            Subathon.scheduler.schedule(Subathon.server, 600, entity::kill);
+                            Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 600, entity::kill);
                         } else if (entity instanceof ExperienceOrbEntity instance) {
                             ((ExperienceOrbEntityMixin) instance).setAmount(random.nextInt(1000));
                         } else if (entity instanceof EnderPearlEntity instance) {
@@ -81,15 +85,16 @@ public class Mobs extends Chaos {
                         }
 
                         if (entity instanceof MobEntity mob) {
-                            mob.initialize(serverPlayer.getWorld(), player.getWorld().getLocalDifficulty(player.getBlockPos()), SpawnReason.TRIGGERED, null, null);
-                            if (trySpawnAt(mob, serverPlayer.getWorld(), player.getBlockPos(), 30, 15, 30,
-                                    (world, pos, state, abovePos, aboveState) -> (aboveState.isAir() || aboveState.getMaterial().isLiquid()) && !state.isAir()).isPresent()) {
+                            mob.initialize(serverPlayer.getServerWorld(), player.getWorld().getLocalDifficulty(player.getBlockPos()), SpawnReason.TRIGGERED, null, null);
+                            //TODO: tags
+                            if (trySpawnAt(mob, serverPlayer.getServerWorld(), player.getBlockPos(), 30, 15, 30,
+                                    (world, pos, state, abovePos, aboveState) -> (aboveState.isAir() || aboveState.isLiquid()) && !state.isAir()).isPresent()) {
                                 success = true;
                                 continue;
                             }
                         }
 
-                        Subathon.scheduler.schedule(Subathon.server, 1, () -> serverPlayer.getWorld().spawnEntityAndPassengers(entity));
+                        Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 1, () -> serverPlayer.getWorld().spawnEntity(entity));
                         success = true;
                     } catch (Exception e) {
                         success = false;
@@ -111,7 +116,7 @@ public class Mobs extends Chaos {
             mutable.set(pos, j, verticalRange, k);
             if (!world.getWorldBorder().contains(mutable) || !LargeEntitySpawnHelper.findSpawnPos(world, verticalRange, mutable, requirements)) continue;
             entity.setPos(mutable.getX(), mutable.getY() + 1, mutable.getZ());
-            Subathon.scheduler.schedule(Subathon.server, 1, () -> world.spawnEntityAndPassengers(entity));
+            Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 1, () -> world.spawnEntityAndPassengers(entity));
             return Optional.of(entity);
         }
         return Optional.empty();

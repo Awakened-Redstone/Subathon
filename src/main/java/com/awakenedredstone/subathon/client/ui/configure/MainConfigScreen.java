@@ -6,7 +6,6 @@ import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.text.Text;
 import org.apache.http.util.Asserts;
@@ -67,7 +66,7 @@ public class MainConfigScreen extends BaseScreen<FlowLayout> {
 
         ButtonComponent effectsButton = rootComponent.childById(ButtonComponent.class, "effects");
         Asserts.notNull(effectsButton, "effectsButton");
-        if (!client.isIntegratedServerRunning() && !client.isConnectedToRealms() && client.player != null) {
+        if (!client.isIntegratedServerRunning() && client.player != null) {
             commonButton.active = false;
             List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.translatable("text.subathon.configs.soon.edit"), 200)
                     .stream().map(TooltipComponent::of).toList();

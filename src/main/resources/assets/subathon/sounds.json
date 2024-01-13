@@ -1,0 +1,8 @@
+{
+  "sfx.generic.shockwave": {
+    "sounds": [
+      "subathon:shockwave"
+    ],
+    "subtitle": "subathon.subtitles.sfx.generic.shockwave"
+  }
+}

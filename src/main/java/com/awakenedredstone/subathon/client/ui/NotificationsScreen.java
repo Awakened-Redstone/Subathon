@@ -1,13 +1,12 @@
 package com.awakenedredstone.subathon.client.ui;
 
 import com.awakenedredstone.subathon.client.SubathonClient;
-import com.awakenedredstone.subathon.twitch.EventMessages;
+import com.awakenedredstone.subathon.integration.twitch.EventMessages;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.Surface;
-import io.wispforest.owo.ui.util.Drawer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -18,7 +17,7 @@ import java.util.*;
 
 @Environment(EnvType.CLIENT)
 public class NotificationsScreen extends BaseScreen<FlowLayout> {
-    private List<SubathonClient.Notification> notifications = List.copyOf(SubathonClient.messages);
+    private List<SubathonClient.Notification> notifications = List.copyOf(SubathonClient.getInstance().messages);
 
     public NotificationsScreen() {
         super(FlowLayout.class, "notifications_screen");
@@ -30,7 +29,7 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
         FlowLayout items = rootComponent.childById(FlowLayout.class, "notifications");
         Objects.requireNonNull(items, "Notifications block is required!");
 
-        for (SubathonClient.Notification notification : SubathonClient.messages) {
+        for (SubathonClient.Notification notification : SubathonClient.getInstance().messages) {
             var template = model.expandTemplate(FlowLayout.class, "notification", new MapBuilder<String, String>()
                     .put("id", UUID.randomUUID().toString())
                     .put("type", getType(notification.message(), notification.placeholders()))
@@ -38,12 +37,7 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
                     .build());
 
             template.mouseEnter().subscribe(() -> {
-                template.surface((matrices, component) -> {
-                    Drawer.drawGradientRect(matrices,
-                            component.x(), component.y(), component.width(), component.height(),
-                            0xC0101010, 0x00101010, 0x00101010, 0xC0101010
-                    );
-                });
+                template.surface(HOVER);
             });
 
             template.mouseLeave().subscribe(() -> {
@@ -72,10 +66,10 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
     @Override
     public void tick() {
         if (client == null || client.currentScreen != this) return;
-        if (!new HashSet<>(notifications).containsAll(SubathonClient.messages)) {
-            HashSet<SubathonClient.Notification> messagesCopy = new HashSet<>(SubathonClient.messages);
+        if (!new HashSet<>(notifications).containsAll(SubathonClient.getInstance().messages)) {
+            HashSet<SubathonClient.Notification> messagesCopy = new HashSet<>(SubathonClient.getInstance().messages);
             notifications.forEach(messagesCopy::remove);
-            notifications = List.copyOf(SubathonClient.messages);
+            notifications = List.copyOf(SubathonClient.getInstance().messages);
 
             FlowLayout items = this.uiAdapter.rootComponent.childById(FlowLayout.class, "notifications");
             Objects.requireNonNull(items, "Notifications block is required!");
@@ -88,8 +82,8 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
                         .build());
 
                 template.mouseEnter().subscribe(() -> {
-                    template.surface((matrices, component) -> {
-                        Drawer.drawGradientRect(matrices,
+                    template.surface((context, component) -> {
+                        context.drawGradientRect(
                                 component.x(), component.y(), component.width(), component.height(),
                                 0xC0101010, 0x00101010, 0x00101010, 0xC0101010
                         );
@@ -119,7 +113,7 @@ public class NotificationsScreen extends BaseScreen<FlowLayout> {
     }
 
     public static String getType(EventMessages message, Map<String, String> map) {
-        int amount = Integer.parseInt(map.getOrDefault("%amount%", "-1"));
+        int amount = Integer.parseInt(map.getOrDefault("amount", "-1"));
         return switch (message) {
             case SUB, RESUB, GIFT -> "gift";
             case CHEER -> {

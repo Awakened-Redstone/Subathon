@@ -17,6 +17,10 @@ import java.util.Random;
 
 public class Arrows extends Chaos {
 
+    public Arrows() {
+        super(40);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
@@ -40,7 +44,7 @@ public class Arrows extends Chaos {
 
             Collections.shuffle(arrows);
 
-            arrows.forEach(runnable -> Subathon.scheduler.schedule(Subathon.server, 1, runnable));
+            arrows.forEach(runnable -> Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 1, runnable));
         } else return false;
         return true;
     }

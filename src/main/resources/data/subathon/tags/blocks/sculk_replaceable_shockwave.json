@@ -1,0 +1,28 @@
+{
+  "values": [
+    "#minecraft:sculk_replaceable",
+    "#minecraft:planks",
+    "#minecraft:logs",
+    "#minecraft:leaves",
+    "#minecraft:beacon_base_blocks",
+    "#minecraft:wooden_stairs",
+    "#minecraft:wooden_slabs",
+    "#minecraft:dampens_vibrations",
+    "minecraft:crafting_table",
+    "minecraft:dirt_path",
+    "minecraft:pumpkin",
+    "minecraft:carved_pumpkin",
+    "minecraft:melon",
+    "minecraft:farmland",
+    "minecraft:hay_block",
+    "minecraft:obsidian",
+    "minecraft:end_stone",
+    "minecraft:cobblestone",
+    "minecraft:deepslate_bricks",
+    "minecraft:deepslate_tiles",
+    "minecraft:cobbled_deepslate",
+    "minecraft:cracked_deepslate_bricks",
+    "minecraft:cracked_deepslate_tiles",
+    "minecraft:polished_deepslate"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+    "display": {
+        "icon": {
+            "item": "minecraft:netherite_ingot"
+        },
+        "title": {
+            "translate": "advancements.subathon.overpowered.title"
+        },
+        "description": {
+            "translate": "advancements.subathon.overpowered.description"
+        },
+        "frame": "challenge",
+        "show_toast": true,
+        "announce_to_chat": true,
+        "hidden": true
+    },
+    "parent": "minecraft:end/find_end_city",
+    "criteria": {
+        "has_the_recipe": {
+            "trigger": "minecraft:recipe_unlocked",
+            "conditions": {
+                "recipe": "minecraft:netherite_ingot"
+            }
+        },
+        "has_the_effect": {
+            "trigger": "subathon:effect_and_points",
+            "conditions": {
+                "targetAmount": "100",
+                "effect": "subathon:increase_recipe_output"
+            }
+        }
+    }
+}

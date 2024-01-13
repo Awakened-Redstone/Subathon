@@ -2,15 +2,10 @@ accessWidener v1 named
 
 #Classes
 accessible class net/minecraft/client/gui/hud/InGameHud$HeartType
-accessible class net/minecraft/client/render/model/SpriteAtlasManager$Atlas
 
 #Methods
-accessible method net/minecraft/client/gui/hud/InGameHud$HeartType fromPlayerState (Lnet/minecraft/entity/player/PlayerEntity;)Lnet/minecraft/client/gui/hud/InGameHud$HeartType;
+accessible method net/minecraft/client/gui/DrawContext <init> (Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;)V
 accessible method net/minecraft/entity/LargeEntitySpawnHelper findSpawnPos (Lnet/minecraft/server/world/ServerWorld;ILnet/minecraft/util/math/BlockPos$Mutable;Lnet/minecraft/entity/LargeEntitySpawnHelper$Requirements;)Z
-accessible method net/minecraft/entity/Entity adjustMovementForCollisions (Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;
-accessible method net/minecraft/entity/Entity playAmethystChimeSound (Lnet/minecraft/block/BlockState;)V
 
 #Fields
 accessible field net/minecraft/entity/mob/CreeperEntity CHARGED Lnet/minecraft/entity/data/TrackedData;
-accessible field net/minecraft/client/util/math/MatrixStack stack Ljava/util/Deque;
-accessible field net/minecraft/entity/Entity nextStepSoundDistance F

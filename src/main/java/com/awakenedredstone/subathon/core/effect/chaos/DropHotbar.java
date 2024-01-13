@@ -7,10 +7,14 @@ import java.util.Random;
 
 public class DropHotbar extends Chaos {
 
+    public DropHotbar() {
+        super(16);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         boolean droppedSomething = false;
-        if (!player.world.isClient()) {
+        if (!player.getWorld().isClient()) {
             Random random = new Random();
             boolean throwRandomly = random.nextInt(10) == 0;
             for (int i = 0; i < 9; i++) {

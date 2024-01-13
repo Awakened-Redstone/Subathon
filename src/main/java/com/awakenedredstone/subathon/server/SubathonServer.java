@@ -1,6 +1,6 @@
 package com.awakenedredstone.subathon.server;
 
-import com.awakenedredstone.subathon.twitch.Twitch;
+import com.awakenedredstone.subathon.integration.twitch.Twitch;
 import net.fabricmc.api.DedicatedServerModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

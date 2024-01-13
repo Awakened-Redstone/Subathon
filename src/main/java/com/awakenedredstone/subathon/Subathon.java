@@ -6,21 +6,19 @@ import com.awakenedredstone.subathon.command.SubathonCommand;
 import com.awakenedredstone.subathon.command.argument.TwitchUsernameArgumentType;
 import com.awakenedredstone.subathon.config.CommonConfigs;
 import com.awakenedredstone.subathon.config.ConfigsClient;
+import com.awakenedredstone.subathon.core.data.ComponentManager;
 import com.awakenedredstone.subathon.core.effect.Effect;
 import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
-import com.awakenedredstone.subathon.entity.FireballEntity;
 import com.awakenedredstone.subathon.event.RegistryFreezeCallback;
-import com.awakenedredstone.subathon.registry.ChaosRegistry;
-import com.awakenedredstone.subathon.registry.EffectRegistry;
-import com.awakenedredstone.subathon.registry.EntityRegistry;
-import com.awakenedredstone.subathon.registry.SubathonRegistries;
-import com.awakenedredstone.subathon.twitch.Twitch;
+import com.awakenedredstone.subathon.registry.*;
+import com.awakenedredstone.subathon.integration.twitch.Twitch;
 import com.awakenedredstone.subathon.util.ConversionUtils;
 import com.awakenedredstone.subathon.util.MessageUtils;
 import com.awakenedredstone.subathon.util.ScheduleUtils;
 import com.awakenedredstone.subathon.util.WeightedRandom;
 import io.wispforest.owo.network.serialization.PacketBufSerializer;
 import io.wispforest.owo.registration.reflect.FieldRegistrationHandler;
+import lombok.Getter;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.ArgumentTypeRegistry;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -37,6 +35,9 @@ import net.minecraft.command.argument.serialize.ConstantArgumentSerializer;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.AbstractFireballEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -46,11 +47,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.UUID;
+import java.util.*;
 
+//TODO: Make all translations use PlaceholderAPI
 public class Subathon implements ModInitializer {
     public static final String MOD_ID = "subathon";
     public static final Logger LOGGER = LoggerFactory.getLogger("Sub-a-thon");
@@ -58,19 +57,27 @@ public class Subathon implements ModInitializer {
     public static CommonConfigs COMMON_CONFIGS;
     //public static final ServerConfigs SERVER_CONFIGS = ServerConfigs.createAndLoad();
     public static final OkHttpClient OK_HTTP_CLIENT = new OkHttpClient.Builder().build();
-    public static MinecraftServer server = null;
-    public static ScheduleUtils scheduler;
-    public static WeightedRandom<StatusEffect> potionsRandom = new WeightedRandom<>();
-    public static WeightedRandom<Chaos> chaosRandom = new WeightedRandom<>();
-    public static final Queue<Runnable> delayedEvents = new LinkedList<>();
-    public static List<Block> infestedBlocks;
+    @Getter
+    private static Subathon instance;
+    private MinecraftServer server = null;
+
+    @Getter
+    private ScheduleUtils scheduler;
+    public final WeightedRandom<StatusEffect> potionsRandom = new WeightedRandom<>();
+    public final WeightedRandom<Chaos> chaosRandom = new WeightedRandom<>();
+    public final Queue<Runnable> delayedEvents = new LinkedList<>();
+    @Getter private List<Block> infestedBlocks;
 
     @Override
     public void onInitialize() {
+        instance = this;
         ArgumentTypeRegistry.registerArgumentType(id("twitch_username"), TwitchUsernameArgumentType.class, ConstantArgumentSerializer.of(TwitchUsernameArgumentType::create));
         FieldRegistrationHandler.register(EntityRegistry.class, MOD_ID, false);
         FieldRegistrationHandler.register(EffectRegistry.class, MOD_ID, false);
         FieldRegistrationHandler.register(ChaosRegistry.class, MOD_ID, false);
+        FieldRegistrationHandler.register(SoundRegistry.class, MOD_ID, false);
+        SubathonCriteria.init();
+        FeatureRegistry.init();
 
         RegistryFreezeCallback.EVENT.register(() -> {
             COMMON_CONFIGS = CommonConfigs.createAndLoad(builder -> {
@@ -100,22 +107,18 @@ public class Subathon implements ModInitializer {
             });
 
             COMMON_CONFIGS.subscribeToPotionWeights(map -> {
-                potionsRandom = new WeightedRandom<>();
-                map.forEach((identifier, integer) -> {
-                    potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier));
-                });
+                potionsRandom.reset();
+                map.forEach((identifier, integer) -> potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
             });
 
             COMMON_CONFIGS.subscribeToChaosWeights(map -> {
-                chaosRandom = new WeightedRandom<>();
-                map.forEach((identifier, integer) -> {
-                    chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier));
-                });
+                chaosRandom.reset();
+                map.forEach((identifier, integer) -> chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
             });
 
             Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
-            SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(SubathonRegistries.CHAOS.getId(chaos), 1));
-            SubathonRegistries.EFFECTS.forEach(effect -> COMMON_CONFIGS.effects().putIfAbsent(SubathonRegistries.EFFECTS.getId(effect), effect));
+            SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(chaos.getIdentifier(), chaos.getDefaultWeight()));
+            SubathonRegistries.EFFECTS.forEach(effect -> COMMON_CONFIGS.effects().putIfAbsent(effect.getIdentifier(), effect));
             COMMON_CONFIGS.save();
         });
 
@@ -139,7 +142,7 @@ public class Subathon implements ModInitializer {
                 Twitch.getInstance().connectIRC(channel, player);
             });
         });
-        
+
         ServerPlayNetworking.registerGlobalReceiver(Subathon.id("disconnect"), (server, player, handler, buf, responseSender) -> {
             ConfigsClient.ConnectionType type = buf.readEnumConstant(ConfigsClient.ConnectionType.class);
             String key = buf.readString();
@@ -169,8 +172,8 @@ public class Subathon implements ModInitializer {
         });
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
-            Subathon.server = server;
-            Subathon.scheduler = new ScheduleUtils();
+            this.server = server;
+            this.scheduler = new ScheduleUtils();
 
             Registries.STATUS_EFFECT.forEach(statusEffect -> COMMON_CONFIGS.potionWeights().putIfAbsent(Registries.STATUS_EFFECT.getId(statusEffect), 1));
             SubathonRegistries.CHAOS.forEach(chaos -> COMMON_CONFIGS.chaosWeights().putIfAbsent(SubathonRegistries.CHAOS.getId(chaos), 1));
@@ -179,21 +182,23 @@ public class Subathon implements ModInitializer {
             COMMON_CONFIGS.chaosWeights().forEach((identifier, integer) -> chaosRandom.add(integer, SubathonRegistries.CHAOS.get(identifier)));
         });
 
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             while (!delayedEvents.isEmpty()) {
                 delayedEvents.poll().run();
             }
+        });
 
-            Subathon.server = null;
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            this.server = null;
             Twitch.getInstance().reset();
-            Subathon.scheduler.destroy();
-            Subathon.scheduler = null;
+            this.scheduler.close();
+            this.scheduler = null;
         });
 
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             String version = FabricLoader.getInstance().getModContainer(Subathon.MOD_ID).get().getMetadata().getVersion().getFriendlyString();
             sender.sendPacket(Subathon.id("mod_version"), PacketByteBufs.create().writeString(version));
-            sender.sendPacket(Subathon.id("eventsub_warning"), PacketByteBufs.create());
+            //sender.sendPacket(Subathon.id("ui_warning"), PacketByteBufs.create());
         });
 
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -232,10 +237,25 @@ public class Subathon implements ModInitializer {
         return ConversionUtils.timeStringToTicks(COMMON_CONFIGS.updateCooldown());
     }
 
-    public static <T extends FireballEntity> FabricEntityTypeBuilder<T> createEntity(SpawnGroup spawnGroup, EntityType.EntityFactory<T> factory) {
+    public static <T extends AbstractFireballEntity> FabricEntityTypeBuilder<T> createFireballEntity(SpawnGroup spawnGroup, EntityType.EntityFactory<T> factory) {
         return FabricEntityTypeBuilder.create(spawnGroup, factory);
     }
 
+    public static <T extends ProjectileEntity> FabricEntityTypeBuilder<T> createProjectileEntity(SpawnGroup spawnGroup, EntityType.EntityFactory<T> factory) {
+        return FabricEntityTypeBuilder.create(spawnGroup, factory);
+    }
+
+    public static MinecraftServer getServer() {
+        return instance.server;
+    }
+
+    public static long getPoints(PlayerEntity player) {
+        return ComponentManager.getComponent(getServer(), player).getPoints();
+    }
+
+    public static void schedule(long delay, Runnable runnable) {
+        instance.scheduler.schedule(getServer(), delay, runnable);
+    }
 
     static {
         PacketBufSerializer.register(Effect.class, (buf, effect) -> {

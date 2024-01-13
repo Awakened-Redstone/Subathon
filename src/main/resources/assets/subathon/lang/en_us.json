@@ -29,6 +29,9 @@
     "command.subathon.set.bitStorage": "Set bitStorage value to %value%",
     "command.subathon.set.redemptionPoints": "Set redemptionPoints value to %value%",
 
+
+    "toast.subathon.warning.mismatch_version.title": "\u00a7c\u00a7nVersion mismatch!",
+    "toast.subathon.warning.mismatch_version.description": "This server is running on a different version of Sub-a-thon, things might not work properly!",
     "toast.subathon.warning.eventsub.title": "Stability warning!",
     "toast.subathon.warning.eventsub.description": [
         {
@@ -40,6 +43,8 @@
             "color": "white"
         }
     ],
+    "toast.subathon.warning.ui.title": "Early 1.20 build!",
+    "toast.subathon.warning.ui.description": "The UI is still being fixed",
     "toast.subathon.error.eventsub.connection.failed.title": "Connection failed!",
     "toast.subathon.error.eventsub.connection.failed.description": [
         "Failed to initiate a stable connection with ",
@@ -54,12 +59,12 @@
     ],
     "toast.subathon.error.eventsub.connection.unknown_sub.title": "Unknown sub type!",
     "toast.subathon.error.eventsub.connection.unknown_sub.description": "An unknown sub type returned, this should NEVER happen, please report this issue!",
+    "toast.subathon.error.eventsub.unknown_connection.title": "Unknown connection type!",
+    "toast.subathon.error.eventsub.unknown_connection.description": "An unknown connection type returned, this should NEVER happen, please report this issue!",
     "toast.subathon.error.eventsub.queue.title": "Queue contain items!",
     "toast.subathon.error.eventsub.queue.description": "The action could not be performed as the queue contains items!",
     "toast.subathon.error.irc.connected.title": "Already connected!",
     "toast.subathon.error.irc.connected.description": "This channel already has a connection!",
-    "toast.subathon.warning.mismatch_version.title": "\u00a7c\u00a7nVersion mismatch!",
-    "toast.subathon.warning.mismatch_version.description": "This server is running on a different version of Sub-a-thon, things might not work properly!",
 
     "text.subathon.warning": [
         {
@@ -259,7 +264,7 @@
     "text.subathon.screen.effects.disabled": "\u00a7c❌",
     "text.subathon.screen.effects.enabled": "\u00a7a✔",
 
-    "text.subathon.points": "%points%",
+    "text.subathon.points": "%s",
 
     "text.subathon.effects.subathon.test": "⚗ Test",
     "text.subathon.effects.subathon.test.tooltip": "This should never be visible",
@@ -273,6 +278,18 @@
         "\n\n",
         {
             "text": "Extreme destruction and pain is almost guaranteed",
+            "color": "red"
+        }
+    ],
+    "text.subathon.effects.subathon.increase_recipe_output": "\u271A Mutiply recipe output \u00a77[Beta]",
+    "text.subathon.effects.subathon.increase_recipe_output.tooltip": [
+        {
+            "text": "Minecraft was not designed for stack sizes above 64, so things may not behave properly",
+            "color": "yellow"
+        },
+        "\n\n",
+        {
+            "text": "Stacc API is highly recommended",
             "color": "red"
         }
     ],
@@ -322,7 +339,7 @@
     "text.subathon.notification.gift": "%user% gifted %amount% tier %tier% subs",
     "text.subathon.notification.cheer": "%user% cheered x%amount%",
 
-    "text.subathon.chaos.error": "Failed to trigger a chaos within %amount% tries",
+    "text.subathon.chaos.error": "<color:#d81e2a><bold>Sub-a-thon</bold> <dark_gray><bold>:</bold></dark_gray> <red>Failed to trigger a chaos within %amount% tries",
 
     "text.config.subathon/mode.error.empty": "\u00a7cNo configurations",
     "text.config.subathon/mode.option.scale": "⇵ Scale",
@@ -352,8 +369,10 @@
     ],
     "text.config.subathon/common.option.chaosTries": "Chaos tries",
     "text.config.subathon/common.option.chaosTries.tooltip": "Defines how many times the chaos effect can try to trigger a chaos before failing",
-    "text.config.subathon/common.option.excludedMobs": "Excluded mobs",
-    "text.config.subathon/common.option.excludedMobs.tooltip": "Mobs that are excluded from the chaos effect",
+    "text.config.subathon/common.option.excludedEntities": "Excluded entities",
+    "text.config.subathon/common.option.excludedEntities.tooltip": "Entities that are excluded from the chaos effect",
+    "text.config.subathon/common.option.protectedEntities": "Proteted entities",
+    "text.config.subathon/common.option.protectedEntities.tooltip": "Mobs that are protected from the chaos effect",
     "text.config.subathon/common.option.threshold": "Threshold",
     "text.config.subathon/common.category.subs": "Subscriptions",
     "text.config.subathon/common.option.subs.enabled": "Enable subs integration",
@@ -466,6 +485,8 @@
     "text.subathon.chaos.subathon.mobs": "Spawn mobs",
     "text.subathon.chaos.subathon.mobs.message": "Some mobs seem to have appeared nearby!",
     "text.subathon.chaos.subathon.rando_potion": "Random potion effect",
+    "text.subathon.chaos.subathon.rando_screen_rotation": "Random screen rotation* <gray>[Beta]",
+    "text.subathon.chaos.subathon.rando_screen_rotation.tooltip": "Requires <color:#bc297a>Ok Boomer\n<color:#6091e5>https://modrinth.com/mod/ok-boomer\n\n<red>Single-player only!",
     "text.subathon.chaos.subathon.random_enchant": "Random enchantment",
     "text.subathon.chaos.subathon.random_enchant_compatible": "Random compatible enchantment",
     "text.subathon.chaos.subathon.random_enchant_incompatible": "Random incompatible enchantment",

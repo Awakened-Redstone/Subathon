@@ -40,6 +40,7 @@ public class WeightedRandom<T> {
     }
 
     public WeightedRandom<T> add(double weight, T result) {
+        if (weights.containsKey(result) && weights.containsValue(weight)) return this;
         if (weight <= 0) return this;
         weights.put(result, weight);
         total += weight;
@@ -50,5 +51,12 @@ public class WeightedRandom<T> {
     public T next() {
         double value = random.nextDouble() * total;
         return map.higherEntry(value).getValue();
+    }
+
+    public void reset() {
+        map.clear();
+        weights.clear();
+        random.setSeed(random.nextLong());
+        total = 0;
     }
 }

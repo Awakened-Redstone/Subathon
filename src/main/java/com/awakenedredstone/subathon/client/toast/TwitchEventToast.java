@@ -3,7 +3,8 @@ package com.awakenedredstone.subathon.client.toast;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.toast.Toast;
@@ -22,45 +23,44 @@ import java.util.List;
 public record TwitchEventToast(Identifier spriteId, Text title, Text message) implements Toast {
 
     @Override
-    public Visibility draw(MatrixStack matrix, ToastManager manager, long startTime) {
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
-        RenderSystem.setShaderTexture(0, TEXTURE);
+    public Visibility draw(DrawContext context, ToastManager manager, long startTime) {
+        TextRenderer textRenderer = manager.getClient().textRenderer;
+
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        manager.drawTexture(matrix, 0, 0, 0, 0, this.getWidth(), this.getHeight());
-        int i;
-        List<OrderedText> titleList = manager.getClient().textRenderer.wrapLines(title, 125);
-        List<OrderedText> list = manager.getClient().textRenderer.wrapLines(message, 125);
+        context.drawTexture(TEXTURE, 0, 0, 0, 0, this.getWidth(), this.getHeight());
+        List<OrderedText> titleList = textRenderer.wrapLines(title, 125);
+        List<OrderedText> list = textRenderer.wrapLines(message, 125);
         if (list.size() == 1) {
-            manager.getClient().textRenderer.draw(matrix, title, 30.0f, 7.0f, 0xFF88FF | 0xFF000000);
-            manager.getClient().textRenderer.draw(matrix, list.get(0), 30.0f, 18.0f, -1);
-        } else if (list.size() < 1) {
-            manager.getClient().textRenderer.draw(matrix, title, 30.0f, 11.0f, 0xFF88FF | 0xFF000000);
+            context.drawText(textRenderer, title, 30, 7, 0xFF88FF | 0xFF000000, false);
+            context.drawText(textRenderer, list.get(0), 30, 18, -1, false);
+        } else if (list.isEmpty()) {
+            context.drawText(textRenderer, title, 30, 11, 0xFF88FF | 0xFF000000, false);
         } else {
             int j = 1500;
             float f = 300.0f;
             if (startTime < 1500L) {
                 int k = MathHelper.floor(MathHelper.clamp((float) (1500L - startTime) / 300.0f, 0.0f, 1.0f) * 255.0f) << 24 | 0x4000000;
                 if (titleList.size() <= 1) {
-                    manager.getClient().textRenderer.draw(matrix, title, 30.0f, 11.0f, 0xFF88FF | k);
+                    context.drawText(textRenderer, title, 30, 11, 0xFF88FF | k, false);
                 } else {
-                    float l = this.getHeight() / 2f - titleList.size() * manager.getClient().textRenderer.fontHeight / 2f;
+                    int l = this.getHeight() / 2 - titleList.size() * textRenderer.fontHeight / 2;
                     int line = 0;
                     for (OrderedText orderedText : titleList) {
                         if (++line > 2) break;
 
-                        manager.getClient().textRenderer.draw(matrix, orderedText, 30.0f, l, 0xFFFFFF | k);
-                        l += manager.getClient().textRenderer.fontHeight;
+                        context.drawText(textRenderer, orderedText, 30, l, 0xFFFFFF | k, false);
+                        l += textRenderer.fontHeight;
                     }
                 }
             } else {
                 int k = MathHelper.floor(MathHelper.clamp((float) (startTime - 1500L) / 300.0f, 0.0f, 1.0f) * 252.0f) << 24 | 0x4000000;
-                float l = this.getHeight() / 2f - list.size() * manager.getClient().textRenderer.fontHeight / 2f;
+                int l = this.getHeight() / 2 - list.size() * textRenderer.fontHeight / 2;
                 int line = 0;
                 for (OrderedText orderedText : list) {
                     if (++line > 2) break;
 
-                    manager.getClient().textRenderer.draw(matrix, orderedText, 30.0f, l, 0xFFFFFF | k);
-                    l += manager.getClient().textRenderer.fontHeight;
+                    context.drawText(textRenderer, orderedText, 30, l, 0xFFFFFF | k, false);
+                    l += textRenderer.fontHeight;
                 }
             }
         }
@@ -73,7 +73,7 @@ public record TwitchEventToast(Identifier spriteId, Text title, Text message) im
             RenderSystem.setShaderTexture(0, sprite.getAtlasId());
 
             RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-            DrawableHelper.drawSprite(matrix, 8, 8, 0, 18, 18, sprite);
+            context.drawSprite(8, 8, 0, 18, 18, sprite);
             //DrawableHelper.drawTexture(matrix, 8, 8, 18, 18, 0, 0, 18, 18, 18, 18);
         } catch (Exception e) {/**/}
         return startTime >= 5000L ? Toast.Visibility.HIDE : Toast.Visibility.SHOW;

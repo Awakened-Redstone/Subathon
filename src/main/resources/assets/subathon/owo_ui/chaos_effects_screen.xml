@@ -114,7 +114,6 @@
             <flow-layout direction="horizontal">
                 <children>
                     <label id="option-name">
-                        <text translate="true">{{config-option-name}}</text>
                         <positioning type="relative">0,50</positioning>
                         <shadow>true</shadow>
                     </label>
@@ -149,6 +148,9 @@
                     <all>5</all>
                 </padding>
 
+                <margins>
+                    <top>-5</top>
+                </margins>
             </flow-layout>
         </config-option>
     </templates>

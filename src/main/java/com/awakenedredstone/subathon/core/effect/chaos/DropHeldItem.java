@@ -8,10 +8,14 @@ import java.util.Random;
 
 public class DropHeldItem extends Chaos {
 
+    public DropHeldItem() {
+        super(19);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         boolean droppedSomething = false;
-        if (!player.world.isClient) {
+        if (!player.getWorld().isClient()) {
             Random random = new Random();
             PlayerInventory playerInventory = player.getInventory();
             ItemStack itemStack = playerInventory.dropSelectedItem(true);

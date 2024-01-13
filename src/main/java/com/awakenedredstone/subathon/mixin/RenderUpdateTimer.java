@@ -4,6 +4,7 @@ import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.util.ConversionUtils;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.AbstractInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -23,10 +24,10 @@ public abstract class RenderUpdateTimer extends AbstractInventoryScreen<PlayerSc
     }
 
     @Inject(method = "render", at = @At("TAIL"))
-    private void render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (SubathonClient.CLIENT_CONFIGS.showTimer() && SubathonClient.nextUpdate > -1) {
-            Text message = Text.literal(ConversionUtils.ticksToSimpleTime(SubathonClient.nextUpdate));
-            this.textRenderer.draw(matrices, message, x + 129, this.y + 74, 0x404040);
+    private void render(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (SubathonClient.CLIENT_CONFIGS.showTimer() && SubathonClient.getInstance().nextUpdate > -1) {
+            Text message = Text.literal(ConversionUtils.ticksToSimpleTime(SubathonClient.getInstance().nextUpdate));
+            context.drawText(this.textRenderer, message, x + 129, this.y + 74, 0x404040, false);
         }
     }
 }

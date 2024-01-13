@@ -11,6 +11,10 @@ import java.util.Random;
 
 public class TntSphere extends Chaos {
 
+    public TntSphere() {
+        super(13);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         var ref = new Object() {
@@ -20,8 +24,8 @@ public class TntSphere extends Chaos {
             Random random = new Random();
             Utils.makeSphere(player.getPos(), vec3d -> {
                 try {
-                    if (player.world.getBlockState(new BlockPos(vec3d)).getBlock().getHardness() == -1) return;
-                    player.world.setBlockState(new BlockPos(vec3d), Blocks.TNT.getDefaultState().with(TntBlock.UNSTABLE, true));
+                    if (player.getWorld().getBlockState(BlockPos.ofFloored(vec3d)).getBlock().getHardness() == -1) return;
+                    player.getWorld().setBlockState(BlockPos.ofFloored(vec3d), Blocks.TNT.getDefaultState().with(TntBlock.UNSTABLE, true));
                     ref.success++;
                 } catch (Exception e) {/**/}
             }, 5, 5, 5, false);

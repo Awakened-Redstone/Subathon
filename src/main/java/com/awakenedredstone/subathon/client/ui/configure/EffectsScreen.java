@@ -144,8 +144,8 @@ public class EffectsScreen extends BaseScreen<FlowLayout> {
 
             String translationKey = "text.subathon.effects." + identifier.toTranslationKey();
             if (I18n.hasTranslation(translationKey + ".tooltip")) {
-                List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Text.translatable(translationKey + ".tooltip"), client.getWindow().getScaledWidth() / 2)
-                        .stream().map(TooltipComponent::of).toList());
+                List<TooltipComponent> tooltip = new ArrayList<>(client.textRenderer.wrapLines(Text.translatable(translationKey + ".tooltip"),
+                        client.getWindow().getScaledWidth() / 2).stream().map(TooltipComponent::of).toList());
                 template.tooltip(tooltip);
             }
 

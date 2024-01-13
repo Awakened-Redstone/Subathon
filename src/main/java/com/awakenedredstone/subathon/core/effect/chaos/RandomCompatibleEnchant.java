@@ -17,6 +17,10 @@ import java.util.UUID;
 
 public class RandomCompatibleEnchant extends Chaos {
 
+    public RandomCompatibleEnchant() {
+        super(8);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();

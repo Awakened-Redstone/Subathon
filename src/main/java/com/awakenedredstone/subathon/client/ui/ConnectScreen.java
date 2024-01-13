@@ -4,8 +4,8 @@ import com.awakenedredstone.subathon.Subathon;
 import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.config.ConfigsClient;
 import com.awakenedredstone.subathon.owo.SubathonTextBox;
-import com.awakenedredstone.subathon.twitch.AuthUtils;
-import com.awakenedredstone.subathon.twitch.Twitch;
+import com.awakenedredstone.subathon.integration.twitch.AuthUtils;
+import com.awakenedredstone.subathon.integration.twitch.Twitch;
 import com.awakenedredstone.subathon.util.FileUtil;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
@@ -18,7 +18,6 @@ import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.Surface;
 import io.wispforest.owo.ui.parsing.UIModel;
-import io.wispforest.owo.ui.util.Drawer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -26,6 +25,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import okhttp3.*;
@@ -39,6 +39,8 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Consumer;
+
+import static com.awakenedredstone.subathon.config.ConfigsClient.ConnectionType.EVENTSUB;
 
 @Environment(EnvType.CLIENT)
 public class ConnectScreen extends BaseScreen<FlowLayout> {
@@ -56,15 +58,15 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
 
         var accountLabel = getComponent(rootComponent, LabelComponent.class, "account");
 
-        if (SubathonClient.authenticated) {
-            if (SubathonClient.connectionType.requiresAuth()) {
+        if (SubathonClient.getInstance().getInstance().authenticated) {
+            if (SubathonClient.getInstance().getInstance().connectionType.requiresAuth()) {
                 accountLabel.text(Texts.of("text.subathon.screen.connect.account", new MapBuilder.StringMap()
-                        .putAny("%user%", SubathonClient.cache.get("accountName"))
-                        .build()));
+                    .putAny("user", SubathonClient.getInstance().getInstance().cache.get("accountName"))
+                    .build()));
             } else {
                 accountLabel.text(Texts.of("text.subathon.screen.connect.account.authless", new MapBuilder.StringMap()
-                        .putAny("%user%", SubathonClient.cache.get("accountName"))
-                        .build()));
+                    .putAny("user", SubathonClient.getInstance().getInstance().cache.get("accountName"))
+                    .build()));
             }
         } else {
             accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
@@ -75,10 +77,16 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
 
         for (Component child : items.children()) {
             if (child instanceof FlowLayout component) {
-                component.mouseEnter().subscribe(() -> component.surface((matrices, component1) -> Drawer.drawGradientRect(matrices,
+                component.mouseEnter().subscribe(() -> component.surface((context, component1) -> {
+                    MatrixStack matrices = context.getMatrices();
+                    matrices.push();
+                    matrices.translate(0, 0, -0.1);
+                    context.drawGradientRect(
                         component1.x(), component1.y(), component1.width(), component1.height(),
                         0xC0101010, 0x00101010, 0x00101010, 0xC0101010
-                )));
+                    );
+                    matrices.pop();
+                }));
 
                 component.mouseLeave().subscribe(() -> component.surface(Surface.BLANK));
             }
@@ -111,12 +119,12 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             SubathonClient.CLIENT_CONFIGS.twitchUsername(channel);
             button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
             ClientPlayNetworking.send(Subathon.id("channel"), PacketByteBufs.create().writeString(channel));
-            SubathonClient.connectionType = ConfigsClient.ConnectionType.IRC;
+            SubathonClient.getInstance().connectionType = ConfigsClient.ConnectionType.IRC;
         });
 
         cancelButton.onPress(button -> {
             rootComponent.removeChild(twitchUsername);
-            button.active = true;
+            connectButton.active = true;
             resetKeyButton.active = true;
             resetCacheButton.active = true;
         });
@@ -128,7 +136,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             if (this.client == null || this.client.player == null) return;
 
             //region CONNECTION
-            if (SubathonClient.authenticated) return;
+            if (SubathonClient.getInstance().authenticated) return;
 
             switch (SubathonClient.CLIENT_CONFIGS.connectionType()) {
                 case EVENTSUB -> {
@@ -145,14 +153,15 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                                 FileUtil.writeFile(Subathon.CONFIG_DIR.resolve("auth").toFile(), authKey);
                                 button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
                                 ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(authKey));
-                                SubathonClient.cache.put("token", authKey);
-                                SubathonClient.connectionType = ConfigsClient.ConnectionType.EVENTSUB;
+                                SubathonClient.getInstance().cache.put("token", authKey);
+                                SubathonClient.getInstance().connectionType = EVENTSUB;
                             }
                         });
                     } else {
-                        SubathonClient.cache.put("token", cachedKey.get());
+                        SubathonClient.getInstance().cache.put("token", cachedKey.get());
                         button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
                         ClientPlayNetworking.send(Subathon.id("auth_key"), PacketByteBufs.create().writeString(cachedKey.get()));
+                        SubathonClient.getInstance().connectionType = EVENTSUB;
                     }
                 }
                 case IRC -> {
@@ -162,7 +171,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                     } else {
                         button.setMessage(Text.translatable("text.subathon.screen.connect.button.authenticated"));
                         ClientPlayNetworking.send(Subathon.id("channel"), PacketByteBufs.create().writeString(channel));
-                        SubathonClient.connectionType = ConfigsClient.ConnectionType.IRC;
+                        SubathonClient.getInstance().connectionType = ConfigsClient.ConnectionType.IRC;
                     }
                 }
             }
@@ -172,7 +181,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             //region GET REWARDS
             Path cacheDir = Subathon.CONFIG_DIR.resolve("cache");
 
-            Runnable getRewards = () -> SubathonClient.rewards.forEach(reward -> {
+            Runnable getRewards = () -> SubathonClient.getInstance().rewards.forEach(reward -> {
                 var image = reward.image();
 
                 var url = image != null ? image.url4x() : reward.defaultImage().url4x();
@@ -181,7 +190,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                 if (cachedImage.isPresent()) {
                     try {
                         NativeImage read = NativeImage.read(cachedImage.get());
-                        SubathonClient.runtimeRewardTextures.registerTexture(Subathon.id("reward/" + reward.id()), new NativeImageBackedTexture(read));
+                        SubathonClient.getInstance().runtimeRewardTextures.registerTexture(Subathon.id("reward/" + reward.id()), new NativeImageBackedTexture(read));
                     } catch (Exception e) {
                         Subathon.LOGGER.error("Failed to load reward texture!", e);
                     }
@@ -204,7 +213,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
                             byte[] bytes = body.bytes();
                             FileUtil.writeFileBytes(cacheDir.resolve("reward-icons").resolve(reward.id()).toFile(), bytes);
                             NativeImage read = NativeImage.read(new ByteArrayInputStream(bytes));
-                            SubathonClient.runtimeRewardTextures.registerTexture(Subathon.id("reward/" + reward.id()), new NativeImageBackedTexture(read));
+                            SubathonClient.getInstance().runtimeRewardTextures.registerTexture(Subathon.id("reward/" + reward.id()), new NativeImageBackedTexture(read));
                         } catch (Exception e) {
                             Subathon.LOGGER.error("Failed to load reward texture!", e);
                         }
@@ -213,13 +222,13 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             });
 
             if (SubathonClient.CLIENT_CONFIGS.connectionType().requiresAuth()) {
-                if (SubathonClient.rewards.isEmpty()) {
-                    Twitch.getInstance().getChannelCustomRewards(SubathonClient.cache.get("token")).whenCompleteAsync((customRewards, throwable) -> {
-                        SubathonClient.rewards.addAll(customRewards);
+                if (SubathonClient.getInstance().rewards.isEmpty()) {
+                    Twitch.getInstance().getChannelCustomRewards(SubathonClient.getInstance().cache.get("token")).whenCompleteAsync((customRewards, throwable) -> {
+                        SubathonClient.getInstance().rewards.addAll(customRewards);
                         new Thread(getRewards).start();
                     });
                 } else {
-                    SubathonClient.runtimeRewardTextures.clear();
+                    SubathonClient.getInstance().runtimeRewardTextures.clear();
                     new Thread(getRewards).start();
                 }
             }
@@ -230,20 +239,21 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             accountLabel.text(Texts.of("text.subathon.screen.connect.account.disconnected"));
             disconnectButton.active = false;
             //reconnectButton.active = false;
-            SubathonClient.runtimeRewardTextures.clear();
-            SubathonClient.rewards.clear();
+            SubathonClient.getInstance().runtimeRewardTextures.clear();
+            SubathonClient.getInstance().rewards.clear();
             if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
                 UUID rewardId = SubathonClient.CLIENT_CONFIGS.rewardId();
-                if (SubathonClient.cache.get("token") != null) Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), rewardId, false);
+                if (SubathonClient.getInstance().cache.get("token") != null)
+                    Twitch.getInstance().toggleReward(SubathonClient.getInstance().cache.get("token"), rewardId, false);
                 ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeUUID(rewardId)));
             }
 
-            if (SubathonClient.connectionType != null) {
-                PacketByteBuf buf = PacketByteBufs.create().writeEnumConstant(SubathonClient.connectionType);
-                if (SubathonClient.connectionType.requiresAuth()) {
-                    if (SubathonClient.cache.get("token") != null) {
-                        buf.writeString(SubathonClient.cache.get("token"));
-                        SubathonClient.cache.remove("token");
+            if (SubathonClient.getInstance().connectionType != null) {
+                PacketByteBuf buf = PacketByteBufs.create().writeEnumConstant(SubathonClient.getInstance().connectionType);
+                if (SubathonClient.getInstance().connectionType.requiresAuth()) {
+                    if (SubathonClient.getInstance().cache.get("token") != null) {
+                        buf.writeString(SubathonClient.getInstance().cache.get("token"));
+                        SubathonClient.getInstance().cache.remove("token");
                     }
                 } else {
                     buf.writeString("");
@@ -256,8 +266,8 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             boolean open = false;
         };
         extraOptionsButton.onPress((ButtonComponent button) -> {
-            disconnectButton.active = SubathonClient.authenticated;
-            //reconnectButton.active = SubathonClient.authenticated;
+            disconnectButton.active = SubathonClient.getInstance().authenticated;
+            //reconnectButton.active = SubathonClient.getInstance().authenticated;
 
             ref.open = !ref.open;
             if (ref.open) {
@@ -272,7 +282,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         resetKeyButton.onPress((ButtonComponent button) -> {
             disconnect.run();
             FileUtil.delete(Subathon.CONFIG_DIR.resolve("auth"));
-            SubathonClient.cache.remove("token");
+            SubathonClient.getInstance().cache.remove("token");
             resetKeyButton.active = false;
         });
 
@@ -281,21 +291,21 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             FileUtil.delete(Subathon.CONFIG_DIR.resolve("cache"));
             SubathonClient.CLIENT_CONFIGS.rewardId(null);
             SubathonClient.CLIENT_CONFIGS.twitchUsername("");
-            SubathonClient.runtimeRewardTextures.clear();
-            SubathonClient.rewards.clear();
-            SubathonClient.cache.clear();
+            SubathonClient.getInstance().runtimeRewardTextures.clear();
+            SubathonClient.getInstance().rewards.clear();
+            SubathonClient.getInstance().cache.clear();
         });
 
         /*reconnectButton.onPress((ButtonComponent button) -> {
             disconnectButton.active = false;
             reconnectButton.active = false;
             resetCacheButton.active = false;
-            SubathonClient.authenticated = false;
-            SubathonClient.connectionStatus.clear();
-            SubathonClient.runtimeRewardTextures.clear();
-            SubathonClient.rewards.clear();
-            ClientPlayNetworking.send(Subathon.id("disconnect"), PacketByteBufs.create().writeString(SubathonClient.cache.get("token")));
-            SubathonClient.cache.remove("token");
+            SubathonClient.getInstance().authenticated = false;
+            SubathonClient.getInstance().connectionStatus.clear();
+            SubathonClient.getInstance().runtimeRewardTextures.clear();
+            SubathonClient.getInstance().rewards.clear();
+            ClientPlayNetworking.send(Subathon.id("disconnect"), PacketByteBufs.create().writeString(SubathonClient.getInstance().cache.get("token")));
+            SubathonClient.getInstance().cache.remove("token");
             connectButton.setMessage(Text.translatable("text.subathon.screen.connect.button.reconnecting"));
             connect.accept(connectButton);
         });*/
@@ -305,12 +315,12 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         //region BUTTON TOOLTIP
         {
             List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.translatable("text.subathon.screen.connect.button.tooltip"), 200)
-                    .stream().map(TooltipComponent::of).toList();
+                .stream().map(TooltipComponent::of).toList();
             connectButton.tooltip(tooltip);
         }
         //endregion
 
-        SubathonClient.connectionStatus.forEach((object, status) -> {
+        SubathonClient.getInstance().connectionStatus.forEach((object, status) -> {
             FlowLayout item = getComponent(items, FlowLayout.class, "connect." + object);
             assert item != null;
             LabelComponent statusCompent = getComponent(item, LabelComponent.class, "status");
@@ -319,7 +329,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
         });
 
         //region UPDATE GUI IF CONNECTED
-        if (SubathonClient.authenticated) {
+        if (SubathonClient.getInstance().authenticated) {
             resetCacheButton.active = false;
             resetKeyButton.active = false;
             connectButton.active = false;
@@ -333,7 +343,7 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
             assert flowLayout != null;
             assert client != null;
             List<TooltipComponent> tooltip = client.textRenderer.wrapLines(Text.translatable("text.subathon.screen.connect.resubs.tooltip"), 200)
-                    .stream().map(TooltipComponent::of).toList();
+                .stream().map(TooltipComponent::of).toList();
             flowLayout.tooltip(tooltip);
         }
         //endregion
@@ -344,10 +354,6 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
     @Override
     public void close() {
         super.close();
-    }
-
-    public FlowLayout rootComponent() {
-        return uiAdapter.rootComponent;
     }
 
     public FlowLayout extraOptions() {
@@ -364,10 +370,10 @@ public class ConnectScreen extends BaseScreen<FlowLayout> {
 
     public OptionComponentFactory.Result<FlowLayout, SubathonTextBox> createTextBox(UIModel model, Consumer<SubathonTextBox> processor) {
         var optionComponent = model.expandTemplate(FlowLayout.class, "text-box-config-option",
-                new MapBuilder.StringMap()
-                        .put("config-option-name", "text.config.subathon/client.option.twitchUsername")
-                        .putAny("config-option-value", SubathonClient.CLIENT_CONFIGS.twitchUsername())
-                        .build());
+            new MapBuilder.StringMap()
+                .put("config-option-name", "text.config.subathon/client.option.twitchUsername")
+                .putAny("config-option-value", SubathonClient.CLIENT_CONFIGS.twitchUsername())
+                .build());
 
         var valueBox = getComponent(optionComponent, SubathonTextBox.class, "value-box");
 

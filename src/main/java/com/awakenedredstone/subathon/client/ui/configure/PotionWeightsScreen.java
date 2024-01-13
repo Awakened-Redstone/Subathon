@@ -5,16 +5,13 @@ import com.awakenedredstone.subathon.client.ui.BaseScreen;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.Utils;
-import com.awakenedredstone.subathon.util.WeightedRandom;
 import io.wispforest.owo.config.ui.ConfigScreen;
 import io.wispforest.owo.config.ui.OptionComponentFactory;
 import io.wispforest.owo.config.ui.component.ConfigTextBox;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.Surface;
 import io.wispforest.owo.ui.parsing.UIModel;
-import io.wispforest.owo.ui.util.Drawer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.tooltip.TooltipComponent;
@@ -39,8 +36,8 @@ public class PotionWeightsScreen extends BaseScreen<FlowLayout> {
     protected void build(FlowLayout rootComponent) {
         Utils.load(ConfigScreen.class);
 
-        Subathon.potionsRandom = new WeightedRandom<>();
-        Subathon.COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> Subathon.potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
+        Subathon.getInstance().potionsRandom.reset();
+        Subathon.COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> Subathon.getInstance().potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
 
         FlowLayout items = rootComponent.childById(FlowLayout.class, "effects");
         Objects.requireNonNull(items, "Effects block is required!");
@@ -53,32 +50,21 @@ public class PotionWeightsScreen extends BaseScreen<FlowLayout> {
         ButtonComponent refreshButton = rootComponent.childById(ButtonComponent.class, "refresh");
         Asserts.notNull(refreshButton, "refreshButton");
         refreshButton.onPress(button -> {
-            Subathon.potionsRandom = new WeightedRandom<>();
-            Subathon.COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> Subathon.potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
-            
-            items.children().stream().filter(v -> v.id() != null).forEach(component -> {
-                StatusEffect effect = Registries.STATUS_EFFECT.get(new Identifier(component.id()));
-                String percentageString = String.format("%.5g", Subathon.potionsRandom.percentage(effect)) + "%";
-                String weightString = Subathon.potionsRandom.getWeight(effect) + "/" + Subathon.chaosRandom.getTotal();
-                List<TooltipComponent> tooltip = new ArrayList<>();
-                tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
-                tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
-                component.tooltip(tooltip);
-            });
+            refreshWeights(items);
         });
 
         Registries.STATUS_EFFECT.stream().forEach(statusEffect -> {
             Identifier identifier = Registries.STATUS_EFFECT.getId(statusEffect);
             var template = model.expandTemplate(FlowLayout.class, "effect", new MapBuilder.StringMap()
-                    .put("translation", statusEffect.getTranslationKey())
-                    .put("namespace", identifier.getNamespace())
-                    .put("path", identifier.getPath())
-                    .putAny("identifier", identifier)
-                    .build());
+                .put("translation", statusEffect.getTranslationKey())
+                .put("namespace", identifier.getNamespace())
+                .put("path", identifier.getPath())
+                .putAny("identifier", identifier)
+                .build());
 
-            template.mouseEnter().subscribe(() -> template.surface((matrices, component1) -> Drawer.drawGradientRect(matrices,
-                    component1.x(), component1.y(), component1.width(), component1.height(),
-                    0xC0101010, 0x00101010, 0x00101010, 0xC0101010
+            template.mouseEnter().subscribe(() -> template.surface((context, component1) -> context.drawGradientRect(
+                component1.x(), component1.y(), component1.width(), component1.height(),
+                0xC0101010, 0x00101010, 0x00101010, 0xC0101010
             )));
 
             template.mouseLeave().subscribe(() -> template.surface(Surface.BLANK));
@@ -86,10 +72,10 @@ public class PotionWeightsScreen extends BaseScreen<FlowLayout> {
             FlowLayout container = template.childById(FlowLayout.class, "config-field");
             Objects.requireNonNull(items, "Configs block is required!");
 
-            container.child(createTextBox(model, identifier, textBox -> textBox.configureForNumber(Integer.class)).optionProvider());
+            container.child(createTextBox(model, identifier, textBox -> textBox.configureForNumber(Integer.class)).baseComponent());
 
-            String percentageString = String.format("%.5g", Subathon.potionsRandom.percentage(statusEffect)) + "%";
-            String weightString = Subathon.potionsRandom.getWeight(statusEffect) + "/" + Subathon.chaosRandom.getTotal();
+            String percentageString = String.format("%.5g", Subathon.getInstance().potionsRandom.percentage(statusEffect)) + "%";
+            String weightString = Subathon.getInstance().potionsRandom.getWeight(statusEffect) + "/" + Subathon.getInstance().potionsRandom.getTotal();
             List<TooltipComponent> tooltip = new ArrayList<>();
             tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
             tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
@@ -104,17 +90,16 @@ public class PotionWeightsScreen extends BaseScreen<FlowLayout> {
     @Override
     public void close() {
         Subathon.COMMON_CONFIGS.save();
-        Subathon.potionsRandom = new WeightedRandom<>();
-        Subathon.COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> Subathon.potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
+        Subathon.getInstance().potionsRandom.reset();
+        Subathon.COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> Subathon.getInstance().potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
         super.close();
     }
 
-    public static OptionComponentFactory.Result<FlowLayout, ConfigTextBox> createTextBox(UIModel model, Identifier identifier, Consumer<ConfigTextBox> processor) {
+    public OptionComponentFactory.Result<FlowLayout, ConfigTextBox> createTextBox(UIModel model, Identifier identifier, Consumer<ConfigTextBox> processor) {
         var optionComponent = model.expandTemplate(FlowLayout.class, "text-box-config-option",
-                new MapBuilder.StringMap()
-                        .put("config-option-name", "text.config.subathon/mode.option.weight")
-                        .putAny("config-option-value", Subathon.COMMON_CONFIGS.potionWeights().getOrDefault(identifier, 1))
-                        .build());
+            new MapBuilder.StringMap()
+                .putAny("config-option-value", Subathon.COMMON_CONFIGS.potionWeights().getOrDefault(identifier, 1))
+                .build());
 
         var valueBox = optionComponent.childById(ConfigTextBox.class, "value-box");
         var resetButton = optionComponent.childById(ButtonComponent.class, "reset-button");
@@ -129,7 +114,9 @@ public class PotionWeightsScreen extends BaseScreen<FlowLayout> {
             resetButton.active = !s.equals("1");
             try {
                 Subathon.COMMON_CONFIGS.potionWeights().put(identifier, Integer.parseInt(s));
-            } catch (Exception ignored) {}
+                refreshWeights(getComponent(FlowLayout.class, "effects"));
+            } catch (Exception ignored) {
+            }
         });
 
         processor.accept(valueBox);
@@ -138,10 +125,19 @@ public class PotionWeightsScreen extends BaseScreen<FlowLayout> {
 
         return new OptionComponentFactory.Result<>(optionComponent, valueBox);
     }
-    
-    private boolean isOver(Component component) {
-        double clientMouseX = client.mouse.getX() / client.getWindow().getScaleFactor();
-        double clientMouseY = client.mouse.getY() / client.getWindow().getScaleFactor();
-        return component.isInBoundingBox(clientMouseX, clientMouseY);
+
+    private void refreshWeights(FlowLayout items) {
+        Subathon.getInstance().potionsRandom.reset();
+        Subathon.COMMON_CONFIGS.potionWeights().forEach((identifier, integer) -> Subathon.getInstance().potionsRandom.add(integer, Registries.STATUS_EFFECT.get(identifier)));
+
+        items.children().stream().filter(v -> v.id() != null).forEach(component -> {
+            StatusEffect effect = Registries.STATUS_EFFECT.get(new Identifier(component.id()));
+            String percentageString = String.format("%.5g", Subathon.getInstance().potionsRandom.percentage(effect)) + "%";
+            String weightString = Subathon.getInstance().potionsRandom.getWeight(effect) + "/" + Subathon.getInstance().potionsRandom.getTotal();
+            List<TooltipComponent> tooltip = new ArrayList<>();
+            tooltip.add(TooltipComponent.of(Texts.of("<yellow>" + percentageString + "</yellow>").asOrderedText()));
+            tooltip.add(TooltipComponent.of(Texts.of("<gray>" + weightString + "</gray>").asOrderedText()));
+            component.tooltip(tooltip);
+        });
     }
 }

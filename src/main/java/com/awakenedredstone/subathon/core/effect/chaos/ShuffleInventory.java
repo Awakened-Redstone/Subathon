@@ -8,6 +8,10 @@ import java.util.Random;
 
 public class ShuffleInventory extends Chaos {
 
+    public ShuffleInventory() {
+        super(18);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();

@@ -23,6 +23,7 @@ public class ConfigsClient {
     @PredicateConstraint("validTwitchUsername")
     public String twitchUsername = "";
 
+    @Hook
     @Comment("Toggles showing the points on the screen")
     public boolean showValue = true;
     @Comment("Toggles showing the update timer")
@@ -30,7 +31,7 @@ public class ConfigsClient {
 
     @Hook
     @Comment("Sets the scale of teh points display on the screen")
-    @RangeConstraint(min = 0, max = 5)
+    @RangeConstraint(min = 0, max = 5, decimalPlaces = 1)
     public float pointsFontScale = 1f;
 
     @PredicateConstraint("aboveZero")
@@ -110,7 +111,7 @@ public class ConfigsClient {
     }
 
     public static boolean validTwitchUsername(String username) {
-        return Pattern.compile("^[a-zA-Z\\d]\\w{0,24}$").matcher(username).matches();
+        return Pattern.compile("^$|^[a-zA-Z\\d]\\w{0,24}$").matcher(username).matches();
     }
 
     public enum ConnectionType {

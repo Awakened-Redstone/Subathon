@@ -32,8 +32,9 @@ public class ConfigsCommon {
 
     @ExcludeFromScreen
     @PredicateConstraint("mobsConstrain")
-    @Comment("Mobs that are excluded from the chaos effect")
-    public List<String> excludedMobs = new ArrayList<>(Arrays.asList("minecraft:player", "minecraft:egg", "minecraft:item",
+    @Comment("Mobs that are not spawned excluded from the chaos effect")
+    //TODO: tags
+    public List<String> excludedEntities = new ArrayList<>(Arrays.asList("minecraft:player", "minecraft:egg", "minecraft:item",
             "minecraft:item_frame", "minecraft:paiting", "minecraft:fishing_bobber", "minecraft:experience_bottle",
             "minecraft:ender_pearl", "minecraft:spectral_arrow", "minecraft:snowball", "minecraft:small_fireball",
             "minecraft:shulker_bullet", "minecraft:marker", "minecraft:firework_rocket", "minecraft:falling_block",
@@ -41,7 +42,15 @@ public class ConfigsCommon {
             "minecraft:boat", "minecraft:chest_boat", "minecraft:arrow", "minecraft:area_effect_cloud", "minecraft:armor_stand",
             "minecraft:minecart", "minecraft:furnace_minecart", "minecraft:chest_minecart", "minecraft:hopper_minecart",
             "minecraft:spawner_minecart", "minecraft:command_block_minecart", "minecraft:giant", "minecraft:gloe_item_frame",
-            "minecraft:leash_know", "minecraft:llama_spit", "minecraft:potion", "minecraft:wither_skull", "subathon:fireball"));
+            "minecraft:leash_know", "minecraft:llama_spit", "minecraft:potion", "minecraft:wither_skull", "subathon:fireball",
+            "minecraft:text_display", "minecraft:item_display", "minecraft:block_display", "lil-donk:penguin", "subathon:chaos_fireball", "subathon:big_bomb"));
+
+    @ExcludeFromScreen
+    @PredicateConstraint("mobsConstrain")
+    //TODO: tags
+    @Comment("Mobs that can't be affected by things like randomize entities")
+    public List<String> protectedEntities = new ArrayList<>(Arrays.asList("minecraft:player", "lil-donk:penguin",
+            "minecraft:text_display", "minecraft:item_display", "minecraft:block_display"));
 
     @Hook
     @ExcludeFromScreen
@@ -119,6 +128,12 @@ public class ConfigsCommon {
             return value >= 0;
         }
     }
+
+    /*@SectionHeader("hypeChat")
+    @Nest public Common$HypeChat hypeChat = new Common$HypeChat();
+
+    public static class Common$HypeChat {
+    }*/
 
     @SectionHeader("rewards")
     @Nest public Common$Rewards rewards = new Common$Rewards();

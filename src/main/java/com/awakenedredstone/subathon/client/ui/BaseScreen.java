@@ -6,7 +6,6 @@ import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.ParentComponent;
 import io.wispforest.owo.ui.core.Surface;
-import io.wispforest.owo.ui.util.Drawer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.sound.PositionedSoundInstance;
@@ -60,10 +59,21 @@ public abstract class BaseScreen<R extends ParentComponent> extends BaseUIModelS
         return component;
     }
 
-    public static final Surface HOVER = (matrices, component) -> {
-        Drawer.drawGradientRect(matrices,
-                component.x(), component.y(), component.width(), component.height(),
-                0xC0101010, 0x00101010, 0x00101010, 0xC0101010
+    public <T extends Component> T getComponent(@NotNull Class<T> expectedClass, @NotNull String id) {
+        var component = rootComponent().childById(expectedClass, id);
+        Asserts.notNull(component, id);
+
+        return component;
+    }
+
+    public R rootComponent() {
+        return uiAdapter.rootComponent;
+    }
+
+    public static final Surface HOVER = (context, component) -> {
+        context.drawGradientRect(
+            component.x(), component.y(), component.width(), component.height(),
+            0xC0101010, 0x00101010, 0x00101010, 0xC0101010
         );
     };
 }

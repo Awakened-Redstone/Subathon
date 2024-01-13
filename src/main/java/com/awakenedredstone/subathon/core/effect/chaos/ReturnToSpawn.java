@@ -11,17 +11,21 @@ import java.util.Optional;
 
 public class ReturnToSpawn extends Chaos {
 
+    public ReturnToSpawn() {
+        super(6);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {
             float spawnAngle = serverPlayer.getSpawnAngle();
-            ServerWorld world = Subathon.server.getWorld(serverPlayer.getSpawnPointDimension());
+            ServerWorld world = Subathon.getServer().getWorld(serverPlayer.getSpawnPointDimension());
             BlockPos spawnPointPosition = serverPlayer.getSpawnPointPosition();
 
             Optional<Vec3d> respawnPosition = world != null && spawnPointPosition != null ?
                     PlayerEntity.findRespawnPosition(world, spawnPointPosition, spawnAngle, serverPlayer.isSpawnForced(), true) : Optional.empty();
 
-            ServerWorld serverWorld = world != null && respawnPosition.isPresent() ? world : Subathon.server.getOverworld();
+            ServerWorld serverWorld = world != null && respawnPosition.isPresent() ? world : Subathon.getServer().getOverworld();
 
             if (respawnPosition.isPresent()) {
                 Vec3d vec3d = respawnPosition.get();
@@ -31,8 +35,8 @@ public class ReturnToSpawn extends Chaos {
                     serverPlayer.teleport(world, vec3d.x, vec3d.y, vec3d.z, spawnAngle, 0.0f);
                 }
             } else {
-                BlockPos spawnPos = Subathon.server.getOverworld().getSpawnPos();
-                float spawnAngle1 = Subathon.server.getOverworld().getSpawnAngle();
+                BlockPos spawnPos = Subathon.getServer().getOverworld().getSpawnPos();
+                float spawnAngle1 = Subathon.getServer().getOverworld().getSpawnAngle();
                 if (serverWorld == player.getWorld()) {
                     serverPlayer.networkHandler.requestTeleport(spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(), spawnAngle1, 0.0f);
                 } else {

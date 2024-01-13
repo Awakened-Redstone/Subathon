@@ -5,7 +5,7 @@ import com.awakenedredstone.subathon.client.SubathonClient;
 import com.awakenedredstone.subathon.client.ui.BaseScreen;
 import com.awakenedredstone.subathon.duck.owo.ComponentDuck;
 import com.awakenedredstone.subathon.owo.SubathonTextBox;
-import com.awakenedredstone.subathon.twitch.Twitch;
+import com.awakenedredstone.subathon.integration.twitch.Twitch;
 import com.awakenedredstone.subathon.util.MapBuilder;
 import com.awakenedredstone.subathon.util.Texts;
 import com.awakenedredstone.subathon.util.Utils;
@@ -17,7 +17,6 @@ import io.wispforest.owo.ui.core.Component;
 import io.wispforest.owo.ui.core.Positioning;
 import io.wispforest.owo.ui.core.Surface;
 import io.wispforest.owo.ui.parsing.UIModel;
-import io.wispforest.owo.ui.util.Drawer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -79,27 +78,27 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
             });
         }
 
-        SubathonClient.rewards.stream().filter(reward -> !reward.isUserInputRequired()).forEach(reward -> {
+        SubathonClient.getInstance().rewards.stream().filter(reward -> !reward.isUserInputRequired()).forEach(reward -> {
             var ref = new Object() {
                 boolean wasShiftDown = Screen.hasShiftDown();
             };
 
-            NativeImageBackedTexture image = (NativeImageBackedTexture) SubathonClient.runtimeRewardTextures.getTexture(Subathon.id("reward/" + reward.id()));
+            NativeImageBackedTexture image = (NativeImageBackedTexture) SubathonClient.getInstance().runtimeRewardTextures.getTexture(Subathon.id("reward/" + reward.id()));
             var template = model.expandTemplate(FlowLayout.class, "reward", new MapBuilder.StringMap()
-                    .put("id", reward.id())
-                    .put("reward_name", reward.title())
-                    .putAny("size", image.getImage().getWidth())
-                    .build());
+                .put("id", reward.id())
+                .put("reward_name", reward.title())
+                .putAny("size", image.getImage().getWidth())
+                .build());
 
             if (template.id() == null) throw new IllegalStateException("Reward entry on UI can not be missing the ID!");
             UUID id = UUID.fromString(template.id());
 
             if (Objects.equals(id, selected)) {
-                template.surface((matrices, component) ->
-                        Drawer.drawGradientRect(matrices,
-                                component.x(), component.y(), component.width(), component.height(),
-                                0xC0006000, 0x00001000, 0x00001000, 0xC0006000
-                        ));
+                template.surface((context, component) ->
+                    context.drawGradientRect(
+                        component.x(), component.y(), component.width(), component.height(),
+                        0xC0006000, 0x00001000, 0x00001000, 0xC0006000
+                    ));
             }
 
             ((ComponentDuck) template).subathon$registerUpdateListener((delta, mouseX, mouseY) -> {
@@ -113,11 +112,11 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
                     List<Text> tooltip = new ArrayList<>();
                     tooltip.add(Text.literal(prompt == null ? "No description" : prompt));
                     tooltip.add(Text.empty());
-                    tooltip.add(Texts.of("text.subathon.screen.rewards.cost", new MapBuilder.StringMap().putAny("%cost%", cost).build()));
+                    tooltip.add(Texts.of("text.subathon.screen.rewards.cost", new MapBuilder.StringMap().putAny("cost", cost).build()));
                     if (Screen.hasShiftDown()) {
-                        tooltip.add(Texts.of("text.subathon.screen.rewards.subOnly", new MapBuilder.StringMap().putAny("%boolean%", subOnly).build()));
-                        tooltip.add(Texts.of("text.subathon.screen.rewards.paused", new MapBuilder.StringMap().putAny("%boolean%", paused).build()));
-                        tooltip.add(Texts.of("text.subathon.screen.rewards.enabled", new MapBuilder.StringMap().putAny("%boolean%", enabled).build()));
+                        tooltip.add(Texts.of("text.subathon.screen.rewards.subOnly", new MapBuilder.StringMap().putAny("boolean", subOnly).build()));
+                        tooltip.add(Texts.of("text.subathon.screen.rewards.paused", new MapBuilder.StringMap().putAny("boolean", paused).build()));
+                        tooltip.add(Texts.of("text.subathon.screen.rewards.enabled", new MapBuilder.StringMap().putAny("boolean", enabled).build()));
                     } else {
                         tooltip.add(Texts.of("text.subathon.screen.rewards.more"));
                     }
@@ -133,10 +132,10 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
             template.mouseEnter().subscribe(() -> {
                 if (!Objects.equals(id, selected)) {
                     //noinspection CodeBlock2Expr
-                    template.surface((matrices, component) -> {
-                        Drawer.drawGradientRect(matrices,
-                                component.x(), component.y(), component.width(), component.height(),
-                                0xC0101010, 0x00101010, 0x00101010, 0xC0101010
+                    template.surface((context, component) -> {
+                        context.drawGradientRect(
+                            component.x(), component.y(), component.width(), component.height(),
+                            0xC0101010, 0x00101010, 0x00101010, 0xC0101010
                         );
                     });
                 }
@@ -156,11 +155,11 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
                         this.playDownSound(MinecraftClient.getInstance().getSoundManager());
                         selected = id;
                         textBox.text(parseSelected());
-                        template.surface((matrices, component) ->
-                                Drawer.drawGradientRect(matrices,
-                                        component.x(), component.y(), component.width(), component.height(),
-                                        0xC0006000, 0x00001000, 0x00001000, 0xC0006000
-                                ));
+                        template.surface((context, component) ->
+                            context.drawGradientRect(
+                                component.x(), component.y(), component.width(), component.height(),
+                                0xC0006000, 0x00001000, 0x00001000, 0xC0006000
+                            ));
                     }
                 } else if (button == 1) {
                     if (Objects.equals(selected, id)) {
@@ -168,10 +167,10 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
                         selected = null;
                         textBox.text(parseSelected());
                         //noinspection CodeBlock2Expr
-                        template.surface((matrices, component) -> {
-                            Drawer.drawGradientRect(matrices,
-                                    component.x(), component.y(), component.width(), component.height(),
-                                    0xC0101010, 0x00101010, 0x00101010, 0xC0101010
+                        template.surface((context, component) -> {
+                            context.drawGradientRect(
+                                component.x(), component.y(), component.width(), component.height(),
+                                0xC0101010, 0x00101010, 0x00101010, 0xC0101010
                             );
                         });
                     }
@@ -197,14 +196,17 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
     }
 
     private void save() {
+        if (textBox == null) return;
         textBox.text(parseSelected());
         if (SubathonClient.CLIENT_CONFIGS.rewardId() != null) {
-            Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), SubathonClient.CLIENT_CONFIGS.rewardId(), false);
+            Twitch.getInstance().toggleReward(SubathonClient.getInstance().cache.get("token"), SubathonClient.CLIENT_CONFIGS.rewardId(), false);
         }
 
         SubathonClient.CLIENT_CONFIGS.rewardId(selected);
-        Twitch.getInstance().toggleReward(SubathonClient.cache.get("token"), selected, true);
-        ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeSelectedUUID()));
+        Twitch.getInstance().toggleReward(SubathonClient.getInstance().cache.get("token"), selected, true);
+        if (MinecraftClient.getInstance().world != null) {
+            ClientPlayNetworking.send(Subathon.id("reward_id"), PacketByteBufs.create().writeUuid(safeSelectedUUID()));
+        }
     }
 
     private void updateGui() {
@@ -214,21 +216,21 @@ public class RewardScreen extends BaseScreen<FlowLayout> {
             if (reward.id() == null) throw new IllegalStateException("Reward entry on UI can not be missing the ID!");
             UUID id = UUID.fromString(reward.id());
             if (Objects.equals(id, selected)) {
-                reward.surface((matrices, component) ->
-                        Drawer.drawGradientRect(matrices,
-                                component.x(), component.y(), component.width(), component.height(),
-                                0xC0006000, 0x00001000, 0x00001000, 0xC0006000
-                        ));
+                reward.surface((context, component) ->
+                    context.drawGradientRect(
+                        component.x(), component.y(), component.width(), component.height(),
+                        0xC0006000, 0x00001000, 0x00001000, 0xC0006000
+                    ));
             } else reward.surface(Surface.BLANK);
         }
     }
 
     public OptionComponentFactory.Result<FlowLayout, SubathonTextBox> createTextBox(UIModel model, Consumer<SubathonTextBox> processor) {
         var optionComponent = model.expandTemplate(FlowLayout.class, "text-box-config-option",
-                new MapBuilder.StringMap()
-                        .put("config-option-name", "text.config.subathon/mode.option.weight")
-                        .putAny("config-option-value", parseSelected())
-                        .build());
+            new MapBuilder.StringMap()
+                .put("config-option-name", "text.config.subathon/mode.option.weight")
+                .putAny("config-option-value", parseSelected())
+                .build());
 
         var valueBox = optionComponent.childById(SubathonTextBox.class, "value-box");
 

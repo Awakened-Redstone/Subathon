@@ -1,0 +1,28 @@
+{
+    "type": "subathon:sculk_patch",
+    "config": {
+        "depth": 6,
+        "extra_bottom_block_chance": 0.5,
+        "extra_edge_column_chance": 0.75,
+        "ground_state": {
+            "type": "minecraft:simple_state_provider",
+            "state": {
+                "Name": "minecraft:sculk"
+            }
+        },
+        "surface": "floor",
+        "vegetation_chance": 0.01,
+        "vegetation_feature": {
+            "feature": "subathon:sculk_vegetation",
+            "placement": []
+        },
+        "vertical_range": 20,
+        "xz_radius": {
+            "type": "minecraft:uniform",
+            "value": {
+                "min_inclusive": 1,
+                "max_inclusive": 1
+            }
+        }
+    }
+}

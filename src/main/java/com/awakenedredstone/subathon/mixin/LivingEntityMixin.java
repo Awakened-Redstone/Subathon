@@ -13,9 +13,8 @@ import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(LivingEntity.class)
+@Mixin(value = LivingEntity.class)
 public abstract class LivingEntityMixin extends Entity {
-
     public LivingEntityMixin(EntityType<?> type, World world) {
         super(type, world);
     }
@@ -25,7 +24,7 @@ public abstract class LivingEntityMixin extends Entity {
         Effect jump = SubathonRegistries.EFFECTS.get(Subathon.id("jump"));
         if (jump == null) return original;
         if (jump.enabled && (LivingEntity) (Object) this instanceof PlayerEntity player) {
-            return (float) (original + (jump.scale * ComponentManager.getComponent(world, player).getPoints()));
+            return (float) (original + (jump.scale * Subathon.getPoints(player)));
         } else return original;
     }
 }

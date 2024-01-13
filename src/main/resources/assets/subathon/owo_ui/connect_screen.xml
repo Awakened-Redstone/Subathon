@@ -59,7 +59,8 @@
             </surface>
         </flow-layout>
     </components>
-    <templates>
+    <templates
+    >
         <connection>
             <flow-layout direction="horizontal" id="connect.{{text}}">
                 <children>
@@ -133,6 +134,7 @@
                 <surface>
                     <panel dark="true"/>
                 </surface>
+                <z-index>15</z-index>
                 <positioning type="relative">100,100</positioning>
             </flow-layout>
         </extra-options>
@@ -170,6 +172,7 @@
                 <surface>
                     <panel dark="true"/>
                 </surface>
+                <z-index>50</z-index>
                 <positioning type="relative">50,50</positioning>
             </flow-layout>
         </twitch-username>
@@ -211,16 +214,13 @@
                         <vertical-alignment>center</vertical-alignment>
                     </flow-layout>
                 </children>
-
                 <sizing>
                     <horizontal method="fixed">240</horizontal>
                     <vertical method="fixed">32</vertical>
                 </sizing>
-
                 <padding>
                     <all>5</all>
                 </padding>
-
             </flow-layout>
         </config-option>
     </templates>

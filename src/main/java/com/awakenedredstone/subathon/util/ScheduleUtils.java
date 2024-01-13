@@ -12,7 +12,7 @@ import java.util.UUID;
 public class ScheduleUtils {
     private final Queue<Event> events = new PriorityQueue<>(createEventComparator());
 
-    public void destroy() {
+    public void close() {
         events.clear();
     }
 

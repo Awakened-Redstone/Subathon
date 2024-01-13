@@ -23,6 +23,10 @@ import java.util.UUID;
 
 public class RandomItem extends Chaos {
 
+    public RandomItem() {
+        super(16);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         int success = 0;
@@ -38,14 +42,15 @@ public class RandomItem extends Chaos {
                 itemStack.setNbt(nbt);
                 itemStack.setCustomName(Text.literal(uuid()));
 
-                ItemEntity itemEntity = new ItemEntity(player.world, player.getX(), player.getY(), player.getZ(), itemStack);
+                ItemEntity itemEntity = new ItemEntity(player.getWorld(), player.getX(), player.getY(), player.getZ(), itemStack);
                 itemEntity.setPickupDelay(0);
                 if (random.nextBoolean()) {
-                    Optional<ItemEntity> entity = trySpawnAt(itemEntity, serverPlayer.getWorld(), player.getBlockPos(), 30, 5, 5,
-                            (world, pos, state, abovePos, aboveState) -> (aboveState.isAir() || aboveState.getMaterial().isLiquid()) && !state.isAir());
+                    //TODO: tags
+                    Optional<ItemEntity> entity = trySpawnAt(itemEntity, serverPlayer.getServerWorld(), player.getBlockPos(), 30, 5, 5,
+                            (world, pos, state, abovePos, aboveState) -> (aboveState.isAir() || aboveState.isLiquid()) && !state.isAir());
                     if (entity.isPresent()) success++;
                 } else {
-                    Subathon.scheduler.schedule(Subathon.server, 1, () -> serverPlayer.getWorld().spawnEntityAndPassengers(itemEntity));
+                    Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 1, () -> serverPlayer.getWorld().spawnEntity(itemEntity));
                     success++;
                 }
             }
@@ -66,7 +71,7 @@ public class RandomItem extends Chaos {
             mutable.set(pos, j, verticalRange, k);
             if (!world.getWorldBorder().contains(mutable) || !LargeEntitySpawnHelper.findSpawnPos(world, verticalRange, mutable, requirements)) continue;
             entity.setPos(mutable.getX(), mutable.getY() + 1, mutable.getZ());
-            world.spawnEntityAndPassengers(entity);
+            Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 1, () -> world.spawnEntityAndPassengers(entity));
             return Optional.of(entity);
         }
         return Optional.empty();

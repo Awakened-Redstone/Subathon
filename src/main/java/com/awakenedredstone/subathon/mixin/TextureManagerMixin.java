@@ -18,13 +18,12 @@ import java.util.Map;
 @Mixin(TextureManager.class)
 @Environment(EnvType.CLIENT)
 public class TextureManagerMixin {
-
     @Shadow @Final private Map<Identifier, AbstractTexture> textures;
 
     @Inject(method = "getTexture", at = @At("HEAD"), cancellable = true)
     private void subathon$addRuntimeTextures(Identifier id, CallbackInfoReturnable<AbstractTexture> cir) {
-        if (!textures.containsKey(id) && SubathonClient.runtimeRewardTextures.getTextures().containsKey(id)) {
-            cir.setReturnValue(SubathonClient.runtimeRewardTextures.getTexture(id));
+        if (!textures.containsKey(id) && SubathonClient.getInstance().runtimeRewardTextures.getTextures().containsKey(id)) {
+            cir.setReturnValue(SubathonClient.getInstance().runtimeRewardTextures.getTexture(id));
         }
     }
 }

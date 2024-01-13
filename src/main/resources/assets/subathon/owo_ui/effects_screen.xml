@@ -12,6 +12,7 @@
                                     <bottom>2</bottom>
                                     <left>10</left>
                                 </margins>
+                                <z-index>-1</z-index>
                             </label>
                         </children>
                         <margins>
@@ -92,6 +93,7 @@
                 <surface>
                     <panel dark="true" />
                 </surface>
+                <z-index>15</z-index>
             </flow-layout>
         </mode-options>
         <text-box-config-option>

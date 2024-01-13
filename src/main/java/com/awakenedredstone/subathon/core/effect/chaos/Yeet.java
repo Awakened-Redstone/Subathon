@@ -8,6 +8,10 @@ import java.util.Random;
 
 public class Yeet extends Chaos {
 
+    public Yeet() {
+        super(50);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         if (player instanceof ServerPlayerEntity serverPlayer) {

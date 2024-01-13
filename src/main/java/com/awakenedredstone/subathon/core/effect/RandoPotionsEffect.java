@@ -39,7 +39,7 @@ public class RandoPotionsEffect extends Effect {
         double amplifierGaussian = Math.abs(random.nextGaussian(0, 23));
         int duration = (int) Math.round(durationGaussian * 20);
         int amplifier = (int) Math.round(amplifierGaussian);
-        StatusEffect effect = Subathon.potionsRandom.next();
+        StatusEffect effect = Subathon.getInstance().potionsRandom.next();
         if (player.hasStatusEffect(effect)) {
             StatusEffectInstance playerEffect = player.getStatusEffect(effect);
             duration += playerEffect.getDuration();
@@ -54,17 +54,5 @@ public class RandoPotionsEffect extends Effect {
         container.child(Components.button(Text.translatable("text.subathon.screen.potion_effects.open"),
                         button -> MinecraftClient.getInstance().setScreen(new PotionWeightsScreen()))
                 .sizing(Sizing.content()));
-
-        //Option<List<?>> excludedPotions = Subathon.COMMON_CONFIGS.optionForKey(Option.Key.ROOT.child("excludedPotions"));
-        //var result = POTION_LIST().make(model, excludedPotions);
-        //container.child(result.optionContainer());
     }
-
-    /*@SuppressWarnings({"unchecked", "rawtypes"})
-    private OptionComponentFactory<List<?>> POTION_LIST() {
-        return (model, option) -> {
-            var layout = new PotionListOptionContainer(option);
-            return new OptionComponentFactory.Result(layout, layout);
-        };
-    }*/
 }

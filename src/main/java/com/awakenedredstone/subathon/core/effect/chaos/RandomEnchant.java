@@ -20,6 +20,10 @@ import java.util.UUID;
 
 public class RandomEnchant extends Chaos {
 
+    public RandomEnchant() {
+        super(16);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();
@@ -34,7 +38,7 @@ public class RandomEnchant extends Chaos {
             } while (stack.isEmpty());
 
 
-            Optional<RegistryEntry.Reference<Enchantment>> optional = Registries.ENCHANTMENT.getRandom(player.world.random);
+            Optional<RegistryEntry.Reference<Enchantment>> optional = Registries.ENCHANTMENT.getRandom(player.getWorld().getRandom());
             if (optional.isEmpty()) return false;
             Enchantment enchant = optional.get().value();
 

@@ -1,10 +1,12 @@
 package com.awakenedredstone.subathon.core.effect;
 
 import com.awakenedredstone.subathon.Subathon;
+import com.awakenedredstone.subathon.client.ui.configure.ChaosWeightsScreen;
 import com.awakenedredstone.subathon.config.component.MobListOptionContainer;
 import com.awakenedredstone.subathon.core.effect.chaos.Chaos;
-import com.awakenedredstone.subathon.client.ui.configure.ChaosWeightsScreen;
+import com.awakenedredstone.subathon.registry.ChaosRegistry;
 import com.awakenedredstone.subathon.util.MapBuilder;
+import com.awakenedredstone.subathon.util.ServerUtils;
 import com.awakenedredstone.subathon.util.Texts;
 import io.wispforest.owo.config.Option;
 import io.wispforest.owo.config.ui.OptionComponentFactory;
@@ -31,11 +33,11 @@ public class ChaosEffect extends Effect {
         boolean success;
         int remainingTries = Subathon.COMMON_CONFIGS.chaosTries();
         do {
-            Chaos chaos = Subathon.chaosRandom.next();
+            Chaos chaos = Subathon.getInstance().chaosRandom.next();
             success = chaos.playerTrigger(player);
-            //player.sendMessage(Text.literal(ChaosRegistry.classNameRegistry.get(chaos.getClass().getName()).toString() + " -> " + success), false);
+            Subathon.LOGGER.debug(chaos.getIdentifier() + " -> " + success);
             if (remainingTries-- <= 0) {
-                player.sendMessage(Texts.of("text.subathon.chaos.error", new MapBuilder.StringMap().putAny("%amount%", Subathon.COMMON_CONFIGS.chaosTries()).build()), false);
+                player.sendMessage(Texts.of("text.subathon.chaos.error", new MapBuilder.StringMap().putAny("amount", Subathon.COMMON_CONFIGS.chaosTries()).build()), false);
                 break;
             }
         } while (!success);
@@ -46,11 +48,11 @@ public class ChaosEffect extends Effect {
         boolean success;
         int remainingTries = Subathon.COMMON_CONFIGS.chaosTries();
         do {
-            Chaos chaos = Subathon.chaosRandom.next();
+            Chaos chaos = Subathon.getInstance().chaosRandom.next();
             success = chaos.globalTrigger(world);
-            //Subathon.server.sendMessage(Text.literal(ChaosRegistry.classNameRegistry.get(chaos.getClass().getName()).toString() + " -> " + success));
+            //ServerUtils.broadcast(Text.literal(chaos.getIdentifier() + " -> " + success));
             if (remainingTries-- <= 0) {
-                Subathon.server.sendMessage(Texts.of("text.subathon.chaos.error", new MapBuilder.StringMap().putAny("amount", Subathon.COMMON_CONFIGS.chaosTries()).build()));
+                ServerUtils.broadcast(Texts.of("text.subathon.chaos.error", new MapBuilder.StringMap().putAny("amount", Subathon.COMMON_CONFIGS.chaosTries()).build()));
                 break;
             }
         } while (!success);
@@ -62,8 +64,8 @@ public class ChaosEffect extends Effect {
                         button -> MinecraftClient.getInstance().setScreen(new ChaosWeightsScreen()))
                 .sizing(Sizing.content()));
 
-        Option<List<?>> excludedMobs = Subathon.COMMON_CONFIGS.optionForKey(Option.Key.ROOT.child("excludedMobs"));
-        var result = MOB_LIST().make(model, excludedMobs);
+        Option<List<?>> excludedEntities = Subathon.COMMON_CONFIGS.optionForKey(Option.Key.ROOT.child("excludedEntities"));
+        var result = MOB_LIST().make(model, excludedEntities);
         container.child((Component) result.optionProvider());
     }
 

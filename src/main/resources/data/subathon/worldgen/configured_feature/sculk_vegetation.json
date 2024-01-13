@@ -1,0 +1,59 @@
+{
+    "type": "subathon:simple_block",
+    "config": {
+        "to_place": {
+            "type": "minecraft:weighted_state_provider",
+            "entries": [
+                {
+                    "data": {
+                        "Name": "minecraft:sculk_sensor"
+                    },
+                    "weight": 12
+                },
+                {
+                    "data": {
+                        "Name": "minecraft:sculk_shrieker",
+                        "Properties": {
+                            "can_summon": "true",
+                            "shrieking": "false",
+                            "waterlogged": "false"
+                        }
+                    },
+                    "weight": 3
+                },
+                {
+                    "data": {
+                        "Name": "minecraft:sculk_shrieker",
+                        "Properties": {
+                            "can_summon": "false",
+                            "shrieking": "false",
+                            "waterlogged": "false"
+                        }
+                    },
+                    "weight": 2
+                },
+                {
+                    "data": {
+                        "Name": "minecraft:sculk_vein",
+                        "Properties": {
+                            "up": "false",
+                            "north": "false",
+                            "south": "false",
+                            "down": "true",
+                            "east": "false",
+                            "west": "false",
+                            "waterlogged": "false"
+                        }
+                    },
+                    "weight": 25
+                },
+                {
+                    "data": {
+                        "Name": "minecraft:sculk_catalyst"
+                    },
+                    "weight": 1
+                }
+            ]
+        }
+    }
+}

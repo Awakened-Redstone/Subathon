@@ -15,6 +15,7 @@ import net.minecraft.entity.projectile.ShulkerBulletEntity;
 import net.minecraft.entity.vehicle.TntMinecartEntity;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -22,11 +23,16 @@ import java.util.Random;
 
 public class RandomizeEntities extends Chaos {
 
+    public RandomizeEntities() {
+        super(10);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         int successCount = 0;
-        List<Entity> entities = player.world.getEntitiesByClass(Entity.class, player.getBoundingBox().expand(15), entity -> true).stream()
-                .filter(entity -> !(entity instanceof PlayerEntity)).toList();
+        List<Entity> entities = player.getWorld().getEntitiesByClass(Entity.class, player.getBoundingBox().expand(15), entity -> true).stream()
+                .filter(entity -> Subathon.COMMON_CONFIGS.protectedEntities().contains(Registries.ENTITY_TYPE.getId(entity.getType()).toString())).toList();
+
         if (entities.size() < 5) return false;
         if (player instanceof ServerPlayerEntity serverPlayer) {
             for (Entity oldEntity : entities) {
@@ -35,14 +41,14 @@ public class RandomizeEntities extends Chaos {
                 while (!success && tryLimit-- > 0) {
                     try {
                         Random random = new Random();
-                        var minecraftRandom = player.world.random;
+                        var minecraftRandom = player.getWorld().getRandom();
                         EntityType<?> entityType = Registries.ENTITY_TYPE.getRandom(minecraftRandom).get().value();
                         Identifier identifier = Registries.ENTITY_TYPE.getId(entityType);
                         Entity newEntity = entityType.create(player.getWorld());
                         if (newEntity == null) continue;
                         newEntity.setPos(oldEntity.getX(), oldEntity.getY(), oldEntity.getZ());
 
-                        if (Subathon.COMMON_CONFIGS.excludedMobs().contains(identifier.toString())) {
+                        if (Subathon.COMMON_CONFIGS.excludedEntities().contains(identifier.toString())) {
                             continue;
                         } else if (newEntity instanceof CreeperEntity creeper) {
                             creeper.setFuseSpeed((short) 30);
@@ -50,7 +56,7 @@ public class RandomizeEntities extends Chaos {
                         } else if (newEntity instanceof TntEntity tnt) {
                             tnt.setFuse((short) 80);
                         } else if (newEntity instanceof VexEntity) {
-                            Subathon.scheduler.schedule(Subathon.server, 600, newEntity::kill);
+                            Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 600, newEntity::kill);
                         } else if (newEntity instanceof ExperienceOrbEntity instance) {
                             ((ExperienceOrbEntityMixin) instance).setAmount(random.nextInt(1000));
                         } else if (newEntity instanceof ShulkerBulletEntity instance) {
@@ -73,11 +79,11 @@ public class RandomizeEntities extends Chaos {
                         }
 
                         if (newEntity instanceof MobEntity mob) {
-                            mob.initialize(serverPlayer.getWorld(), player.getWorld().getLocalDifficulty(player.getBlockPos()), SpawnReason.EVENT, null, null);
+                            mob.initialize(serverPlayer.getServerWorld(), player.getWorld().getLocalDifficulty(player.getBlockPos()), SpawnReason.EVENT, null, null);
                         }
 
-                        Subathon.scheduler.schedule(Subathon.server, 1, () -> {
-                            serverPlayer.getWorld().spawnEntityAndPassengers(newEntity);
+                        Subathon.getInstance().getScheduler().schedule(Subathon.getServer(), 1, () -> {
+                            serverPlayer.getWorld().spawnEntity(newEntity);
                             oldEntity.discard();
                         });
                         success = true;

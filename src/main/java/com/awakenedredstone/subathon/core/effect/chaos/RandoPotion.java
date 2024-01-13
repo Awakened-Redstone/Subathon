@@ -9,6 +9,10 @@ import java.util.Random;
 
 public class RandoPotion extends Chaos {
 
+    public RandoPotion() {
+        super(12);
+    }
+
     @Override
     public boolean playerTrigger(PlayerEntity player) {
         Random random = new Random();
@@ -17,7 +21,7 @@ public class RandoPotion extends Chaos {
         double amplifierGaussian = Math.abs(random.nextGaussian(0, 23));
         int duration = (int) Math.round(durationGaussian * 20);
         int amplifier = (int) Math.round(amplifierGaussian);
-        StatusEffect effect = Subathon.potionsRandom.next();
+        StatusEffect effect = Subathon.getInstance().potionsRandom.next();
         if (player.hasStatusEffect(effect)) {
             StatusEffectInstance playerEffect = player.getStatusEffect(effect);
             duration += playerEffect.getDuration();
